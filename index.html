@@ -16,36 +16,50 @@
     <div id="app" class="max-w-4xl mx-auto">
         <h1 class="text-2xl font-bold text-gray-800 mb-4 text-center">တိရစ္ဆာန် လောင်းကစား (၃၆ ကောင်)</h1>
 
+        <!-- Login Screen -->
         <div id="login-screen" class="bg-white p-6 rounded-xl shadow-lg">
             <h2 class="text-lg font-bold mb-4 text-center">User/Admin Login</h2>
             <div id="user-list" class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-6"></div>
             <div class="border-t pt-4">
                 <input type="text" id="new-user-name" class="p-2 border rounded w-full mb-2" placeholder="အမည်">
                 <input type="password" id="new-user-pass" class="p-2 border rounded w-full mb-2" placeholder="စကားဝှက်">
-                <button id="add-user-btn" class="bg-green-600 text-white w-full py-2 rounded font-bold">User အသစ်ဖန်တီးမည်</button>
+                <button id="add-user-btn" class="bg-green-600 text-white w-full py-2 rounded font-bold">User အသစ်ဖန်တီးမည် (Coin: 100)</button>
             </div>
             <button id="admin-login-trigger" class="w-full mt-4 bg-gray-800 text-white font-bold py-2 rounded">Admin အဖြစ် ဝင်ရောက်ရန်</button>
         </div>
 
+        <!-- Game UI -->
         <div id="game-ui" class="hidden-ui">
             <div class="bg-white p-3 rounded-xl shadow mb-4 flex justify-between items-center">
                 <div>
                     <p id="current-user-display" class="font-bold"></p>
                     <p class="text-blue-600 font-bold">Coin: <span id="coin-balance">0</span></p>
                 </div>
-                <button id="logout-btn" class="bg-red-500 text-white px-3 py-1 rounded">Logout</button>
+                <button id="logout-btn" class="bg-red-500 text-white px-3 py-1 rounded text-sm">Logout</button>
             </div>
 
+            <!-- Admin Panel -->
             <div id="admin-panel" class="hidden-ui bg-gray-800 text-white p-4 rounded-xl mb-4">
                 <h3 class="font-bold text-yellow-400 mb-2">Admin Panel</h3>
-                <button id="reset-timer-btn" class="bg-green-600 w-full py-2 mb-2 rounded font-bold text-sm">ဂိမ်းအသစ်ဖွင့်မည် (၃ မိနစ်)</button>
+                <div class="flex gap-2 mb-4">
+                    <button id="admin-manual-close" class="flex-1 bg-red-600 py-2 rounded font-bold text-sm">ဂိမ်းရပ်မည်</button>
+                    <button id="admin-manual-open" class="flex-1 bg-green-600 py-2 rounded font-bold text-sm">ဂိမ်းပြန်ဖွင့်မည်</button>
+                </div>
+                <div class="pt-2 border-t border-gray-600">
+                    <select id="user-select-admin" class="text-black w-full p-1 mb-1 rounded text-sm"></select>
+                    <input type="number" id="coin-amount" class="text-black w-full p-1 mb-1 rounded text-sm" placeholder="Coin ပမာဏ">
+                    <div class="flex gap-2">
+                        <button id="add-coin-btn" class="flex-1 bg-blue-600 py-1 rounded text-sm">Coin ထည့်</button>
+                        <button id="sub-coin-btn" class="flex-1 bg-orange-600 py-1 rounded text-sm">Coin နုတ်</button>
+                    </div>
+                </div>
             </div>
 
             <div class="bg-blue-100 p-3 rounded text-center font-bold mb-4 border border-blue-200">
                 အချိန် - <span id="timer-display" class="text-blue-800 text-xl">--:--</span>
             </div>
 
-            <div id="result-display" class="hidden-ui bg-yellow-100 p-4 rounded-xl text-center font-bold text-xl mb-4 border border-yellow-300"></div>
+            <div id="result-display" class="hidden-ui bg-yellow-100 p-4 rounded-xl text-center font-bold text-lg mb-4 border border-yellow-300"></div>
 
             <div class="grid grid-cols-4 md:grid-cols-6 gap-2" id="animal-grid"></div>
         </div>
@@ -68,7 +82,7 @@
         const gameData = ["မြင်း", "ရွှေနဂါး", "လိပ်ပြာ", "ဆတ်", "မြွေ", "မျောက်", "ပင့်ကူ", "ဗျိုင်း", "ငန်း", "ခရု", "ဆင်", "ရွှေငါး", "ကြက်", "လိပ်", "ကျီး", "ကျား", "ဝက်", "ဒေါင်း", "ယုန်", "ခွေး", "ပုစွန်", "ဆိတ်", "နွား", "ဖား", "ပျား", "ကြွက်", "ငါးရှဉ့်", "ကျားသစ်", "ခြင်္သေ့", "သမင်", "ဝံပုလွေ", "လင်းယုန်", "ကြောင်", "ပုရွက်ဆိတ်", "ပိုးကောင်", "ငါး"];
 
         let users = {};
-        let adminState = { nextReveal: 0, lastWinnerIdx: -1 };
+        let adminState = { nextReveal: Date.now() + 180000, lastWinnerIdx: -1, isOpen: true };
         let currentUserId = localStorage.getItem('game_uid');
         let isAdmin = localStorage.getItem('is_admin') === 'true';
 
@@ -84,13 +98,12 @@
                 const mins = Math.floor(diff / 60000);
                 const secs = Math.floor((diff % 60000) / 1000);
                 display.innerText = `${mins}:${secs < 10 ? '0' + secs : secs}`;
-            } else if (adminState.nextReveal > 0) {
-                // Time up - Trigger calculation
-                if (adminState.lastWinnerIdx === -1) {
-                    calculateAndProcessWinner();
-                }
             } else {
-                display.innerText = "--:--";
+                if (isAdmin && adminState.isOpen) {
+                    calculateAndProcessWinner();
+                } else if (!adminState.isOpen) {
+                    display.innerText = "ဂိမ်းပိတ်ထားသည်";
+                }
             }
         }, 1000);
 
@@ -109,12 +122,11 @@
             });
 
             let winnerIdx;
+            // Logic: 30 coins or less -> pick from 0s. Over 30 -> pick from min bets.
             if (totalBets <= 30) {
-                // Logic: Pick from animals with 0 bets
                 let zeroCandidates = animalTotals.map((val, idx) => val === 0 ? idx : -1).filter(idx => idx !== -1);
                 winnerIdx = zeroCandidates.length > 0 ? zeroCandidates[Math.floor(Math.random() * zeroCandidates.length)] : Math.floor(Math.random() * 36);
             } else {
-                // Logic: Pick from animals with minimum bets
                 let minBet = Math.min(...animalTotals);
                 let candidates = animalTotals.map((val, idx) => val === minBet ? idx : -1).filter(idx => idx !== -1);
                 winnerIdx = candidates[Math.floor(Math.random() * candidates.length)];
@@ -130,8 +142,7 @@
                 db.ref(`users/${uid}/selections`).set({});
             });
             
-            // Set winner and schedule next game in 3 mins
-            db.ref('adminState').set({ 
+            db.ref('adminState').update({ 
                 nextReveal: Date.now() + 180000, 
                 lastWinnerIdx: winnerIdx 
             });
@@ -159,6 +170,7 @@
                 document.getElementById('result-display').classList.add('hidden-ui');
             }
             renderGrid();
+            if(isAdmin) renderAdminPanel();
         }
 
         function renderUserList() {
@@ -177,6 +189,16 @@
                     } else { alert("Password မှားနေသည်"); }
                 };
                 list.appendChild(btn);
+            });
+        }
+
+        function renderAdminPanel() {
+            const sel = document.getElementById('user-select-admin');
+            sel.innerHTML = '';
+            Object.keys(users).forEach(uid => {
+                const opt = document.createElement('option');
+                opt.value = uid; opt.innerText = users[uid].name;
+                sel.appendChild(opt);
             });
         }
 
@@ -217,8 +239,24 @@
             }
         };
 
-        document.getElementById('reset-timer-btn').onclick = () => {
-            db.ref('adminState').set({ nextReveal: Date.now() + 180000, lastWinnerIdx: -1 });
+        document.getElementById('add-coin-btn').onclick = () => {
+            const uid = document.getElementById('user-select-admin').value;
+            const amt = parseInt(document.getElementById('coin-amount').value);
+            if(amt && users[uid]) db.ref(`users/${uid}/balance`).set((users[uid].balance || 0) + amt);
+        };
+
+        document.getElementById('sub-coin-btn').onclick = () => {
+            const uid = document.getElementById('user-select-admin').value;
+            const amt = parseInt(document.getElementById('coin-amount').value);
+            if(amt && users[uid]) db.ref(`users/${uid}/balance`).set((users[uid].balance || 0) - amt);
+        };
+
+        document.getElementById('admin-manual-open').onclick = () => {
+            db.ref('adminState').set({ nextReveal: Date.now() + 180000, lastWinnerIdx: -1, isOpen: true });
+        };
+        
+        document.getElementById('admin-manual-close').onclick = () => {
+            db.ref('adminState').update({ isOpen: false });
         };
 
         document.getElementById('logout-btn').onclick = () => {
