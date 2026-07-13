@@ -9,26 +9,23 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <style>
         .hidden-ui { display: none !important; }
-        .bet-badge { position: absolute; top: -5px; right: -5px; }
-        body { font-family: 'Inter', sans-serif; }
+        .bet-badge { position: absolute; bottom: -8px; right: -8px; background: #3b82f6; color: white; border-radius: 9999px; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; border: 2px solid white; }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen p-4">
-    <div id="app" class="max-w-4xl mx-auto">
-        <h1 class="text-2xl font-bold text-gray-800 mb-6 text-center">တိရစ္ဆာန် လောင်းကစား (၃၆ ကောင်)</h1>
-
+<body class="bg-gray-50 min-h-screen p-4">
+    <div id="app" class="max-w-xl mx-auto">
         <!-- Login Screen -->
-        <div id="login-screen" class="bg-white p-6 rounded-2xl shadow-xl max-w-md mx-auto">
-            <h2 class="text-lg font-bold mb-4 text-center">ဝင်ရောက်ရန်</h2>
-            <input type="text" id="username-input" class="p-3 border rounded-lg w-full mb-2" placeholder="အမည် (English)">
-            <input type="password" id="password-input" class="p-3 border rounded-lg w-full mb-4" placeholder="စကားဝှက်">
-            <button id="login-btn" class="bg-blue-600 text-white w-full py-3 rounded-lg font-bold mb-2 hover:bg-blue-700 transition">ဝင်မည် / အကောင့်အသစ်ဆောက်မည်</button>
-            <button id="admin-login-btn" class="w-full text-gray-500 underline text-sm mt-2">Admin ဝင်ရောက်ရန်</button>
+        <div id="login-screen" class="bg-white p-6 rounded-2xl shadow-xl max-w-sm mx-auto mt-10">
+            <h2 class="text-xl font-bold mb-6 text-center text-gray-800">upဝင်ရောက်ရန်</h2>
+            <input type="text" id="username-input" class="p-3 border rounded-xl w-full mb-3" placeholder="အမည် (English)">
+            <input type="password" id="password-input" class="p-3 border rounded-xl w-full mb-5" placeholder="စကားဝှက်">
+            <button id="login-btn" class="bg-blue-600 text-white w-full py-3 rounded-xl font-bold mb-3 hover:bg-blue-700 transition">ဝင်မည် / အကောင့်အသစ်ဆောက်မည်</button>
+            <button id="admin-login-btn" class="w-full text-gray-500 text-sm underline mt-2">Admin ဝင်ရောက်ရန်</button>
         </div>
 
         <!-- Game UI -->
         <div id="game-ui" class="hidden-ui">
-            <div class="bg-white p-4 rounded-2xl shadow-sm mb-6 flex justify-between items-center border border-gray-100">
+            <div class="bg-white p-4 rounded-2xl shadow-sm mb-4 flex justify-between items-center border border-gray-100">
                 <div>
                     <p id="user-display" class="font-bold text-gray-700"></p>
                     <p class="text-blue-600 font-bold text-lg">Coins: <span id="coin-balance">0</span></p>
@@ -37,23 +34,23 @@
             </div>
 
             <!-- Admin Panel -->
-            <div id="admin-panel" class="hidden-ui bg-gray-900 text-white p-6 rounded-2xl mb-6 shadow-xl">
+            <div id="admin-panel" class="hidden-ui bg-gray-900 text-white p-6 rounded-2xl mb-4 shadow-xl">
                 <h3 class="font-bold text-yellow-400 mb-4 text-lg">Admin Panel</h3>
-                <div class="pt-4 border-t border-gray-700">
-                    <input type="text" id="admin-target-user" placeholder="User Name" class="text-black p-3 mb-2 w-full rounded-lg">
-                    <input type="number" id="admin-coin-val" placeholder="Coin Amount" class="text-black p-3 mb-2 w-full rounded-lg">
-                    <div class="flex gap-3">
-                        <button id="admin-add" class="flex-1 bg-green-600 py-3 rounded-xl font-bold">ထည့် (+)</button>
-                        <button id="admin-sub" class="flex-1 bg-red-600 py-3 rounded-xl font-bold">နုတ် (-)</button>
-                    </div>
+                <input type="text" id="admin-target-user" placeholder="User Name" class="text-black p-3 mb-2 w-full rounded-lg">
+                <input type="number" id="admin-coin-val" placeholder="Coin Amount" class="text-black p-3 mb-2 w-full rounded-lg">
+                <div class="flex gap-3">
+                    <button id="admin-add" class="flex-1 bg-green-600 py-3 rounded-xl font-bold">ထည့် (+)</button>
+                    <button id="admin-sub" class="flex-1 bg-red-600 py-3 rounded-xl font-bold">နုတ် (-)</button>
                 </div>
             </div>
 
-            <div class="bg-blue-50 p-4 rounded-xl text-center font-bold mb-6 border border-blue-100">
-                အချိန် - <span id="timer-display" class="text-blue-800 text-2xl font-mono">--:--</span>
+            <div class="bg-blue-600 text-white p-4 rounded-xl text-center font-bold text-xl mb-4 shadow-lg">
+                အချိန် - <span id="timer-display" class="font-mono">--:--</span>
             </div>
 
-            <div id="result-box" class="hidden-ui bg-yellow-100 p-4 rounded-xl text-center font-bold text-lg mb-4 text-yellow-800 border border-yellow-300"></div>
+            <div id="result-box" class="hidden-ui bg-yellow-100 p-4 rounded-xl text-center font-bold text-lg mb-4 text-yellow-800 border border-yellow-300">
+                ပြီးခဲ့သည့်ပွဲ အနိုင် - <span id="winner-name">---</span>
+            </div>
 
             <div class="grid grid-cols-4 md:grid-cols-6 gap-2" id="animal-grid"></div>
         </div>
@@ -78,12 +75,11 @@
         let currentUser = localStorage.getItem('game_uid');
         let isAdmin = localStorage.getItem('is_admin') === 'true';
 
-        // Timer and Game State Listeners
         db.ref('game').on('value', snap => {
             const game = snap.val() || { nextReveal: Date.now() + 60000 };
             const diff = game.nextReveal - Date.now();
             if(diff <= 0) {
-                document.getElementById('timer-display').innerText = "ရလဒ်ထွက်နေသည်...";
+                document.getElementById('timer-display').innerText = "0:00";
                 if(isAdmin) processResult();
             } else {
                 const m = Math.floor(diff/60000);
@@ -92,13 +88,12 @@
             }
             if(game.lastWinner) {
                 document.getElementById('result-box').classList.remove('hidden-ui');
-                document.getElementById('result-box').innerText = "ပြီးခဲ့သည့်ပွဲ အနိုင်ရသူ - " + game.lastWinner;
+                document.getElementById('winner-name').innerText = game.lastWinner;
             }
         });
 
         if(currentUser) showGame();
 
-        // Login Logic
         document.getElementById('login-btn').onclick = async () => {
             const name = document.getElementById('username-input').value.trim();
             const pass = document.getElementById('password-input').value.trim();
@@ -123,24 +118,33 @@
             document.getElementById('login-screen').classList.add('hidden-ui');
             document.getElementById('game-ui').classList.remove('hidden-ui');
             if(isAdmin) document.getElementById('admin-panel').classList.remove('hidden-ui');
+            updateBalance();
             renderGrid();
-            if(!isAdmin) updateBalance();
         }
 
-        function updateBalance() {
-            db.ref('users/' + currentUser + '/balance').on('value', snap => {
-                document.getElementById('coin-balance').innerText = snap.val() || 0;
-            });
-            document.getElementById('user-display').innerText = "User: " + currentUser;
+        async function updateBalance() {
+            if(!isAdmin) {
+                db.ref('users/' + currentUser + '/balance').on('value', snap => {
+                    document.getElementById('coin-balance').innerText = snap.val() || 0;
+                });
+                document.getElementById('user-display').innerText = "User: " + currentUser;
+            }
         }
 
-        function renderGrid() {
+        async function renderGrid() {
             const grid = document.getElementById('animal-grid');
             grid.innerHTML = '';
+            
+            let userBets = {};
+            if(!isAdmin) {
+                const snap = await db.ref('users/' + currentUser + '/bets').once('value');
+                userBets = snap.val() || {};
+            }
+
             animals.forEach((name, i) => {
                 const btn = document.createElement('button');
-                btn.className = "p-3 bg-white border rounded-lg shadow-sm text-center hover:bg-blue-50 transition active:scale-95";
-                btn.innerHTML = `<div class="font-medium text-sm">${name}</div>`;
+                btn.className = "relative p-3 bg-white border border-gray-200 rounded-xl shadow-sm text-center hover:bg-blue-50 transition active:scale-95";
+                btn.innerHTML = `<div class="font-medium text-sm">${name}</div> ${userBets[i] ? `<div class="bet-badge">${userBets[i]}</div>` : ''}`;
                 btn.onclick = () => placeBet(i);
                 grid.appendChild(btn);
             });
@@ -148,21 +152,21 @@
 
         async function placeBet(idx) {
             if(isAdmin) return;
-            const userRef = db.ref('users/' + currentUser);
-            userRef.transaction(u => {
+            db.ref('users/' + currentUser).transaction(u => {
                 if(u && (u.balance || 0) >= 1) {
                     u.balance = (u.balance || 0) - 1;
                     if(!u.bets) u.bets = {};
                     u.bets[idx] = (u.bets[idx] || 0) + 1;
                     return u;
                 }
+            }, (error, committed) => {
+                if(committed) renderGrid();
             });
         }
 
-        // Logic for Winner Calculation (Admin)
         async function processResult() {
             const usersSnap = await db.ref('users').once('value');
-            const users = usersSnap.val();
+            const users = usersSnap.val() || {};
             let totalBets = 0;
             let betCounts = new Array(36).fill(0);
             
@@ -184,7 +188,6 @@
                 if(winnerIdx === -1) winnerIdx = Math.floor(Math.random() * 36);
             }
 
-            // Pay winners
             for(let uid in users) {
                 if(users[uid].bets && users[uid].bets[winnerIdx]) {
                     let win = users[uid].bets[winnerIdx] * 27;
