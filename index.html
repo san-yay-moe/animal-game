@@ -76,7 +76,7 @@
 
         let users = {};
         let adminState = { nextReveal: Date.now() + 180000, lastWinnerIdx: -1 };
-        let currentUserId = localStorage.getItem('game_uid') || null;
+        let currentUserId = localStorage.getItem('game_uid');
         let isAdmin = localStorage.getItem('is_admin') === 'true';
 
         db.ref('users').on('value', (snap) => { users = snap.val() || {}; updateUI(); });
@@ -129,7 +129,7 @@
         }
 
         function updateUI() {
-            if(currentUserId && users[currentUserId] || isAdmin) {
+            if((currentUserId && users[currentUserId]) || isAdmin) {
                 document.getElementById('login-screen').classList.add('hidden-ui');
                 document.getElementById('game-ui').classList.remove('hidden-ui');
                 
@@ -138,8 +138,9 @@
                     document.getElementById('current-user-display').innerText = "Admin Account";
                     document.getElementById('coin-balance').innerText = "---";
                 } else {
-                    document.getElementById('current-user-display').innerText = "User: " + users[currentUserId].name;
-                    document.getElementById('coin-balance').innerText = users[currentUserId].balance || 0;
+                    document.getElementById('admin-panel').classList.add('hidden-ui');
+                    document.getElementById('current-user-display').innerText = "User: " + (users[currentUserId]?.name || "");
+                    document.getElementById('coin-balance').innerText = users[currentUserId]?.balance || 0;
                 }
             } else {
                 document.getElementById('login-screen').classList.remove('hidden-ui');
@@ -177,6 +178,7 @@
 
         function populateAdminSelect() {
             const sel = document.getElementById('user-select-admin');
+            if(!sel) return;
             sel.innerHTML = '<option value="">User ရွေးရန်</option>';
             Object.keys(users).forEach(uid => {
                 const opt = document.createElement('option');
@@ -185,7 +187,6 @@
             });
         }
 
-        // Event Handlers
         document.getElementById('login-submit-btn').onclick = () => {
             const n = document.getElementById('login-name').value.trim();
             const p = document.getElementById('login-pass').value.trim();
@@ -202,7 +203,8 @@
         };
 
         document.getElementById('admin-login-trigger').onclick = () => {
-            if(prompt("Admin Password:") === 'admin123') { 
+            const pass = prompt("Admin Password:");
+            if(pass === 'admin123') { 
                 isAdmin = true; localStorage.setItem('is_admin', 'true');
                 updateUI(); 
             }
