@@ -19,7 +19,7 @@
 
         <!-- Login -->
         <div id="login-screen" class="bg-white p-6 rounded-2xl shadow-xl">
-            <h2 class="text-lg font-bold mb-4 text-center">အကောင့်ဝင်ရန်မ</h2>
+            <h2 class="text-lg font-bold mb-4 text-center">အကောင့်ဝင်ရန်</h2>
             <input type="text" id="login-name" class="p-3 border rounded-lg w-full mb-2" placeholder="အမည် (English)">
             <input type="password" id="login-pass" class="p-3 border rounded-lg w-full mb-4" placeholder="စကားဝှက်">
             <button id="login-btn" class="bg-blue-600 text-white w-full py-3 rounded-lg font-bold mb-2">ဝင်မည် / အကောင့်ဖွင့်မည်</button>
@@ -110,10 +110,11 @@
             animals.forEach((name, i) => {
                 const bet = (users[uid] && users[uid].selections) ? (users[uid].selections[i] || 0) : 0;
                 const btn = document.createElement('button');
-                btn.className = "bg-white p-3 rounded shadow text-sm relative border " + (adminState.status === 'betting' ? "hover:bg-blue-50 cursor-pointer" : "opacity-50 cursor-not-allowed");
+                // Status check: Always allow clicking, or check if betting
+                btn.className = "bg-white p-3 rounded shadow text-sm relative border hover:bg-blue-50 cursor-pointer";
                 btn.innerHTML = `${name} ${bet > 0 ? `<span class="bet-badge bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px]">${bet}</span>` : ''}`;
                 btn.onclick = () => {
-                    if (isAdmin || !uid || adminState.status !== 'betting') return;
+                    if (isAdmin || !uid) return;
                     if ((users[uid].balance || 0) >= 1) {
                         db.ref(`users/${uid}/balance`).set((users[uid].balance || 0) - 1);
                         db.ref(`users/${uid}/selections/${i}`).set((bet + 1));
