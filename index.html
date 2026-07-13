@@ -82,16 +82,27 @@
             let data = snap.val();
 
             if(!data) {
+                // အကောင့်သစ်
                 data = { balance: 100, pass: pass, bets: {} };
                 await ref.set(data);
-            }
-
-            if(data.pass === pass) {
                 currentUser = name;
                 localStorage.setItem('game_uid', name);
                 showGame();
             } else {
-                alert("စကားဝှက်မှားနေသည်");
+                // အကောင့်ဟောင်း ဖြစ်နိုင်ခြေကို စစ်ဆေးခြင်း
+                if (!data.pass) {
+                    // Password မရှိသေးတဲ့ အကောင့်ဟောင်းဆိုရင် အခုထည့်တဲ့ password ကို အစားထိုးပေးမယ်
+                    await ref.update({ pass: pass });
+                    currentUser = name;
+                    localStorage.setItem('game_uid', name);
+                    showGame();
+                } else if (data.pass === pass) {
+                    currentUser = name;
+                    localStorage.setItem('game_uid', name);
+                    showGame();
+                } else {
+                    alert("စကားဝှက်မှားနေသည်");
+                }
             }
         };
 
