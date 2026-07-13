@@ -10,7 +10,7 @@
     <style>
         .hidden-ui { display: none !important; }
         .bet-badge { position: absolute; top: -5px; right: -5px; }
-        body { font-family: 'Inter', sans-serif; }
+        body { font-family: sans-serif; }
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen p-4">
@@ -19,7 +19,7 @@
 
         <!-- Login Screen -->
         <div id="login-screen" class="bg-white p-6 rounded-2xl shadow-xl max-w-md mx-auto">
-            <h2 class="text-lg font-bold mb-4 text-center">(ဝင်ရောက်ရန်)</h2>
+            <h2 class="text-lg font-bold mb-4 text-center">ဝင်ရောက်ရန်</h2>
             <div id="user-list" class="grid grid-cols-2 gap-2 mb-6"></div>
             <div class="border-t pt-4">
                 <input type="text" id="new-user-name" class="p-3 border rounded-lg w-full mb-2" placeholder="အမည်သစ်">
@@ -52,13 +52,8 @@
                 </div>
             </div>
 
-            <div id="claim-box" class="hidden-ui bg-green-100 p-4 rounded-xl text-center font-bold text-lg mb-4 text-green-800 border border-green-300">
-                <p class="mb-2">သင် အနိုင်ရရှိထားပါတယ်!</p>
-                <button id="claim-btn" class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700">ဆုငွေ ထုတ်ယူမည် (<span id="win-amount">0</span> coins)</button>
-            </div>
-
-            <div class="bg-blue-50 p-4 rounded-xl text-center font-bold mb-6 border border-blue-100">
-                အချိန် - <span id="timer-display" class="text-blue-800 text-2xl font-mono">--:--</span>
+            <div class="bg-blue-600 p-4 rounded-xl text-center font-bold mb-6 text-white border border-blue-100">
+                အချိန် - <span id="timer-display" class="text-2xl font-mono">--:--</span>
             </div>
 
             <div id="result-display" class="hidden-ui bg-yellow-100 p-4 rounded-xl text-center font-bold text-lg mb-6 border border-yellow-300"></div>
@@ -81,7 +76,7 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        const gameData = ["မြင်း", "ရွှေနဂါး", "လိပ်ပြာ", "ဆတ်", "မြွေ", "မျောက်", "ပင့်ကူ", "ဗျိုင်း", "ငန်း", "ခရု", "ဆင်", "ရွှေငါး", "ကြက်", "လိပ်", "ကျီး", "ကျား", "ဝက်", "ဒေါင်း", "ယုန်", "ခွေး", "ပုစွန်", "ဆိတ်", "နွား", "ဖား", "ပျား", "ကြွက်", "ငါးရှဉ့်", "ကျားသစ်", "ခြင်္သေ့", "သမင်", "ဝံပုလွေ", "လင်းယုန်", "ကြောင်", "ပုရွက်ဆိတ်", "ပိုးကောင်", "ငါး"];
+        const gameData = ["မြင်း", "တော", "ရွှေနဂါး", "လိပ်ပြာ", "ဆတ်", "မြွေ", "မျောက်", "ပင့်ကူ", "ဗျိုင်း", "သီလ", "ငန်း", "ခရု", "ဆင်", "ရွှေငါး", "ကြက်", "လိပ်", "ကျီး", "ငှက်", "ကျား", "ဝက်", "ဒေါင်း", "ယုန်", "ခွေး", "ပုစွန်", "နဂါးပျံ", "ဆိတ်", "နွား", "အိမ်", "တီ", "ငွေငါး", "ခို", "ဖား", "ပျား", "ကျောက်", "ကြွက်", "ငါးရှဉ့်"];
 
         let users = {};
         let adminState = { nextReveal: Date.now() + 180000, lastWinnerIdx: -1 };
@@ -92,39 +87,67 @@
         db.ref('adminState').on('value', (snap) => { adminState = snap.val() || adminState; updateUI(); });
 
         function processRoundEnd() {
-            // အနိုင်ရသူကို Random ဆွဲထုတ်ခြင်း
-            const winnerIdx = Math.floor(Math.random() * gameData.length);
+            let totalBets = 0;
+            let animalBets = new Array(36).fill(0);
             
-            // တွက်ချက်ခြင်း
+            // တွက်ချက်မှု - အကောင်တိုင်းအတွက် စုစုပေါင်းလောင်းထားတာကို ရှာခြင်း
+            Object.keys(users).forEach(uid => {
+                if(users[uid].selections) {
+                    gameData.forEach((_, i) => {
+                        const b = users[uid].selections[i] || 0;
+                        animalBets[i] += b;
+                        totalBets += b;
+                    });
+                }
+            });
+
+            let winningIdx = -1;
+            let multiplier = 0;
+
+            if (totalBets > 30) {
+                // အနည်းဆုံးလောင်းထားသော အကောင် (bet > 0)
+                let minVal = Infinity;
+                gameData.forEach((_, i) => {
+                    if (animalBets[i] > 0 && animalBets[i] < minVal) {
+                        minVal = animalBets[i];
+                        winningIdx = i;
+                    }
+                });
+                multiplier = 27;
+            } else {
+                // 0 coin ရှိသော အကောင်
+                let candidates = [];
+                gameData.forEach((_, i) => { if(animalBets[i] === 0) candidates.push(i); });
+                winningIdx = candidates[Math.floor(Math.random() * candidates.length)];
+                multiplier = 0;
+            }
+
+            // အနိုင်ရငွေ ပေါင်းပေးခြင်း
             Object.keys(users).forEach(uid => {
                 const u = users[uid];
-                if(u.selections && u.selections[winnerIdx]) {
-                    const win = u.selections[winnerIdx] * 20; // 20 ဆ ပေးမယ်
-                    db.ref(`users/${uid}/pendingWin`).transaction(p => (p || 0) + win);
+                if(u.selections && u.selections[winningIdx]) {
+                    const win = u.selections[winningIdx] * multiplier;
+                    db.ref(`users/${uid}/balance`).transaction(b => (b || 0) + win);
                 }
                 db.ref(`users/${uid}/selections`).set({});
             });
             
-            db.ref('adminState').set({ 
-                lastWinnerIdx: winnerIdx, 
-                nextReveal: Date.now() + 180000 
-            });
+            db.ref('adminState').set({ lastWinnerIdx: winningIdx, nextReveal: Date.now() + 180000 });
         }
 
         setInterval(() => {
             const diff = adminState.nextReveal - Date.now();
-            if(diff <= 0 && isAdmin) { // Admin ဖုန်းကနေ auto တွက်ပေးမယ်
-                processRoundEnd();
-            }
+            if(diff <= 0 && isAdmin) processRoundEnd();
             
             const display = document.getElementById('timer-display');
-            if(!display) return;
-            if (diff > 0) {
-                const mins = Math.floor(diff / 60000);
-                const secs = Math.floor((diff % 60000) / 1000);
-                display.innerText = `${mins}:${secs < 10 ? '0' + secs : secs}`;
-            } else {
-                display.innerText = "ရလဒ်ထွက်နေသည်...";
+            if(display) {
+                if (diff > 0) {
+                    const m = Math.floor(diff / 60000);
+                    const s = Math.floor((diff % 60000) / 1000);
+                    display.innerText = `${m}:${s < 10 ? '0' + s : s}`;
+                } else {
+                    display.innerText = "ရလဒ်ထွက်နေသည်...";
+                }
             }
         }, 1000);
 
@@ -134,49 +157,56 @@
                 document.getElementById('game-ui').classList.remove('hidden-ui');
                 if(isAdmin) document.getElementById('admin-panel').classList.remove('hidden-ui');
                 if(!isAdmin && users[currentUserId]) {
-                    const u = users[currentUserId];
-                    document.getElementById('current-user-display').innerText = "User: " + u.name;
-                    document.getElementById('coin-balance').innerText = u.balance || 0;
-                    
-                    if(u.pendingWin > 0) {
-                        document.getElementById('claim-box').classList.remove('hidden-ui');
-                        document.getElementById('win-amount').innerText = u.pendingWin;
-                    } else {
-                        document.getElementById('claim-box').classList.add('hidden-ui');
-                    }
+                    document.getElementById('current-user-display').innerText = "User: " + users[currentUserId].name;
+                    document.getElementById('coin-balance').innerText = users[currentUserId].balance || 0;
                 }
             } else {
                 document.getElementById('login-screen').classList.remove('hidden-ui');
                 document.getElementById('game-ui').classList.add('hidden-ui');
+                renderUserList();
             }
             
             if(adminState.lastWinnerIdx !== -1) {
                 document.getElementById('result-display').classList.remove('hidden-ui');
-                document.getElementById('result-display').innerText = "ပြီးခဲ့သည့် အနိုင်ရသူ - " + gameData[adminState.lastWinnerIdx];
+                document.getElementById('result-display').innerText = "ပြီးခဲ့သည့်ပွဲ အနိုင် - " + gameData[adminState.lastWinnerIdx];
             }
             renderGrid();
             if(isAdmin) renderAdminPanel();
         }
 
-        document.getElementById('claim-btn').onclick = () => {
-            db.ref(`users/${currentUserId}/balance`).transaction(b => (b || 0) + users[currentUserId].pendingWin);
-            db.ref(`users/${currentUserId}/pendingWin`).set(0);
-        };
+        function renderUserList() {
+            const list = document.getElementById('user-list');
+            list.innerHTML = '';
+            Object.keys(users).forEach(uid => {
+                const btn = document.createElement('button');
+                btn.className = "bg-white p-3 border rounded-lg shadow-sm text-sm hover:bg-gray-50";
+                btn.innerText = users[uid].name;
+                btn.onclick = () => {
+                    const pass = prompt("Password:");
+                    if(pass === users[uid].password) {
+                        localStorage.setItem('game_uid', uid);
+                        currentUserId = uid;
+                        updateUI();
+                    } else { alert("Password မှားနေသည်"); }
+                };
+                list.appendChild(btn);
+            });
+        }
 
         function renderGrid() {
             const grid = document.getElementById('animal-grid');
             grid.innerHTML = '';
-            const user = users[currentUserId] || {};
+            const user = users[currentUserId];
             gameData.forEach((name, i) => {
-                const betCount = (user.selections) ? (user.selections[i] || 0) : 0;
+                const betCount = (user && user.selections) ? (user.selections[i] || 0) : 0;
                 const div = document.createElement('div');
                 div.className = "relative p-4 bg-white border rounded-xl shadow-sm text-sm text-center cursor-pointer hover:bg-blue-50 transition border-gray-200";
                 div.innerHTML = `${name} ${betCount > 0 ? `<div class="bet-badge bg-red-500 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-bold">${betCount}</div>` : ''}`;
                 div.onclick = () => {
-                    if (isAdmin || adminState.nextReveal <= Date.now() + 10000) return; // 10 sec before reveal, stop betting
+                    if (isAdmin || !currentUserId || adminState.nextReveal <= Date.now() + 5000) return;
                     if ((user.balance || 0) < 1) return;
                     db.ref(`users/${currentUserId}/balance`).set((user.balance || 0) - 1);
-                    db.ref(`users/${currentUserId}/selections/${i}`).transaction(v => (v || 0) + 1);
+                    db.ref(`users/${currentUserId}/selections/${i}`).set((betCount + 1));
                 };
                 grid.appendChild(div);
             });
