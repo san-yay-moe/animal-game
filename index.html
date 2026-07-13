@@ -100,28 +100,75 @@
                 const secs = Math.floor((diff % 60000) / 1000);
                 display.innerText = `${mins}:${secs < 10 ? '0' + secs : secs}`;
             } else {
-                display.innerText = "ရလဒ်ထွက်နေသည်...";
+                if (isAdmin && adminState.isOpen) {
+                    calculateAndProcessWinner();
+                } else if (!adminState.isOpen) {
+                    display.innerText = "ဂိမ်းပိတ်ထားသည်";
+                } else {
+                    display.innerText = "ရလဒ်ထွက်နေသည်...";
+                }
             }
         }, 1000);
 
+        function calculateAndProcessWinner() {
+            let animalTotals = new Array(36).fill(0);
+            let totalBets = 0;
+            
+            Object.values(users).forEach(user => {
+                if(user.selections) {
+                    Object.entries(user.selections).forEach(([idx, count]) => {
+                        const c = parseInt(count);
+                        animalTotals[parseInt(idx)] += c;
+                        totalBets += c;
+                    });
+                }
+            });
+
+            let winnerIdx;
+            if (totalBets <= 30) {
+                let zeroCandidates = animalTotals.map((val, idx) => val === 0 ? idx : -1).filter(idx => idx !== -1);
+                winnerIdx = zeroCandidates.length > 0 ? zeroCandidates[Math.floor(Math.random() * zeroCandidates.length)] : Math.floor(Math.random() * 36);
+            } else {
+                let minBet = Math.min(...animalTotals);
+                let candidates = animalTotals.map((val, idx) => val === minBet ? idx : -1).filter(idx => idx !== -1);
+                winnerIdx = candidates[Math.floor(Math.random() * candidates.length)];
+            }
+
+            Object.keys(users).forEach(uid => {
+                const user = users[uid];
+                if(user.selections && user.selections[winnerIdx]) {
+                    db.ref(`users/${uid}/balance`).set((user.balance || 0) + (user.selections[winnerIdx] * 27));
+                }
+                db.ref(`users/${uid}/selections`).set({});
+            });
+            
+            db.ref('adminState').update({ nextReveal: Date.now() + 180000, lastWinnerIdx: winnerIdx });
+        }
+
         function updateUI() {
+            const loginScreen = document.getElementById('login-screen');
+            const gameUI = document.getElementById('game-ui');
+            const adminPanel = document.getElementById('admin-panel');
+
             if(currentUserId || isAdmin) {
-                document.getElementById('login-screen').classList.add('hidden-ui');
-                document.getElementById('game-ui').classList.remove('hidden-ui');
-                if(isAdmin) document.getElementById('admin-panel').classList.remove('hidden-ui');
+                loginScreen.classList.add('hidden-ui');
+                gameUI.classList.remove('hidden-ui');
+                if(isAdmin) adminPanel.classList.remove('hidden-ui');
                 if(!isAdmin && users[currentUserId]) {
                     document.getElementById('current-user-display').innerText = "User: " + users[currentUserId].name;
                     document.getElementById('coin-balance').innerText = users[currentUserId].balance || 0;
                 }
             } else {
-                document.getElementById('login-screen').classList.remove('hidden-ui');
-                document.getElementById('game-ui').classList.add('hidden-ui');
+                loginScreen.classList.remove('hidden-ui');
+                gameUI.classList.add('hidden-ui');
                 renderUserList();
             }
             
             if(adminState.lastWinnerIdx !== -1) {
                 document.getElementById('result-display').classList.remove('hidden-ui');
                 document.getElementById('result-display').innerText = "အနိုင်ရသူ - " + gameData[adminState.lastWinnerIdx];
+            } else {
+                document.getElementById('result-display').classList.add('hidden-ui');
             }
             renderGrid();
             if(isAdmin) renderAdminPanel();
@@ -146,6 +193,16 @@
             });
         }
 
+        function renderAdminPanel() {
+            const sel = document.getElementById('user-select-admin');
+            sel.innerHTML = '';
+            Object.keys(users).forEach(uid => {
+                const opt = document.createElement('option');
+                opt.value = uid; opt.innerText = users[uid].name;
+                sel.appendChild(opt);
+            });
+        }
+
         function renderGrid() {
             const grid = document.getElementById('animal-grid');
             grid.innerHTML = '';
@@ -165,7 +222,6 @@
             });
         }
 
-        // Administrative Event Listeners
         document.getElementById('add-user-btn').onclick = () => {
             const n = document.getElementById('new-user-name').value.trim();
             const p = document.getElementById('new-user-pass').value.trim();
@@ -187,6 +243,26 @@
         document.getElementById('logout-btn').onclick = () => {
             localStorage.removeItem('game_uid'); localStorage.removeItem('is_admin');
             location.reload();
+        };
+
+        document.getElementById('add-coin-btn').onclick = () => {
+            const uid = document.getElementById('user-select-admin').value;
+            const amt = parseInt(document.getElementById('coin-amount').value);
+            if(amt && users[uid]) db.ref(`users/${uid}/balance`).set((users[uid].balance || 0) + amt);
+        };
+
+        document.getElementById('sub-coin-btn').onclick = () => {
+            const uid = document.getElementById('user-select-admin').value;
+            const amt = parseInt(document.getElementById('coin-amount').value);
+            if(amt && users[uid]) db.ref(`users/${uid}/balance`).set((users[uid].balance || 0) - amt);
+        };
+
+        document.getElementById('admin-manual-open').onclick = () => {
+            db.ref('adminState').update({ nextReveal: Date.now() + 180000, lastWinnerIdx: -1, isOpen: true });
+        };
+        
+        document.getElementById('admin-manual-close').onclick = () => {
+            db.ref('adminState').update({ isOpen: false });
         };
 
         updateUI();
