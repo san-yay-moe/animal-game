@@ -10,7 +10,7 @@
 </head>
 <body class="bg-gray-100 min-h-screen p-4">
     <div id="app" class="max-w-4xl mx-auto">
-        <h1 class="text-2xl font-bold text-gray-800 mb-6 text-center">တိရစ္ဆာန် လောင်းကစား (၃၆ ကောင်)</h1>
+        <h1 class="text-2xl font-bold text-gray-800 mb-6 text-center">(၃၆ ကောင်)</h1>
 
         <!-- Login Screen -->
         <div id="login-screen" class="bg-white p-6 rounded-2xl shadow-xl max-w-md mx-auto">
@@ -73,7 +73,7 @@
                 document.getElementById('login-screen').classList.add('hidden');
                 document.getElementById('game-ui').classList.remove('hidden');
                 if (uid) {
-                    document.getElementById('user-display').innerText = users[uid].name;
+                    document.getElementById('user-display').innerText = "User: " + users[uid].name;
                     document.getElementById('coin-balance').innerText = users[uid].balance || 0;
                 }
                 if (isAdmin) {
@@ -154,6 +154,7 @@
             db.ref('users/'+uid).once('value', s => {
                 if(!s.exists()) db.ref('users/'+uid).set({name: n, balance: 100});
                 localStorage.setItem('game_uid', uid);
+                localStorage.removeItem('is_admin');
                 updateUI();
             });
         };
@@ -161,6 +162,7 @@
         document.getElementById('admin-login-btn').onclick = () => {
             if(prompt("Admin Password:") === 'admin123') {
                 isAdmin = true; localStorage.setItem('is_admin', 'true');
+                localStorage.removeItem('game_uid');
                 updateUI();
             }
         };
