@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>တိရစ္ဆာန်လောင်းကစား (၃၆ ကောင်)</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <style>
@@ -17,19 +16,17 @@
     <div id="app" class="max-w-4xl mx-auto">
         <h1 class="text-2xl font-bold text-gray-800 mb-4 text-center">တိရစ္ဆာန် လောင်းကစား (၃၆ ကောင်)</h1>
 
-        <!-- Login Screen -->
         <div id="login-screen" class="bg-white p-6 rounded-xl shadow-lg">
             <h2 class="text-lg font-bold mb-4 text-center">User/Admin Login</h2>
             <div id="user-list" class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-6"></div>
             <div class="border-t pt-4">
                 <input type="text" id="new-user-name" class="p-2 border rounded w-full mb-2" placeholder="အမည်">
                 <input type="password" id="new-user-pass" class="p-2 border rounded w-full mb-2" placeholder="စကားဝှက်">
-                <button id="add-user-btn" class="bg-green-600 text-white w-full py-2 rounded font-bold">User အသစ်ဖန်တီးမည် (Coin: 0)</button>
+                <button id="add-user-btn" class="bg-green-600 text-white w-full py-2 rounded font-bold">User အသစ်ဖန်တီးမည်</button>
             </div>
             <button id="admin-login-trigger" class="w-full mt-4 bg-gray-800 text-white font-bold py-2 rounded">Admin အဖြစ် ဝင်ရောက်ရန်</button>
         </div>
 
-        <!-- Game UI -->
         <div id="game-ui" class="hidden-ui">
             <div class="bg-white p-3 rounded-xl shadow mb-4 flex justify-between items-center">
                 <div>
@@ -39,127 +36,124 @@
                 <button id="logout-btn" class="bg-red-500 text-white px-3 py-1 rounded">Logout</button>
             </div>
 
-            <!-- Admin Panel -->
             <div id="admin-panel" class="hidden-ui bg-gray-800 text-white p-4 rounded-xl mb-4">
-                <div class="flex justify-between mb-2">
-                    <h3 class="font-bold text-yellow-400">Admin Panel</h3>
-                    <span id="game-status" class="bg-green-600 px-2 py-0.5 rounded text-xs font-bold">ဂိမ်းဖွင့်ထားသည်</span>
-                </div>
-                <div class="flex gap-2 mb-4">
-                    <button id="admin-manual-close" class="flex-1 bg-red-600 py-2 rounded font-bold text-sm">ဂိမ်းပိတ်မည်</button>
-                    <button id="admin-manual-open" class="flex-1 bg-green-600 py-2 rounded font-bold text-sm">ဂိမ်းဖွင့်မည်</button>
-                </div>
-                <div id="admin-stats" class="text-xs bg-black p-2 rounded mb-2"></div>
-                <div class="pt-2 border-t border-gray-600">
-                    <select id="user-select-admin" class="text-black w-full p-1 mb-1 rounded text-sm"></select>
-                    <input type="number" id="coin-amount" class="text-black w-full p-1 mb-1 rounded text-sm" placeholder="Coin ပမာဏ">
-                    <div class="flex gap-2">
-                        <button id="add-coin-btn" class="flex-1 bg-blue-600 py-1 rounded text-sm">ထည့်</button>
-                        <button id="sub-coin-btn" class="flex-1 bg-orange-600 py-1 rounded text-sm">နုတ်</button>
-                    </div>
+                <h3 class="font-bold text-yellow-400 mb-2">Admin Panel</h3>
+                <button id="reset-timer-btn" class="bg-green-600 w-full py-2 mb-2 rounded font-bold text-sm">ဂိမ်းဖွင့်မည် (၃ မိနစ်)</button>
+                <select id="user-select-admin" class="text-black w-full p-1 mb-1 rounded text-sm"></select>
+                <div class="flex gap-2">
+                    <input type="number" id="coin-amount" class="text-black w-20 p-1 rounded text-sm" placeholder="Coin">
+                    <button id="add-coin-btn" class="flex-1 bg-blue-600 py-1 rounded text-sm">ထည့်</button>
+                    <button id="sub-coin-btn" class="flex-1 bg-orange-600 py-1 rounded text-sm">နုတ်</button>
                 </div>
             </div>
 
-            <div id="timer-box" class="bg-blue-100 p-2 rounded text-center font-bold mb-4 text-sm">
-                လာမည့်အဖြေအတွက် - <span id="timer-display">--</span>
+            <div class="bg-blue-100 p-3 rounded text-center font-bold mb-4 border border-blue-200">
+                လာမည့်အဖြေအတွက် - <span id="timer-display" class="text-blue-800 text-xl">--:--</span>
             </div>
 
             <div class="grid grid-cols-4 md:grid-cols-6 gap-2" id="animal-grid"></div>
-            
-            <div id="result-box" class="hidden-ui mt-4 p-4 bg-white rounded-xl shadow text-center font-bold text-lg">
-                <p id="result-text"></p>
-            </div>
         </div>
     </div>
 
     <script>
-        // *** FIREBASE CONFIGURATION ***
-      const firebaseConfig = {
-
-  apiKey: "AIzaSyBbRZLUYhEvTHoCscb2ul_JURGsfBjCF4s",
-
-  authDomain: "birthday-62720.firebaseapp.com",
-
-  databaseURL: "https://birthday-62720-default-rtdb.firebaseio.com",
-
-  projectId: "birthday-62720",
-
-  storageBucket: "birthday-62720.firebasestorage.app",
-
-  messagingSenderId: "915031456534",
-
-  appId: "1:915031456534:web:816308654f76be33b62e37",
-
-  measurementId: "G-6ZEEC9499R"
-
-};
-
+        const firebaseConfig = {
+            apiKey: "AIzaSyBbRZLUYhEvTHoCscb2ul_JURGsfBjCF4s",
+            authDomain: "birthday-62720.firebaseapp.com",
+            databaseURL: "https://birthday-62720-default-rtdb.firebaseio.com",
+            projectId: "birthday-62720",
+            storageBucket: "birthday-62720.firebasestorage.app",
+            messagingSenderId: "915031456534",
+            appId: "1:915031456534:web:816308654f76be33b62e37",
+            measurementId: "G-6ZEEC9499R"
+        };
+        
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
         const gameData = ["မြင်း", "ရွှေနဂါး", "လိပ်ပြာ", "ဆတ်", "မြွေ", "မျောက်", "ပင့်ကူ", "ဗျိုင်း", "ငန်း", "ခရု", "ဆင်", "ရွှေငါး", "ကြက်", "လိပ်", "ကျီး", "ကျား", "ဝက်", "ဒေါင်း", "ယုန်", "ခွေး", "ပုစွန်", "ဆိတ်", "နွား", "ဖား", "ပျား", "ကြွက်", "ငါးရှဉ့်", "ကျားသစ်", "ခြင်္သေ့", "သမင်", "ဝံပုလွေ", "လင်းယုန်", "ကြောင်", "ပုရွက်ဆိတ်", "ပိုးကောင်", "ငါး"];
 
         let users = {};
-        let adminState = { isOpen: true, nextReveal: Date.now() + 1800000, winnerId: null };
-        let currentUserId = null;
-        let isAdmin = false;
+        let adminState = { nextReveal: Date.now() };
+        let currentUserId = localStorage.getItem('game_uid');
+        let isAdmin = localStorage.getItem('is_admin') === 'true';
 
-        // Firebase Sync
+        // Firebase Listeners
         db.ref('users').on('value', (snap) => { users = snap.val() || {}; updateUI(); });
         db.ref('adminState').on('value', (snap) => { adminState = snap.val() || adminState; updateUI(); });
 
-        function updateUI() {
-            if(!currentUserId && !isAdmin) return;
-            document.getElementById('login-screen').classList.add('hidden-ui');
-            document.getElementById('game-ui').classList.remove('hidden-ui');
-            
-            if(isAdmin) {
-                document.getElementById('admin-panel').classList.remove('hidden-ui');
-                document.getElementById('game-status').innerText = adminState.isOpen ? "ဂိမ်းဖွင့်ထားသည်" : "ဂိမ်းပိတ်ထားသည်";
-                renderAdminStats();
-            } else {
-                const u = users[currentUserId];
-                if(u) {
-                    document.getElementById('current-user-display').innerText = "User: " + u.name;
-                    document.getElementById('coin-balance').innerText = u.balance;
-                }
-            }
-
+        setInterval(() => {
+            const display = document.getElementById('timer-display');
+            if(!display) return;
             const diff = adminState.nextReveal - Date.now();
-            if (adminState.isOpen && diff > 0) {
+            if (diff > 0) {
                 const mins = Math.floor(diff / 60000);
                 const secs = Math.floor((diff % 60000) / 1000);
-                document.getElementById('timer-display').innerText = `${mins}:${secs < 10 ? '0' + secs : secs}`;
+                display.innerText = `${mins}:${secs < 10 ? '0' + secs : secs}`;
             } else {
-                document.getElementById('timer-display').innerText = "ဂိမ်းပိတ်ထားသည်";
+                display.innerText = "အချိန်ပြည့်ပါပြီ";
+            }
+        }, 1000);
+
+        function updateUI() {
+            if(currentUserId || isAdmin) {
+                document.getElementById('login-screen').classList.add('hidden-ui');
+                document.getElementById('game-ui').classList.remove('hidden-ui');
+                
+                if(isAdmin) {
+                    document.getElementById('admin-panel').classList.remove('hidden-ui');
+                    renderAdminSelect();
+                } else if(users[currentUserId]) {
+                    document.getElementById('current-user-display').innerText = "User: " + users[currentUserId].name;
+                    document.getElementById('coin-balance').innerText = users[currentUserId].balance || 0;
+                }
+            } else {
+                document.getElementById('login-screen').classList.remove('hidden-ui');
+                document.getElementById('game-ui').classList.add('hidden-ui');
+                renderUserList();
             }
             renderGrid();
+        }
+
+        function renderUserList() {
+            const list = document.getElementById('user-list');
+            list.innerHTML = '';
+            Object.keys(users).forEach(uid => {
+                const btn = document.createElement('button');
+                btn.className = "bg-white p-2 border rounded shadow text-sm hover:bg-gray-100";
+                btn.innerText = users[uid].name;
+                btn.onclick = () => {
+                    const pass = prompt("Password:");
+                    if(pass === users[uid].password) {
+                        localStorage.setItem('game_uid', uid);
+                        currentUserId = uid;
+                        updateUI();
+                    } else { alert("Password မှားနေသည်"); }
+                };
+                list.appendChild(btn);
+            });
         }
 
         function renderGrid() {
             const grid = document.getElementById('animal-grid');
             grid.innerHTML = '';
             const user = users[currentUserId];
-            
             gameData.forEach((name, i) => {
                 const betCount = (user && user.selections) ? (user.selections[i] || 0) : 0;
                 const div = document.createElement('div');
-                div.className = "relative p-2 text-center border rounded shadow-sm bg-white cursor-pointer";
-                div.innerHTML = `<span class="text-xs font-bold">${name}</span>${betCount > 0 ? `<div class="bet-badge bg-red-500 text-white text-[10px] px-1.5 rounded-full font-bold">${betCount}</div>` : ''}`;
+                div.className = "relative p-2 bg-white border rounded shadow-sm text-xs text-center cursor-pointer hover:bg-blue-50";
+                div.innerHTML = `${name} ${betCount > 0 ? `<div class="bet-badge bg-red-500 text-white text-[10px] px-1.5 rounded-full font-bold">${betCount}</div>` : ''}`;
                 
-                if (adminState.isOpen && !isAdmin && user) {
-                    div.onclick = () => {
-                        if (user.balance >= 1) {
-                            db.ref(`users/${currentUserId}/balance`).set(user.balance - 1);
-                            db.ref(`users/${currentUserId}/selections/${i}`).set((betCount + 1));
-                        }
-                    };
-                }
+                div.onclick = () => {
+                    if (isAdmin || !currentUserId) return;
+                    if ((user.balance || 0) < 1) return alert("Coin မလောက်တော့ပါ");
+                    db.ref(`users/${currentUserId}/balance`).set((user.balance || 0) - 1);
+                    db.ref(`users/${currentUserId}/selections/${i}`).set((betCount + 1));
+                };
                 grid.appendChild(div);
             });
         }
 
-        function renderAdminStats() {
+        function renderAdminSelect() {
             const sel = document.getElementById('user-select-admin');
             sel.innerHTML = '';
             Object.keys(users).forEach(uid => {
@@ -169,41 +163,48 @@
             });
         }
 
-        // Logic Controls
         document.getElementById('add-user-btn').onclick = () => {
-            const n = document.getElementById('new-user-name').value;
-            const p = document.getElementById('new-user-pass').value;
-            if(n && p) {
-                const uid = n.replace(/[^a-z0-9]/gi, '');
-                db.ref('users/' + uid).set({name: n, password: p, balance: 100, selections: {}});
-                currentUserId = uid;
-                updateUI();
-            }
+            const n = document.getElementById('new-user-name').value.trim();
+            const p = document.getElementById('new-user-pass').value.trim();
+            if(!n || !p) return alert("အမည် နှင့် စကားဝှက်ထည့်ပါ");
+            const uid = n.replace(/[^a-z0-9]/gi, '');
+            db.ref('users/' + uid).set({name: n, password: p, balance: 100, selections: {}});
+            localStorage.setItem('game_uid', uid);
+            currentUserId = uid;
+            updateUI();
         };
 
         document.getElementById('admin-login-trigger').onclick = () => {
-            if(prompt("Admin Password:") === 'admin123') { isAdmin = true; updateUI(); }
+            if(prompt("Admin Password:") === 'admin123') { 
+                isAdmin = true; 
+                localStorage.setItem('is_admin', 'true');
+                updateUI(); 
+            }
         };
 
-        document.getElementById('logout-btn').onclick = () => location.reload();
+        document.getElementById('reset-timer-btn').onclick = () => {
+            db.ref('adminState/nextReveal').set(Date.now() + 180000); // 3 minutes
+        };
+
+        document.getElementById('logout-btn').onclick = () => {
+            localStorage.removeItem('game_uid');
+            localStorage.removeItem('is_admin');
+            location.reload();
+        };
 
         document.getElementById('add-coin-btn').onclick = () => {
             const uid = document.getElementById('user-select-admin').value;
             const amt = parseInt(document.getElementById('coin-amount').value);
-            if(amt && users[uid]) db.ref(`users/${uid}/balance`).set(users[uid].balance + amt);
+            if(uid && !isNaN(amt)) db.ref(`users/${uid}/balance`).set((users[uid].balance || 0) + amt);
         };
 
-        // Initialize lists
-        db.ref('users').once('value', (snap) => {
-            const list = document.getElementById('user-list');
-            Object.keys(snap.val() || {}).forEach(uid => {
-                const btn = document.createElement('button');
-                btn.className = "bg-white p-2 border rounded shadow text-sm";
-                btn.innerText = snap.val()[uid].name;
-                btn.onclick = () => { if(prompt("Password:") === snap.val()[uid].password) { currentUserId = uid; updateUI(); } };
-                list.appendChild(btn);
-            });
-        });
+        document.getElementById('sub-coin-btn').onclick = () => {
+            const uid = document.getElementById('user-select-admin').value;
+            const amt = parseInt(document.getElementById('coin-amount').value);
+            if(uid && !isNaN(amt)) db.ref(`users/${uid}/balance`).set(Math.max(0, (users[uid].balance || 0) - amt));
+        };
+
+        updateUI();
     </script>
 </body>
 </html>
