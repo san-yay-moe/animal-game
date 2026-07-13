@@ -39,12 +39,6 @@
             <div id="admin-panel" class="hidden-ui bg-gray-800 text-white p-4 rounded-xl mb-4">
                 <h3 class="font-bold text-yellow-400 mb-2">Admin Panel</h3>
                 <button id="reset-timer-btn" class="bg-green-600 w-full py-2 mb-2 rounded font-bold text-sm">ဂိမ်းအသစ်ဖွင့်မည် (၃ မိနစ်)</button>
-                <select id="user-select-admin" class="text-black w-full p-1 mb-1 rounded text-sm"></select>
-                <div class="flex gap-2">
-                    <input type="number" id="coin-amount" class="text-black w-20 p-1 rounded text-sm" placeholder="Coin">
-                    <button id="add-coin-btn" class="flex-1 bg-blue-600 py-1 rounded text-sm">ထည့်</button>
-                    <button id="sub-coin-btn" class="flex-1 bg-orange-600 py-1 rounded text-sm">နုတ်</button>
-                </div>
             </div>
 
             <div class="bg-blue-100 p-3 rounded text-center font-bold mb-4 border border-blue-200">
@@ -65,8 +59,7 @@
             projectId: "birthday-62720",
             storageBucket: "birthday-62720.firebasestorage.app",
             messagingSenderId: "915031456534",
-            appId: "1:915031456534:web:816308654f76be33b62e37",
-            measurementId: "G-6ZEEC9499R"
+            appId: "1:915031456534:web:816308654f76be33b62e37"
         };
         
         firebase.initializeApp(firebaseConfig);
@@ -92,8 +85,8 @@
                 const secs = Math.floor((diff % 60000) / 1000);
                 display.innerText = `${mins}:${secs < 10 ? '0' + secs : secs}`;
             } else if (adminState.nextReveal > 0) {
-                display.innerText = "အချိန်ပြည့်ပါပြီ";
-                if (isAdmin && adminState.lastWinnerIdx === -1) {
+                // Time up - Trigger calculation
+                if (adminState.lastWinnerIdx === -1) {
                     calculateAndProcessWinner();
                 }
             } else {
@@ -103,28 +96,45 @@
 
         function calculateAndProcessWinner() {
             let animalTotals = new Array(36).fill(0);
+            let totalBets = 0;
+            
             Object.values(users).forEach(user => {
                 if(user.selections) {
                     Object.entries(user.selections).forEach(([idx, count]) => {
-                        animalTotals[parseInt(idx)] += count;
+                        const c = parseInt(count);
+                        animalTotals[parseInt(idx)] += c;
+                        totalBets += c;
                     });
                 }
             });
 
-            let minBet = Math.min(...animalTotals);
-            let candidates = animalTotals.map((val, idx) => val === minBet ? idx : -1).filter(idx => idx !== -1);
-            const winnerIdx = candidates[Math.floor(Math.random() * candidates.length)];
+            let winnerIdx;
+            if (totalBets <= 30) {
+                // Logic: Pick from animals with 0 bets
+                let zeroCandidates = animalTotals.map((val, idx) => val === 0 ? idx : -1).filter(idx => idx !== -1);
+                winnerIdx = zeroCandidates.length > 0 ? zeroCandidates[Math.floor(Math.random() * zeroCandidates.length)] : Math.floor(Math.random() * 36);
+            } else {
+                // Logic: Pick from animals with minimum bets
+                let minBet = Math.min(...animalTotals);
+                let candidates = animalTotals.map((val, idx) => val === minBet ? idx : -1).filter(idx => idx !== -1);
+                winnerIdx = candidates[Math.floor(Math.random() * candidates.length)];
+            }
 
+            // Payouts
             Object.keys(users).forEach(uid => {
                 const user = users[uid];
-                let payout = 0;
                 if(user.selections && user.selections[winnerIdx]) {
-                    payout = user.selections[winnerIdx] * 27;
+                    const winAmount = user.selections[winnerIdx] * 27;
+                    db.ref(`users/${uid}/balance`).set((user.balance || 0) + winAmount);
                 }
-                db.ref(`users/${uid}/balance`).set((user.balance || 0) + payout);
                 db.ref(`users/${uid}/selections`).set({});
             });
-            db.ref('adminState/lastWinnerIdx').set(winnerIdx);
+            
+            // Set winner and schedule next game in 3 mins
+            db.ref('adminState').set({ 
+                nextReveal: Date.now() + 180000, 
+                lastWinnerIdx: winnerIdx 
+            });
         }
 
         function updateUI() {
@@ -136,7 +146,6 @@
                     document.getElementById('current-user-display').innerText = "User: " + users[currentUserId].name;
                     document.getElementById('coin-balance').innerText = users[currentUserId].balance || 0;
                 }
-                if(isAdmin) renderAdminSelect();
             } else {
                 document.getElementById('login-screen').classList.remove('hidden-ui');
                 document.getElementById('game-ui').classList.add('hidden-ui');
@@ -145,7 +154,7 @@
             
             if(adminState.lastWinnerIdx !== -1) {
                 document.getElementById('result-display').classList.remove('hidden-ui');
-                document.getElementById('result-display').innerText = "အနိုင်ရသူ - " + gameData[adminState.lastWinnerIdx];
+                document.getElementById('result-display').innerText = "ပြီးခဲ့သည့် အနိုင်ရသူ - " + gameData[adminState.lastWinnerIdx];
             } else {
                 document.getElementById('result-display').classList.add('hidden-ui');
             }
@@ -168,16 +177,6 @@
                     } else { alert("Password မှားနေသည်"); }
                 };
                 list.appendChild(btn);
-            });
-        }
-
-        function renderAdminSelect() {
-            const sel = document.getElementById('user-select-admin');
-            sel.innerHTML = '';
-            Object.keys(users).forEach(uid => {
-                const opt = document.createElement('option');
-                opt.value = uid; opt.innerText = users[uid].name;
-                sel.appendChild(opt);
             });
         }
 
@@ -225,18 +224,6 @@
         document.getElementById('logout-btn').onclick = () => {
             localStorage.removeItem('game_uid'); localStorage.removeItem('is_admin');
             location.reload();
-        };
-
-        document.getElementById('add-coin-btn').onclick = () => {
-            const uid = document.getElementById('user-select-admin').value;
-            const amt = parseInt(document.getElementById('coin-amount').value);
-            if(uid && !isNaN(amt)) db.ref(`users/${uid}/balance`).set((users[uid].balance || 0) + amt);
-        };
-
-        document.getElementById('sub-coin-btn').onclick = () => {
-            const uid = document.getElementById('user-select-admin').value;
-            const amt = parseInt(document.getElementById('coin-amount').value);
-            if(uid && !isNaN(amt)) db.ref(`users/${uid}/balance`).set(Math.max(0, (users[uid].balance || 0) - amt));
         };
 
         updateUI();
