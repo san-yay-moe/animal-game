@@ -67,10 +67,14 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
+        // Updated Animals List
         const animals = ["မြင်း", "တော", "ရွှေနဂါး", "လိပ်ပြာ", "ဆတ်", "မြွေ", "မျောက်", "ပင့်ကူ", "ဗျိုင်း", "သီလ", "ငန်း", "ခရု", "ဆင်", "ရွှေငါး", "ကြက်", "လိပ်", "ကျီး", "ငှက်", "ကျား", "ဝက်", "ဒေါင်း", "ယုန်", "ခွေး", "ပုစွန်", "နဂါးပျံ", "ဆိတ်", "နွား", "အိမ်", "တီ", "ငွေငါး", "ခို", "ဖား", "ပျား", "ကျောက်", "ကြွက်", "ငါးရှဉ့်"];
 
-        let currentUser = null;
-        let isAdmin = false;
+        let currentUser = localStorage.getItem('game_uid');
+        let isAdmin = localStorage.getItem('is_admin') === 'true';
+
+        // Auto login if already logged in
+        if(currentUser) showGame();
 
         document.getElementById('login-btn').onclick = async () => {
             const name = document.getElementById('username-input').value.trim();
@@ -82,21 +86,12 @@
             let data = snap.val();
 
             if(!data) {
-                // အကောင့်သစ်
-                data = { balance: 100, pass: pass, bets: {} };
-                await ref.set(data);
+                await ref.set({ balance: 100, pass: pass, bets: {} });
                 currentUser = name;
                 localStorage.setItem('game_uid', name);
                 showGame();
             } else {
-                // အကောင့်ဟောင်း ဖြစ်နိုင်ခြေကို စစ်ဆေးခြင်း
-                if (!data.pass) {
-                    // Password မရှိသေးတဲ့ အကောင့်ဟောင်းဆိုရင် အခုထည့်တဲ့ password ကို အစားထိုးပေးမယ်
-                    await ref.update({ pass: pass });
-                    currentUser = name;
-                    localStorage.setItem('game_uid', name);
-                    showGame();
-                } else if (data.pass === pass) {
+                if (data.pass === pass) {
                     currentUser = name;
                     localStorage.setItem('game_uid', name);
                     showGame();
@@ -109,6 +104,7 @@
         document.getElementById('admin-login-btn').onclick = () => {
             if(prompt("Admin Password:") === 'admin123') {
                 isAdmin = true;
+                localStorage.setItem('is_admin', 'true');
                 showGame();
             }
         };
@@ -142,7 +138,7 @@
         }
 
         async function placeBet(idx) {
-            if(isAdmin) return;
+            if(isAdmin || !currentUser) return;
             const ref = db.ref('users/' + currentUser);
             const snap = await ref.once('value');
             const data = snap.val();
@@ -159,16 +155,19 @@
         document.getElementById('admin-add').onclick = () => {
             const name = document.getElementById('admin-target-user').value;
             const val = parseInt(document.getElementById('admin-coin-val').value);
-            db.ref('users/' + name + '/balance').transaction(b => (b || 0) + val);
+            if(name && val) db.ref('users/' + name + '/balance').transaction(b => (b || 0) + val);
         };
 
         document.getElementById('admin-sub').onclick = () => {
             const name = document.getElementById('admin-target-user').value;
             const val = parseInt(document.getElementById('admin-coin-val').value);
-            db.ref('users/' + name + '/balance').transaction(b => Math.max(0, (b || 0) - val));
+            if(name && val) db.ref('users/' + name + '/balance').transaction(b => Math.max(0, (b || 0) - val));
         };
 
-        document.getElementById('logout-btn').onclick = () => location.reload();
+        document.getElementById('logout-btn').onclick = () => {
+            localStorage.clear();
+            location.reload();
+        };
     </script>
 </body>
 </html>
