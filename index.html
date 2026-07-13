@@ -10,6 +10,7 @@
     <style>
         .hidden-ui { display: none !important; }
         .bet-badge { position: absolute; top: -5px; right: -5px; }
+        body { font-family: 'Inter', sans-serif; }
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen p-4">
@@ -18,8 +19,8 @@
 
         <!-- Login Screen -->
         <div id="login-screen" class="bg-white p-6 rounded-2xl shadow-xl max-w-md mx-auto">
-            <h2 class="text-lg font-bold mb-4 text-center">အကောင့်ဝင်ရောက်ရန်123</h2>
-            <input type="text" id="login-name" class="p-3 border rounded-lg w-full mb-2" placeholder="အမည် (English)">
+            <h2 class="text-lg font-bold mb-4 text-center">အကောင့်ဝင်ရောက်ရန်</h2>
+            <input type="text" id="login-name" class="p-3 border rounded-lg w-full mb-2" placeholder="အမည် (English name)">
             <input type="password" id="login-pass" class="p-3 border rounded-lg w-full mb-2" placeholder="စကားဝှက်">
             <button id="login-submit-btn" class="bg-blue-600 text-white w-full py-3 rounded-lg font-bold hover:bg-blue-700 transition">ဝင်မည် / အကောင့်အသစ်ဆောက်မည်</button>
             <button id="admin-login-trigger" class="w-full mt-4 bg-gray-800 text-white font-bold py-3 rounded-lg hover:bg-gray-900 transition">Admin ဝင်ရန်</button>
@@ -79,9 +80,11 @@
         let currentUserId = localStorage.getItem('game_uid');
         let isAdmin = localStorage.getItem('is_admin') === 'true';
 
+        // Load data from Firebase
         db.ref('users').on('value', (snap) => { users = snap.val() || {}; updateUI(); });
         db.ref('adminState').on('value', (snap) => { adminState = snap.val() || adminState; updateUI(); });
 
+        // Timer Logic
         setInterval(() => {
             const diff = adminState.nextReveal - Date.now();
             if (diff > 0) {
@@ -128,6 +131,7 @@
             db.ref('adminState').update({ nextReveal: Date.now() + 180000, lastWinnerIdx: winnerIdx });
         }
 
+        // UI Updates
         function updateUI() {
             if((currentUserId && users[currentUserId]) || isAdmin) {
                 document.getElementById('login-screen').classList.add('hidden-ui');
@@ -149,7 +153,7 @@
             
             if(adminState.lastWinnerIdx !== -1) {
                 document.getElementById('result-display').classList.remove('hidden-ui');
-                document.getElementById('result-display').innerText = "အနိုင်ရသူ - " + gameData[adminState.lastWinnerIdx];
+                document.getElementById('result-display').innerText = "ပြီးခဲ့သည့်ပွဲ အနိုင်ရသူ - " + gameData[adminState.lastWinnerIdx];
             } else {
                 document.getElementById('result-display').classList.add('hidden-ui');
             }
@@ -187,19 +191,28 @@
             });
         }
 
+        // Login Submit
         document.getElementById('login-submit-btn').onclick = () => {
             const n = document.getElementById('login-name').value.trim();
             const p = document.getElementById('login-pass').value.trim();
-            if(!n || !p) return;
+            if(!n || !p) { alert("အချက်အလက်ဖြည့်ပါ"); return; }
             const uid = n.replace(/[^a-z0-9]/gi, '');
+            
             if(!users[uid]) {
-                db.ref('users/' + uid).set({name: n, password: p, balance: 100, selections: {}});
+                // New User
+                db.ref('users/' + uid).set({name: n, password: p, balance: 100, selections: {}}).then(() => {
+                    localStorage.setItem('game_uid', uid);
+                    currentUserId = uid;
+                    updateUI();
+                });
             } else if(users[uid].password !== p) {
-                alert("Password မှားနေသည်"); return;
+                alert("Password မှားနေသည်");
+            } else {
+                // Login Existing
+                localStorage.setItem('game_uid', uid);
+                currentUserId = uid;
+                updateUI();
             }
-            localStorage.setItem('game_uid', uid);
-            currentUserId = uid;
-            updateUI();
         };
 
         document.getElementById('admin-login-trigger').onclick = () => {
