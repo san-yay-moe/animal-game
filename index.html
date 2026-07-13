@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="my">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multiplayer Animal Bet</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <style>
+        .bet-badge { position: absolute; top: -5px; right: -5px; background: red; color: white; border-radius: 50%; padding: 2px 6px; font-size: 10px; font-weight: bold; }
+        .hidden-ui { display: none !important; }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen p-4">
+    <div id="app" class="max-w-4xl mx-auto">
+        <h1 class="text-2xl font-bold text-center mb-4">တိရစ္ဆာန် လောင်းကစား (Firebase Multiplayer)</h1>
+        
+        <!-- Login Screen -->
+        <div id="login-screen" class="bg-white p-6 rounded-xl shadow-lg">
+            <h2 class="text-center font-bold mb-4">User Login</h2>
+            <div id="user-list" class="grid grid-cols-2 gap-2 mb-4"></div>
+            <input type="text" id="new-user-name" class="w-full p-2 border rounded mb-2" placeholder="အမည်">
+            <input type="password" id="new-user-pass" class="w-full p-2 border rounded mb-2" placeholder="စကားဝှက်">
+            <button id="add-user-btn" class="w-full bg-green-600 text-white p-2 rounded">User အသစ်ဖန်တီးမည်</button>
+        </div>
+
+        <!-- Game UI -->
+        <div id="game-ui" class="hidden-ui">
+            <div id="admin-panel" class="hidden-ui bg-gray-800 text-white p-4 rounded-xl mb-4">
+                <h3 class="text-yellow-400 font-bold mb-2">Admin Panel (ဂိမ်းဖွင့်ထားသည်)</h3>
+                <button id="admin-close-btn" class="w-full bg-red-600 p-2 rounded mb-2">ဂိမ်းပိတ်မည်</button>
+                <div id="admin-stats" class="text-xs"></div>
+            </div>
+            <div class="bg-white p-4 rounded-xl shadow flex justify-between mb-4">
+                <div id="user-info"></div>
+                <button id="logout-btn" class="bg-red-500 text-white px-3 py-1 rounded text-sm">Logout</button>
+            </div>
+            <div id="timer-display" class="bg-blue-600 text-white text-center p-2 rounded font-bold mb-4">--</div>
+            <div id="animal-grid" class="grid grid-cols-4 md:grid-cols-6 gap-2"></div>
+        </div>
+    </div>
+
+    <script>
+        // --- FIREBASE CONFIG ---
+        const firebaseConfig = {
+            apiKey: "AizaSyBbRZLUYhEvTHoCscb2ul_JURGsfBjCF4s",
+            authDomain: "birthday-62720.firebaseapp.com",
+            databaseURL: "https://birthday-62720-default-rtdb.firebaseio.com",
+            projectId: "birthday-62720",
+            storageBucket: "birthday-62720.appspot.com",
+            messagingSenderId: "915031456534",
+            appId: "1:915031456534:web:816308654f76be33b62e37"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        // --- GAME LOGIC ---
+        const gameData = ["မြင်း", "ရွှေနဂါး", "လိပ်ပြာ", "ဆတ်", "မြွေ", "မျောက်", "ပင့်ကူ", "ဗျိုင်း", "ငန်း", "ခရု", "ဆင်", "ရွှေငါး", "ကြက်", "လိပ်", "ကျီး", "ကျား", "ဝက်", "ဒေါင်း", "ယုန်", "ခွေး", "ပုစွန်", "ဆိတ်", "နွား", "ဖား", "ပျား", "ကြွက်", "ငါးရှဉ့်", "ကျားသစ်", "ခြင်္သေ့", "သမင်", "ဝံပုလွေ", "လင်းယုန်", "ကြောင်", "ပုရွက်ဆိတ်", "ပိုးကောင်", "ငါး"];
+        
+        // --- REALTIME LISTENERS ---
+        db.ref('game_state').on('value', (snap) => {
+            const state = snap.val();
+            if(state) updateUI(state);
+        });
+
+        function updateUI(state) {
+            const grid = document.getElementById('animal-grid');
+            grid.innerHTML = '';
+            gameData.forEach((name, i) => {
+                const btn = document.createElement('button');
+                btn.className = "relative p-4 bg-white shadow rounded text-center";
+                btn.innerHTML = `${name} <div class="bet-badge">${state.bets ? (state.bets[i] || 0) : 0}</div>`;
+                btn.onclick = () => {
+                    if(state.isOpen) db.ref('game_state/bets/' + i).transaction(val => (val || 0) + 1);
+                };
+                grid.appendChild(btn);
+            });
+        }
+
+        document.getElementById('add-user-btn').onclick = () => {
+            const name = document.getElementById('new-user-name').value;
+            db.ref('users').push({ name, balance: 0 });
+        };
+        
+        // Admin functions would go here...
+    </script>
+</body>
+</html>
