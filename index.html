@@ -21,7 +21,7 @@
 
         <!-- Login Screen -->
         <div id="login-screen" class="bg-white p-6 rounded-2xl shadow-xl max-w-md mx-auto">
-            <h2 class="text-lg font-bold mb-4 text-center">အကောင့်ဝင်ရန်</h2>
+            <h2 class="text-lg font-bold mb-4 text-center">ဥကကကက</h2>
             <div class="mb-6 space-y-2">
                 <input type="text" id="login-name" class="p-3 border rounded-lg w-full" placeholder="အမည် (User ID)">
                 <input type="password" id="login-pass" class="p-3 border rounded-lg w-full" placeholder="စကားဝှက်">
@@ -101,7 +101,6 @@
         let currentUserId = localStorage.getItem('game_uid');
         let isAdmin = localStorage.getItem('is_admin') === 'true';
 
-        // Firebase Listeners
         db.ref('users').on('value', (snap) => { users = snap.val() || {}; updateUI(); });
         db.ref('adminState').on('value', (snap) => { adminState = snap.val() || adminState; updateUI(); });
 
@@ -115,7 +114,6 @@
                 display.innerText = `${mins}:${secs < 10 ? '0' + secs : secs}`;
             } else {
                 display.innerText = "ရလဒ်ထွက်နေသည်...";
-                if (isAdmin && !adminState.isProcessing) autoCalculateResult();
             }
         }, 1000);
 
@@ -195,15 +193,20 @@
             
             if(delta > 0) {
                 if(balance >= 1) {
-                    db.ref(`users/${currentUserId}/balance`).set(balance - 1);
-                    db.ref(`users/${currentUserId}/selections/${i}`).set(currentBet + 1);
+                    // Update both in one transaction block effect
+                    db.ref(`users/${currentUserId}`).update({
+                        balance: balance - 1,
+                        [`selections/${i}`]: currentBet + 1
+                    });
                 } else {
                     showMsg("Coin မလုံလောက်ပါ", true);
                 }
             } else {
                 if(currentBet > 0) {
-                    db.ref(`users/${currentUserId}/balance`).set(balance + 1);
-                    db.ref(`users/${currentUserId}/selections/${i}`).set(currentBet - 1);
+                    db.ref(`users/${currentUserId}`).update({
+                        balance: balance + 1,
+                        [`selections/${i}`]: currentBet - 1
+                    });
                 }
             }
         }
@@ -211,41 +214,37 @@
         function renderGrid() {
             const grid = document.getElementById('animal-grid');
             if(!grid || (!currentUserId && !isAdmin)) return;
+            
+            // Only re-render if something changed or first render
+            if (grid.dataset.rendered === "true") {
+                // Update only numbers to avoid flicker
+                gameData.forEach((_, i) => {
+                    const span = document.getElementById(`count-${i}`);
+                    if(span) {
+                        const betCount = (users[currentUserId] && users[currentUserId].selections) ? (users[currentUserId].selections[i] || 0) : 0;
+                        span.innerText = betCount;
+                    }
+                });
+                return;
+            }
+
             grid.innerHTML = '';
+            grid.dataset.rendered = "true";
             
             gameData.forEach((name, i) => {
                 const betCount = (users[currentUserId] && users[currentUserId].selections) ? (users[currentUserId].selections[i] || 0) : 0;
                 const div = document.createElement('div');
-                div.className = "bg-white p-3 rounded-xl shadow-sm text-center border relative flex flex-col items-center";
+                div.className = "bg-white p-3 rounded-xl shadow-sm text-center border relative flex flex-col items-center select-none";
                 
-                const title = document.createElement('div');
-                title.className = "font-bold text-sm mb-2";
-                title.innerText = name;
-                div.appendChild(title);
-
-                if (!isAdmin) {
-                    const controls = document.createElement('div');
-                    controls.className = "flex gap-1 justify-center";
-                    
-                    const minus = document.createElement('button');
-                    minus.className = "px-3 py-1 bg-red-100 rounded text-red-700 font-bold";
-                    minus.innerText = "-";
-                    minus.addEventListener('click', () => changeBet(i, -1));
-                    
-                    const count = document.createElement('span');
-                    count.className = "px-2 font-bold";
-                    count.innerText = betCount;
-                    
-                    const plus = document.createElement('button');
-                    plus.className = "px-3 py-1 bg-green-100 rounded text-green-700 font-bold";
-                    plus.innerText = "+";
-                    plus.addEventListener('click', () => changeBet(i, 1));
-                    
-                    controls.appendChild(minus);
-                    controls.appendChild(count);
-                    controls.appendChild(plus);
-                    div.appendChild(controls);
-                }
+                div.innerHTML = `
+                    <div class="font-bold text-sm mb-2">${name}</div>
+                    ${!isAdmin ? `
+                    <div class="flex gap-2 items-center">
+                        <button class="px-3 py-1 bg-red-100 rounded text-red-700 font-bold active:scale-95 transition-transform" onclick="changeBet(${i}, -1)">-</button>
+                        <span class="px-2 font-bold min-w-[20px]" id="count-${i}">${betCount}</span>
+                        <button class="px-3 py-1 bg-green-100 rounded text-green-700 font-bold active:scale-95 transition-transform" onclick="changeBet(${i}, 1)">+</button>
+                    </div>` : ''}
+                `;
                 grid.appendChild(div);
             });
         }
