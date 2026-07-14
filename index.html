@@ -19,7 +19,7 @@
 
         <!-- Login Screen -->
         <div id="login-screen" class="bg-white p-6 rounded-2xl shadow-xl max-w-md mx-auto">
-            <h2 class="text-lg font-bold mb-4 text-center">* ဝင်ရောက်ရန်</h2>
+            <h2 class="text-lg font-bold mb-4 text-center">ဝင်ရောက်ရန်</h2>
             <div id="user-list" class="grid grid-cols-2 gap-2 mb-6"></div>
             <div class="border-t pt-4">
                 <input type="text" id="new-user-name" class="p-3 border rounded-lg w-full mb-2" placeholder="အမည်သစ်">
@@ -39,16 +39,14 @@
                 <button id="logout-btn" class="bg-red-50 text-red-600 px-4 py-2 rounded-lg font-bold text-sm hover:bg-red-100 transition">Logout</button>
             </div>
 
-            <!-- Admin Panel -->
+            <!-- Admin Panel (Only for Admin) -->
             <div id="admin-panel" class="hidden-ui bg-gray-900 text-white p-6 rounded-2xl mb-6 shadow-xl">
                 <h3 class="font-bold text-yellow-400 mb-4 text-lg">Admin Panel</h3>
-                <div class="pt-4 border-t border-gray-700">
-                    <select id="user-select-admin" class="text-black w-full p-3 mb-3 rounded-lg"></select>
-                    <input type="number" id="coin-amount" class="text-black w-full p-3 mb-3 rounded-lg" placeholder="Coin ပမာဏ">
-                    <div class="flex gap-3">
-                        <button id="add-coin-btn" class="flex-1 bg-blue-600 py-3 rounded-xl font-bold">ထည့်</button>
-                        <button id="sub-coin-btn" class="flex-1 bg-orange-600 py-3 rounded-xl font-bold">နုတ်</button>
-                    </div>
+                <select id="user-select-admin" class="text-black w-full p-3 mb-3 rounded-lg"></select>
+                <input type="number" id="coin-amount" class="text-black w-full p-3 mb-3 rounded-lg" placeholder="Coin ပမာဏ">
+                <div class="flex gap-3">
+                    <button id="add-coin-btn" class="flex-1 bg-blue-600 py-3 rounded-xl font-bold">ထည့်</button>
+                    <button id="sub-coin-btn" class="flex-1 bg-orange-600 py-3 rounded-xl font-bold">နုတ်</button>
                 </div>
             </div>
 
@@ -83,6 +81,7 @@
         let currentUserId = localStorage.getItem('game_uid');
         let isAdmin = localStorage.getItem('is_admin') === 'true';
 
+        // Firebase Sync
         db.ref('users').on('value', (snap) => { users = snap.val() || {}; updateUI(); });
         db.ref('adminState').on('value', (snap) => { adminState = snap.val() || adminState; updateUI(); });
 
@@ -97,8 +96,8 @@
                 display.innerText = `${mins}:${secs < 10 ? '0' + secs : secs}`;
             } else {
                 display.innerText = "ရလဒ်ထွက်နေသည်...";
+                // Admin triggers calculation automatically
                 if(isAdmin) {
-                    // Automatically trigger calculation if time is up
                     processGame();
                 }
             }
@@ -122,6 +121,7 @@
             let multiplier = 0;
 
             if (totalBets > 30) {
+                // Logic: Find min bet
                 let minVal = Infinity;
                 gameData.forEach((_, i) => {
                     if (animalBets[i] > 0 && animalBets[i] < minVal) {
@@ -131,16 +131,21 @@
                 });
                 multiplier = 27;
             } else {
+                // Logic: Find zero bet
                 let zeros = [];
                 gameData.forEach((_, i) => { if(animalBets[i] === 0) zeros.push(i); });
                 winningIdx = zeros[Math.floor(Math.random() * zeros.length)];
                 multiplier = 0;
             }
 
+            // Distribute winnings
             Object.keys(users).forEach(uid => {
                 const win = (users[uid].selections && users[uid].selections[winningIdx]) ? (users[uid].selections[winningIdx] * multiplier) : 0;
-                if(win > 0) db.ref(`users/${uid}/balance`).transaction(b => (b || 0) + win);
-                db.ref(`users/${uid}/selections`).set({});
+                if(win > 0) {
+                    const newBal = (users[uid].balance || 0) + win;
+                    db.ref(`users/${uid}/balance`).set(newBal);
+                }
+                db.ref(`users/${uid}/selections`).remove();
             });
             
             db.ref('adminState').set({ 
@@ -154,7 +159,7 @@
                 document.getElementById('login-screen').classList.add('hidden-ui');
                 document.getElementById('game-ui').classList.remove('hidden-ui');
                 if(isAdmin) document.getElementById('admin-panel').classList.remove('hidden-ui');
-                if(!isAdmin && users[currentUserId]) {
+                if(users[currentUserId]) {
                     document.getElementById('current-user-display').innerText = "User: " + users[currentUserId].name;
                     document.getElementById('coin-balance').innerText = users[currentUserId].balance || 0;
                 }
@@ -213,20 +218,19 @@
                 div.onclick = () => {
                     if (isAdmin || !currentUserId || adminState.nextReveal <= Date.now()) return;
                     if ((user.balance || 0) < 1) return;
-                    db.ref(`users/${currentUserId}/balance`).transaction(b => (b || 0) - 1);
-                    db.ref(`users/${currentUserId}/selections/${i}`).transaction(b => (b || 0) + 1);
+                    db.ref(`users/${currentUserId}/balance`).set((user.balance || 0) - 1);
+                    db.ref(`users/${currentUserId}/selections/${i}`).set((betCount + 1));
                 };
                 grid.appendChild(div);
             });
         }
 
-        // Administrative Event Listeners
         document.getElementById('add-user-btn').onclick = () => {
             const n = document.getElementById('new-user-name').value.trim();
             const p = document.getElementById('new-user-pass').value.trim();
-            if(!n || !p) return alert("အမည်နှင့် စကားဝှက်ထည့်ပါ");
+            if(!n || !p) return;
             const uid = n.replace(/[^a-z0-9]/gi, '');
-            db.ref('users/' + uid).set({name: n, password: p, balance: 100, selections: {}});
+            db.ref('users/' + uid).set({name: n, password: p, balance: 100});
             localStorage.setItem('game_uid', uid);
             currentUserId = uid;
             updateUI();
@@ -242,13 +246,13 @@
         document.getElementById('add-coin-btn').onclick = () => {
             const uid = document.getElementById('user-select-admin').value;
             const amt = parseInt(document.getElementById('coin-amount').value);
-            db.ref(`users/${uid}/balance`).transaction(b => (b || 0) + amt);
+            db.ref(`users/${uid}/balance`).set((users[uid].balance || 0) + amt);
         };
 
         document.getElementById('sub-coin-btn').onclick = () => {
             const uid = document.getElementById('user-select-admin').value;
             const amt = parseInt(document.getElementById('coin-amount').value);
-            db.ref(`users/${uid}/balance`).transaction(b => (b || 0) - amt);
+            db.ref(`users/${uid}/balance`).set((users[uid].balance || 0) - amt);
         };
 
         document.getElementById('logout-btn').onclick = () => {
