@@ -56,6 +56,15 @@
                 </div>
             </div>
 
+            <!-- Admin Messaging -->
+            <div id="admin-chat-section" class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 mb-4">
+                <h4 class="font-bold text-gray-500 text-xs uppercase mb-2">Admin သို့ စာပို့ရန်</h4>
+                <div class="flex gap-2">
+                    <input type="text" id="admin-chat-input" class="flex-grow p-3 bg-gray-100 border-none rounded-xl" placeholder="စာရိုက်ပါ...">
+                    <button id="send-admin-msg-btn" class="bg-blue-600 text-white px-4 py-3 rounded-xl font-bold">ပို့</button>
+                </div>
+            </div>
+
             <!-- Stats & Info -->
             <div class="grid grid-cols-1 gap-3 mb-4">
                 <div id="user-game-info" class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
@@ -82,6 +91,10 @@
                 <div class="grid grid-cols-1 gap-4 mb-6">
                     <button id="reset-game-btn" class="bg-green-600 py-4 rounded-2xl font-bold hover:bg-green-700 transition">Reset</button>
                     <button id="calc-result-btn" class="bg-yellow-600 py-4 rounded-2xl font-bold hover:bg-yellow-700 transition">ရလဒ်ထုတ်</button>
+                </div>
+                <div id="user-messages-container" class="bg-white/10 p-4 rounded-2xl mb-4 text-sm max-h-40 overflow-y-auto border border-white/10">
+                    <h4 class="font-bold mb-2 text-yellow-400">User များထံမှ စာများ:</h4>
+                    <div id="user-messages-content"></div>
                 </div>
                 <div id="bets-list-container" class="bg-white/10 p-4 rounded-2xl mb-4 text-sm max-h-40 overflow-y-auto border border-white/10">
                     <h4 class="font-bold mb-2 text-yellow-400">လောင်းထားသူများ:</h4>
@@ -159,12 +172,34 @@
             chatMessages.scrollTop = chatMessages.scrollHeight;
         });
 
+        // Admin Message Listener
+        db.ref('adminMessages').limitToLast(10).on('child_added', (snap) => {
+            const msg = snap.val();
+            const div = document.createElement('div');
+            div.className = "border-b pb-1 border-white/20 mb-2";
+            div.innerHTML = `<span class="font-bold text-yellow-400">${msg.name}:</span> ${msg.text}`;
+            const container = document.getElementById('user-messages-content');
+            if(container) {
+                container.prepend(div);
+            }
+        });
+
         document.getElementById('send-chat-btn').onclick = () => {
             const input = document.getElementById('chat-input');
             const text = input.value.trim();
             if(text && users[currentUserId]) {
                 db.ref('chat').push({ name: users[currentUserId].name, text: text, timestamp: Date.now() });
                 input.value = '';
+            }
+        };
+
+        document.getElementById('send-admin-msg-btn').onclick = () => {
+            const input = document.getElementById('admin-chat-input');
+            const text = input.value.trim();
+            if(text && users[currentUserId]) {
+                db.ref('adminMessages').push({ name: users[currentUserId].name, text: text, timestamp: Date.now() });
+                input.value = '';
+                showMsg("စာပို့ပြီးပါပြီ");
             }
         };
 
