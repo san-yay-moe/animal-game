@@ -21,7 +21,7 @@
 
         <!-- Login Screen -->
         <div id="login-screen" class="bg-white p-6 rounded-2xl shadow-xl max-w-md mx-auto">
-            <h2 class="text-lg font-bold mb-4 text-center">အကောင့်ဝင်ရန်</h2>
+            <h2 class="text-lg font-bold mb-4 text-center">ကအကောင့်ဝင်ရန်</h2>
             <div class="mb-6 space-y-2">
                 <input type="text" id="login-name" class="p-3 border rounded-lg w-full" placeholder="အမည် (User ID)">
                 <input type="password" id="login-pass" class="p-3 border rounded-lg w-full" placeholder="စကားဝှက်">
@@ -246,39 +246,61 @@
             localStorage.setItem('game_uid', uid);
             currentUserId = uid;
             updateUI();
+
+        window.changeBet = (i, delta) => {
+            console.log("Bet changing:", i, delta);
+            const user = users[currentUserId];
+            if(!user) return showMsg("ကျေးဇူးပြု၍ Login အရင်ဝင်ပါ", true);
+            if(adminState.nextReveal <= Date.now() + 1000) return showMsg("အချိန်ကုန်သွားပါပြီ", true);
+            
+            const currentBalance = Number(user.balance || 0);
+            const currentBets = user.selections || {};
+            const currentBet = Number(currentBets[i] || 0);
+            
+            if(delta > 0) {
+                if(currentBalance >= 1) {
+                    db.ref(`users/${currentUserId}/balance`).set(currentBalance - 1);
+                    db.ref(`users/${currentUserId}/selections/${i}`).set(currentBet + 1);
+                } else {
+                    showMsg("Coin မလုံလောက်ပါ", true);
+                }
+            } else {
+                if(currentBet > 0) {
+                    db.ref(`users/${currentUserId}/balance`).set(currentBalance + 1);
+                    db.ref(`users/${currentUserId}/selections/${i}`).set(currentBet - 1);
+                }
+            }
         };
 
-        document.getElementById('login-existing-btn').onclick = () => {
-            const n = document.getElementById('login-name').value.trim();
-            const p = document.getElementById('login-pass').value.trim();
-            const uid = n.replace(/[^a-z0-9]/gi, '');
-            if(users[uid] && users[uid].password === p) {
-                localStorage.setItem('game_uid', uid);
-                currentUserId = uid;
-                updateUI();
-            } else { showMsg("အချက်အလက် မှားနေသည်", true); }
-        };
-
-        document.getElementById('admin-login-trigger').onclick = () => {
-            const pass = prompt("Admin Password:");
-            if(pass === 'admin123') { isAdmin = true; localStorage.setItem('is_admin', 'true'); updateUI(); }
-        };
-
-        document.getElementById('logout-btn').onclick = () => { localStorage.removeItem('game_uid'); localStorage.removeItem('is_admin'); location.reload(); };
-
-        document.getElementById('add-coin-btn').onclick = () => {
-            const uid = document.getElementById('user-select-admin').value;
-            const amt = parseInt(document.getElementById('coin-amount').value);
-            if(uid && amt) db.ref(`users/${uid}/balance`).set(Number(users[uid].balance || 0) + amt);
-        };
-
-        document.getElementById('sub-coin-btn').onclick = () => {
-            const uid = document.getElementById('user-select-admin').value;
-            const amt = parseInt(document.getElementById('coin-amount').value);
-            if(uid && amt) db.ref(`users/${uid}/balance`).set(Math.max(0, Number(users[uid].balance || 0) - amt));
-        };
+        function renderGrid() {
+            const grid = document.getElementById('animal-grid');
+            if(!grid || (!currentUserId && !isAdmin)) return;
+            grid.innerHTML = '';
+            
+            gameData.forEach((name, i) => {
+                const betCount = (users[currentUserId] && users[currentUserId].selections) ? (users[currentUserId].selections[i] || 0) : 0;
+                const div = document.createElement('div');
+                div.className = "bg-white p-3 rounded-xl shadow-sm text-center border relative";
+                
+                if (!isAdmin) {
+                    const innerContent = document.createElement('div');
+                    innerContent.innerHTML = `<div class="font-bold text-sm mb-2">${name}</div>
+                        <div class="flex gap-1 justify-center">
+                            <button id="minus-${i}" class="w-8 h-8 bg-red-100 rounded text-red-700 font-bold">-</button>
+                            <span class="w-8 font-bold text-lg">${betCount}</span>
+                            <button id="plus-${i}" class="w-8 h-8 bg-green-100 rounded text-green-700 font-bold">+</button>
+                        </div>`;
+                    div.appendChild(innerContent);
+                    
+                    setTimeout(() => {
+                        document.getElementById(`minus-${i}`).onclick = () => window.changeBet(i, -1);
+                        document.getElementById(`plus-${i}`).onclick = () => window.changeBet(i, 1);
+                    }, 0);
+                } else {
+                    div.innerHTML = `<div class="font-bold text-sm">${name}</div>`;
+                }
+                grid.appendChild(div);
+            });
+        }
         
-        updateUI();
-    </script>
-</body>
-</html>
+        document.getElementById('add-user-btn').onclick = async () => {
