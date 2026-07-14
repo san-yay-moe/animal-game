@@ -9,70 +9,46 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <style>
         .hidden-ui { display: none !important; }
-        .bet-badge { position: absolute; top: -5px; right: -5px; }
-        body { font-family: 'Inter', sans-serif; }
+        body { font-family: sans-serif; }
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen p-4">
-    <div id="message-box" class="fixed top-5 right-5 z-50 hidden p-4 rounded shadow-lg text-white"></div>
-
     <div id="app" class="max-w-4xl mx-auto">
         <h1 class="text-2xl font-bold text-gray-800 mb-6 text-center">တိရစ္ဆာန် လောင်းကစား (၃၆ ကောင်)</h1>
 
         <!-- Login Screen -->
         <div id="login-screen" class="bg-white p-6 rounded-2xl shadow-xl max-w-md mx-auto">
             <h2 class="text-lg font-bold mb-4 text-center">အကောင့်ဝင်ရန်</h2>
-            <div class="mb-6 space-y-2">
-                <input type="text" id="login-name" class="p-3 border rounded-lg w-full" placeholder="အမည် (User ID)">
-                <input type="password" id="login-pass" class="p-3 border rounded-lg w-full" placeholder="စကားဝှက်">
-                <button id="login-existing-btn" class="bg-blue-600 text-white w-full py-3 rounded-lg font-bold hover:bg-blue-700 transition">ဝင်မည်</button>
-            </div>
-            <button id="admin-login-trigger" class="w-full bg-gray-800 text-white font-bold py-3 rounded-lg hover:bg-gray-900 transition">Admin ဝင်ရောက်ရန်</button>
+            <input type="text" id="login-name" class="p-3 border rounded-lg w-full mb-2" placeholder="အမည် (User ID)">
+            <input type="password" id="login-pass" class="p-3 border rounded-lg w-full mb-4" placeholder="စကားဝှက်">
+            <button id="login-existing-btn" class="bg-blue-600 text-white w-full py-3 rounded-lg font-bold mb-2">ဝင်မည်</button>
+            <button id="admin-login-trigger" class="w-full bg-gray-800 text-white font-bold py-3 rounded-lg">Admin ဝင်ရောက်ရန်</button>
         </div>
 
         <!-- Game UI -->
         <div id="game-ui" class="hidden-ui">
-            <div class="bg-white p-4 rounded-2xl shadow-sm mb-6 flex justify-between items-center border border-gray-100">
+            <div class="bg-white p-4 rounded-2xl shadow-sm mb-6 flex justify-between items-center">
                 <div>
-                    <p id="current-user-display" class="font-bold text-gray-700"></p>
-                    <p class="text-blue-600 font-bold text-lg">Coins: <span id="coin-balance">0</span></p>
+                    <p id="current-user-display" class="font-bold"></p>
+                    <p class="text-blue-600 font-bold">Coins: <span id="coin-balance">0</span></p>
                 </div>
-                <button id="logout-btn" class="bg-red-50 text-red-600 px-4 py-2 rounded-lg font-bold text-sm hover:bg-red-100 transition">Logout</button>
+                <button id="logout-btn" class="bg-red-500 text-white px-4 py-2 rounded-lg text-sm">Logout</button>
             </div>
 
-            <!-- User Bet Summary -->
-            <div id="user-game-info" class="bg-white p-4 rounded-xl shadow-sm mb-6 border border-blue-100">
-                <h4 class="font-bold text-gray-600 mb-1 text-sm">လက်ရှိလောင်းထားမှုစုစုပေါင်း: <span id="current-bet-count" class="text-red-600">0</span> coin</h4>
-                <div id="win-loss-status" class="text-sm font-bold mt-2 text-gray-500">နောက်ဆုံးပွဲရလဒ် စောင့်ဆိုင်းနေသည်...</div>
-            </div>
-
-            <!-- Admin Panel -->
-            <div id="admin-panel" class="hidden-ui bg-gray-900 text-white p-6 rounded-2xl mb-6 shadow-xl">
-                <h3 class="font-bold text-yellow-400 mb-4 text-lg">Admin Panel</h3>
+            <div id="admin-panel" class="hidden-ui bg-gray-900 text-white p-6 rounded-2xl mb-6">
+                <h3 class="font-bold text-yellow-400 mb-4">Admin Panel</h3>
                 <div class="grid grid-cols-2 gap-4 mb-4">
-                    <button id="reset-game-btn" class="bg-green-600 py-3 rounded-xl font-bold">ဂိမ်းအသစ်ဖွင့်မည် (Reset)</button>
+                    <button id="reset-game-btn" class="bg-green-600 py-3 rounded-xl font-bold">Reset</button>
                     <button id="calc-result-btn" class="bg-yellow-600 py-3 rounded-xl font-bold">ရလဒ်ထုတ်မည်</button>
                 </div>
-                
-                <!-- လောင်းထားမှုများစာရင်း -->
-                <div id="bets-list-container" class="bg-white text-black p-3 rounded-lg mb-4 text-sm max-h-40 overflow-y-auto">
-                    <h4 class="font-bold mb-2">လက်ရှိ လောင်းထားမှုများ -</h4>
-                    <div id="bets-list-content"></div>
-                </div>
-
-                <select id="user-select-admin" class="text-black w-full p-3 mb-3 rounded-lg"></select>
-                <input type="number" id="coin-amount" class="text-black w-full p-3 mb-3 rounded-lg" placeholder="Coin ပမာဏ">
-                <div class="flex gap-3 mb-3">
-                    <button id="add-coin-btn" class="flex-1 bg-blue-600 py-3 rounded-xl font-bold">ထည့်</button>
-                    <button id="sub-coin-btn" class="flex-1 bg-orange-600 py-3 rounded-xl font-bold">နုတ်</button>
+                <select id="user-select-admin" class="text-black w-full p-3 mb-2 rounded-lg"></select>
+                <input type="number" id="coin-amount" class="text-black w-full p-3 mb-2 rounded-lg" placeholder="Amount">
+                <div class="flex gap-2">
+                    <button id="add-coin-btn" class="flex-1 bg-blue-600 py-2 rounded-lg">Add</button>
+                    <button id="sub-coin-btn" class="flex-1 bg-orange-600 py-2 rounded-lg">Sub</button>
                 </div>
             </div>
 
-            <div class="bg-blue-50 p-4 rounded-xl text-center font-bold mb-6 border border-blue-100">
-                အချိန် - <span id="timer-display" class="text-blue-800 text-2xl font-mono">--:--</span>
-            </div>
-
-            <div id="result-display" class="hidden-ui bg-yellow-100 p-4 rounded-xl text-center font-bold text-lg mb-6 border border-yellow-300"></div>
             <div class="grid grid-cols-3 md:grid-cols-6 gap-3" id="animal-grid"></div>
         </div>
     </div>
@@ -91,186 +67,22 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        function showMsg(text, isError = false) {
-            const box = document.getElementById('message-box');
-            box.innerText = text;
-            box.className = `fixed top-5 right-5 z-50 p-4 rounded shadow-lg text-white ${isError ? 'bg-red-600' : 'bg-green-600'}`;
-            box.classList.remove('hidden-ui');
-            setTimeout(() => box.classList.add('hidden-ui'), 3000);
-        }
-
         const gameData = ["မြင်း", "ရွှေနဂါး", "လိပ်ပြာ", "ဆတ်", "မြွေ", "မျောက်", "ပင့်ကူ", "ဗျိုင်း", "ငန်း", "ခရု", "ဆင်", "ရွှေငါး", "ကြက်", "လိပ်", "ကျီး", "ကျား", "ဝက်", "ဒေါင်း", "ယုန်", "ခွေး", "ပုစွန်", "ဆိတ်", "နွား", "ဖား", "ပျား", "ကြွက်", "ငါးရှဉ့်", "ကျားသစ်", "ခြင်္သေ့", "သမင်", "ဝံပုလွေ", "လင်းယုန်", "ကြောင်", "ပုရွက်ဆိတ်", "ပိုးကောင်", "ငါး"];
 
         let users = {};
-        let adminState = { nextReveal: 0, processed: true, lastWinner: "" };
         let currentUserId = localStorage.getItem('game_uid');
         let isAdmin = localStorage.getItem('is_admin') === 'true';
 
         db.ref('users').on('value', (snap) => { users = snap.val() || {}; updateUI(); });
-        db.ref('adminState').on('value', (snap) => { adminState = snap.val() || { nextReveal: 0, processed: true }; updateUI(); });
-
-        // Timer Logic updated for better clarity
-        setInterval(() => {
-            const display = document.getElementById('timer-display');
-            if(!display) return;
-            const diff = adminState.nextReveal - Date.now();
-            
-            if (diff > 0) {
-                const mins = Math.floor(diff / 60000);
-                const secs = Math.floor((diff % 60000) / 1000);
-                display.innerText = `${mins}:${secs < 10 ? '0' + secs : secs}`;
-            } else {
-                display.innerText = "ရလဒ်ထွက်ရှိနေသည်...";
-                // ဘရောင်ဆာဖွင့်ထားစဉ် အချိန်ပြည့်ပါက အလိုအလျောက်တွက်ချက်ရန်
-                if (!adminState.processed) {
-                    calculateResults(true);
-                }
-            }
-        }, 1000);
-
-        // Load ဖြစ်ချိန်တွင် အချိန်ကျော်လွန်နေပါက ချက်ချင်းစစ်ဆေးရန်
-        window.addEventListener('load', () => {
-            db.ref('adminState').once('value', (snap) => {
-                const state = snap.val();
-                if (state && !state.processed && Date.now() >= state.nextReveal) {
-                    calculateResults(true);
-                }
-            });
-        });
-
-        function calculateResults(isAuto = false) {
-            // Transaction အသုံးပြု၍ တစ်ပြိုင်နက်တည်း ရလဒ်များစွာ မထွက်စေရန်
-            db.ref('adminState').transaction((state) => {
-                if (!state || state.processed) return; 
-                if (Date.now() < state.nextReveal) return;
-                
-                return {
-                    ...state,
-                    processed: true
-                };
-            }, (error, committed, snapshot) => {
-                if (committed) {
-                    performGameLogic();
-                }
-            });
-        }
-
-        function performGameLogic() {
-            let totalBets = new Array(gameData.length).fill(0);
-            Object.keys(users).forEach(uid => {
-                if(users[uid].selections) {
-                    Object.keys(users[uid].selections).forEach(idx => {
-                        totalBets[idx] += users[uid].selections[idx];
-                    });
-                }
-            });
-
-            let zeroBetIndices = [];
-            totalBets.forEach((val, idx) => { if(val === 0) zeroBetIndices.push(idx); });
-
-            let winnerIdx;
-            if(zeroBetIndices.length > 0) {
-                winnerIdx = zeroBetIndices[Math.floor(Math.random() * zeroBetIndices.length)];
-            } else {
-                let minVal = Math.min(...totalBets);
-                let minIndices = [];
-                totalBets.forEach((val, idx) => { if(val === minVal) minIndices.push(idx); });
-                winnerIdx = minIndices[Math.floor(Math.random() * minIndices.length)];
-            }
-
-            let winnerName = gameData[winnerIdx];
-            
-            Object.keys(users).forEach(uid => {
-                const user = users[uid];
-                let winnings = 0;
-                if(user.selections && user.selections[winnerIdx]) {
-                    winnings = user.selections[winnerIdx] * 27;
-                }
-                
-                db.ref(`users/${uid}`).update({
-                    balance: (user.balance || 0) + winnings,
-                    selections: null
-                });
-            });
-
-            db.ref('adminState').update({
-                nextReveal: Date.now() + 180000,
-                lastWinner: winnerName,
-                processed: true 
-            });
-
-            setTimeout(() => { db.ref('adminState').update({ processed: false }); }, 5000);
-        }
-
-        function changeBet(i, delta) {
-            const user = users[currentUserId];
-            if(!user || adminState.nextReveal <= Date.now()) return;
-            
-            const currentBet = (user.selections && user.selections[i]) ? user.selections[i] : 0;
-            const balance = Number(user.balance || 0);
-            
-            if(delta > 0 && balance >= 1) {
-                db.ref(`users/${currentUserId}`).update({
-                    balance: balance - 1,
-                    [`selections/${i}`]: currentBet + 1
-                });
-            } else if(delta < 0 && currentBet > 0) {
-                db.ref(`users/${currentUserId}`).update({
-                    balance: balance + 1,
-                    [`selections/${i}`]: currentBet - 1
-                });
-            }
-        }
-
-        function renderGrid() {
-            const grid = document.getElementById('animal-grid');
-            if(!grid) return;
-            grid.innerHTML = '';
-            
-            gameData.forEach((name, i) => {
-                const btn = document.createElement('button');
-                btn.className = "p-3 bg-white border border-gray-200 rounded-xl shadow-sm text-sm hover:bg-blue-50 transition";
-                btn.innerText = name;
-                btn.onclick = () => changeBet(i, 1);
-                grid.appendChild(btn);
-            });
-        }
 
         function updateUI() {
-            if(currentUserId && !users[currentUserId] && !isAdmin) { localStorage.removeItem('game_uid'); currentUserId = null; }
             if(currentUserId || isAdmin) {
                 document.getElementById('login-screen').classList.add('hidden-ui');
                 document.getElementById('game-ui').classList.remove('hidden-ui');
-                
-                // Show Bet summary and win/loss
-                const user = users[currentUserId];
-                if(user) {
-                    const totalBet = user.selections ? Object.values(user.selections).reduce((a, b) => a + b, 0) : 0;
-                    document.getElementById('current-bet-count').innerText = totalBet;
-                    
-                    const statusDiv = document.getElementById('win-loss-status');
-                    if(adminState.lastWinner) {
-                        const winIdx = gameData.indexOf(adminState.lastWinner);
-                        if(user.selections && user.selections[winIdx]) {
-                            statusDiv.innerHTML = `<span class="text-green-600">🎉 သင်နိုင်ပါသည်! အနိုင်ရငွေ: ${user.selections[winIdx] * 27}</span>`;
-                        } else {
-                            statusDiv.innerHTML = `<span class="text-gray-500">နောက်ဆုံးပွဲရလဒ် - ${adminState.lastWinner} (မနိုင်ပါ)</span>`;
-                        }
-                    }
-                }
-
-                if(isAdmin) {
-                    document.getElementById('admin-panel').classList.remove('hidden-ui');
-                    const select = document.getElementById('user-select-admin');
-                    select.innerHTML = Object.keys(users).map(uid => `<option value="${uid}">${users[uid].name}</option>`).join('');
-                }
+                if(isAdmin) document.getElementById('admin-panel').classList.remove('hidden-ui');
                 if(!isAdmin && users[currentUserId]) {
                     document.getElementById('current-user-display').innerText = "User: " + users[currentUserId].name;
                     document.getElementById('coin-balance').innerText = users[currentUserId].balance || 0;
-                }
-                if(adminState.lastWinner) {
-                    document.getElementById('result-display').classList.remove('hidden-ui');
-                    document.getElementById('result-display').innerText = "နောက်ဆုံးရလဒ် - " + adminState.lastWinner;
                 }
             } else {
                 document.getElementById('login-screen').classList.remove('hidden-ui');
@@ -279,26 +91,44 @@
             renderGrid();
         }
 
-        document.getElementById('add-coin-btn').onclick = () => {
-            const uid = document.getElementById('user-select-admin').value;
-            const amt = parseInt(document.getElementById('coin-amount').value);
-            if(uid && amt) db.ref(`users/${uid}/balance`).set((users[uid].balance || 0) + amt);
-        };
-        document.getElementById('sub-coin-btn').onclick = () => {
-            const uid = document.getElementById('user-select-admin').value;
-            const amt = parseInt(document.getElementById('coin-amount').value);
-            if(uid && amt) db.ref(`users/${uid}/balance`).set(Math.max(0, (users[uid].balance || 0) - amt));
-        };
-        document.getElementById('reset-game-btn').onclick = () => db.ref('adminState').update({ nextReveal: Date.now() + 180000, processed: false });
-        document.getElementById('calc-result-btn').onclick = () => calculateResults();
+        function renderGrid() {
+            const grid = document.getElementById('animal-grid');
+            grid.innerHTML = '';
+            gameData.forEach((name, i) => {
+                const btn = document.createElement('button');
+                btn.className = "p-3 bg-white border rounded shadow text-sm hover:bg-blue-50";
+                btn.innerText = name;
+                btn.onclick = () => {
+                    if(isAdmin || !currentUserId) return;
+                    let user = users[currentUserId];
+                    if((user.balance || 0) >= 1) {
+                        db.ref(`users/${currentUserId}/balance`).set((user.balance || 0) - 1);
+                        db.ref(`users/${currentUserId}/selections/${i}`).set(((user.selections && user.selections[i]) || 0) + 1);
+                    }
+                };
+                grid.appendChild(btn);
+            });
+        }
+
         document.getElementById('login-existing-btn').onclick = () => {
             const n = document.getElementById('login-name').value.trim();
             const p = document.getElementById('login-pass').value.trim();
             const uid = n.replace(/[^a-z0-9]/gi, '');
-            if(users[uid] && users[uid].password === p) { localStorage.setItem('game_uid', uid); currentUserId = uid; updateUI(); }
-            else showMsg("အမည် သို့မဟုတ် စကားဝှက် မှားနေသည်", true);
+            if(users[uid] && users[uid].password === p) { 
+                localStorage.setItem('game_uid', uid); 
+                currentUserId = uid; 
+                updateUI(); 
+            }
         };
-        document.getElementById('admin-login-trigger').onclick = () => { if(prompt("Admin Password:") === 'admin123') { isAdmin = true; localStorage.setItem('is_admin', 'true'); updateUI(); } };
+
+        document.getElementById('admin-login-trigger').onclick = () => {
+            if(prompt("Admin Password:") === 'admin123') { 
+                isAdmin = true; 
+                localStorage.setItem('is_admin', 'true'); 
+                updateUI(); 
+            }
+        };
+
         document.getElementById('logout-btn').onclick = () => { localStorage.clear(); location.reload(); };
 
         updateUI();
