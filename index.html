@@ -19,9 +19,8 @@
     <div id="app" class="max-w-4xl mx-auto">
         <h1 class="text-2xl font-bold text-gray-800 mb-6 text-center">တိရစ္ဆာန် လောင်းကစား (၃၆ ကောင်)</h1>
 
-        <!-- Login Screen -->
         <div id="login-screen" class="bg-white p-6 rounded-2xl shadow-xl max-w-md mx-auto">
-            <h2 class="text-lg font-bold mb-4 text-center">ဥကကကက</h2>
+            <h2 class="text-lg font-bold mb-4 text-center">အကောင့်ဝင်ရန်</h2>
             <div class="mb-6 space-y-2">
                 <input type="text" id="login-name" class="p-3 border rounded-lg w-full" placeholder="အမည် (User ID)">
                 <input type="password" id="login-pass" class="p-3 border rounded-lg w-full" placeholder="စကားဝှက်">
@@ -38,7 +37,6 @@
             <button id="admin-login-trigger" class="w-full mt-6 bg-gray-800 text-white font-bold py-3 rounded-lg hover:bg-gray-900 transition">Admin ဝင်ရောက်ရန်</button>
         </div>
 
-        <!-- Game UI -->
         <div id="game-ui" class="hidden-ui">
             <div class="bg-white p-4 rounded-2xl shadow-sm mb-6 flex justify-between items-center border border-gray-100">
                 <div>
@@ -193,7 +191,6 @@
             
             if(delta > 0) {
                 if(balance >= 1) {
-                    // Update both in one transaction block effect
                     db.ref(`users/${currentUserId}`).update({
                         balance: balance - 1,
                         [`selections/${i}`]: currentBet + 1
@@ -215,21 +212,7 @@
             const grid = document.getElementById('animal-grid');
             if(!grid || (!currentUserId && !isAdmin)) return;
             
-            // Only re-render if something changed or first render
-            if (grid.dataset.rendered === "true") {
-                // Update only numbers to avoid flicker
-                gameData.forEach((_, i) => {
-                    const span = document.getElementById(`count-${i}`);
-                    if(span) {
-                        const betCount = (users[currentUserId] && users[currentUserId].selections) ? (users[currentUserId].selections[i] || 0) : 0;
-                        span.innerText = betCount;
-                    }
-                });
-                return;
-            }
-
             grid.innerHTML = '';
-            grid.dataset.rendered = "true";
             
             gameData.forEach((name, i) => {
                 const betCount = (users[currentUserId] && users[currentUserId].selections) ? (users[currentUserId].selections[i] || 0) : 0;
@@ -240,16 +223,20 @@
                     <div class="font-bold text-sm mb-2">${name}</div>
                     ${!isAdmin ? `
                     <div class="flex gap-2 items-center">
-                        <button class="px-3 py-1 bg-red-100 rounded text-red-700 font-bold active:scale-95 transition-transform" onclick="changeBet(${i}, -1)">-</button>
+                        <button id="minus-${i}" class="px-3 py-1 bg-red-100 rounded text-red-700 font-bold active:scale-95 transition-transform">-</button>
                         <span class="px-2 font-bold min-w-[20px]" id="count-${i}">${betCount}</span>
-                        <button class="px-3 py-1 bg-green-100 rounded text-green-700 font-bold active:scale-95 transition-transform" onclick="changeBet(${i}, 1)">+</button>
+                        <button id="plus-${i}" class="px-3 py-1 bg-green-100 rounded text-green-700 font-bold active:scale-95 transition-transform">+</button>
                     </div>` : ''}
                 `;
                 grid.appendChild(div);
+
+                if (!isAdmin) {
+                    document.getElementById(`minus-${i}`).addEventListener('click', () => changeBet(i, -1));
+                    document.getElementById(`plus-${i}`).addEventListener('click', () => changeBet(i, 1));
+                }
             });
         }
         
-        // Admin Event Listeners
         document.getElementById('add-user-btn').addEventListener('click', async () => {
             const n = document.getElementById('new-user-name').value.trim();
             const p = document.getElementById('new-user-pass').value.trim();
