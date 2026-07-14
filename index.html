@@ -96,7 +96,6 @@
         db.ref('users').on('value', (snap) => { users = snap.val() || {}; updateUI(); });
         db.ref('adminState').on('value', (snap) => { adminState = snap.val() || { nextReveal: 0, processed: true }; updateUI(); });
 
-        // Automated Result Calculator (Runs on every client)
         setInterval(() => {
             const display = document.getElementById('timer-display');
             if(!display) return;
@@ -107,40 +106,48 @@
                 const secs = Math.floor((diff % 60000) / 1000);
                 display.innerText = `${mins}:${secs < 10 ? '0' + secs : secs}`;
             } else {
-                display.innerText = "ရလဒ်ထွက်ရှိနေသည်...";
-                // If timer is up and not processed yet, trigger calculation
+                display.innerText = "ရလဒ်တွက်ချက်နေသည်...";
                 if (!adminState.processed) {
-                    calculateResults(true); // true = auto-triggered
+                    calculateResults(true);
                 }
             }
         }, 1000);
 
         function calculateResults(isAuto = false) {
-            // Check if already processed to prevent duplicates
             if (adminState.processed) return;
 
             const winnerIdx = Math.floor(Math.random() * gameData.length);
             const winnerName = gameData[winnerIdx];
             
-            // Update users
+            // Payout Logic
             Object.keys(users).forEach(uid => {
                 const user = users[uid];
                 let winnings = 0;
                 if(user.selections && user.selections[winnerIdx]) {
                     winnings = user.selections[winnerIdx] * 36;
                 }
-                db.ref(`users/${uid}`).update({
-                    balance: (user.balance || 0) + winnings,
-                    selections: null
-                });
+                
+                // Only write to db if user actually made a bet, to save bandwidth
+                if(user.selections) {
+                    db.ref(`users/${uid}`).update({
+                        balance: (user.balance || 0) + winnings,
+                        selections: null // Reset bets
+                    });
+                }
             });
 
-            // Set state to processed and reset timer
+            // Set state to processed and auto-restart new round immediately
             db.ref('adminState').update({
-                nextReveal: Date.now() + 180000, // 3 mins later
+                nextReveal: Date.now() + 180000, 
                 lastWinner: winnerName,
-                processed: true
+                processed: true 
             });
+
+            // Automatically unlock processing for the *next* round to ensure continuity
+            setTimeout(() => {
+                db.ref('adminState').update({ processed: false });
+            }, 5000);
+
             if (!isAuto) showMsg("ရလဒ်ထွက်ရှိပြီး ဂိမ်းအသစ်စတင်ပါပြီ။");
         }
 
