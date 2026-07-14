@@ -10,19 +10,18 @@
     <style>
         .hidden-ui { display: none !important; }
         .bet-badge { position: absolute; top: -5px; right: -5px; }
-        body { font-family: 'Inter', sans-serif; }
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen p-4">
     <div id="app" class="max-w-4xl mx-auto">
         <h1 class="text-2xl font-bold text-gray-800 mb-6 text-center">တိရစ္ဆာန် လောင်းကစား (၃၆ ကောင်)</h1>
 
-        <!-- Login Screen -->
+        <!-- Login -->
         <div id="login-screen" class="bg-white p-6 rounded-2xl shadow-xl max-w-md mx-auto">
             <h2 class="text-lg font-bold mb-4 text-center">အကောင့်ဝင်ရန်</h2>
             <input type="text" id="user-name" class="w-full p-3 border rounded mb-4" placeholder="အမည် (Name)">
             <button id="login-btn" class="w-full bg-blue-600 text-white p-3 rounded font-bold mb-3">ဝင်ရောက်မည်</button>
-            <button id="admin-login-btn" class="w-full bg-gray-800 text-white p-3 rounded font-bold">Admin အဖြစ် ဝင်ရန်</button>
+            <button id="admin-login-btn" class="w-full bg-gray-800 text-white p-3 rounded font-bold">Admin ဝင်ရန်</button>
         </div>
 
         <!-- Game UI -->
@@ -34,10 +33,10 @@
             <div class="text-center font-bold text-xl mb-4 text-blue-700">အချိန်: <span id="timer">--:--</span></div>
             <div id="animal-grid" class="grid grid-cols-4 sm:grid-cols-6 gap-2"></div>
             
-            <!-- Admin Panel -->
+            <!-- Admin Section -->
             <div id="admin-panel" class="hidden-ui mt-8 bg-gray-900 text-white p-6 rounded-2xl shadow-xl">
-                <h3 class="font-bold text-yellow-400 mb-4 text-lg">Admin Panel</h3>
-                <div id="admin-user-list" class="space-y-3 text-sm"></div>
+                <h3 class="font-bold text-yellow-400 mb-4 text-lg">Admin Panel (User စာရင်း)</h3>
+                <div id="admin-user-list" class="space-y-2"></div>
             </div>
         </div>
     </div>
@@ -73,7 +72,7 @@
                 document.getElementById('timer').innerText = `${m}:${s < 10 ? '0'+s : s}`;
             } else {
                 document.getElementById('timer').innerText = "ရလဒ်ထွက်နေသည်...";
-                if(isAdmin || Object.keys(users)[0] === currentUser) processGame();
+                if(isAdmin) processGame(); // Only admin triggers process
             }
         }, 1000);
 
@@ -86,6 +85,7 @@
                 db.ref(`users/${uid}/selections`).remove();
             });
             db.ref('adminState/nextReveal').set(Date.now() + 180000);
+            alert("ရလဒ်ထွက်ပါပြီ: " + animals[winner]);
         }
 
         document.getElementById('login-btn').onclick = async () => {
@@ -140,11 +140,11 @@
         function renderAdminPanel() {
             const list = document.getElementById('admin-user-list');
             list.innerHTML = Object.keys(users).map(u => `
-                <div class="flex justify-between items-center bg-gray-800 p-2 rounded">
+                <div class="flex justify-between items-center bg-gray-800 p-3 rounded">
                     <span>${users[u].name}: ${users[u].balance}</span>
                     <div class="flex gap-2">
-                        <button onclick="changeCoin('${u}', 10)" class="bg-blue-600 px-2 rounded">+</button>
-                        <button onclick="changeCoin('${u}', -10)" class="bg-red-600 px-2 rounded">-</button>
+                        <button onclick="changeCoin('${u}', 50)" class="bg-blue-600 px-3 py-1 rounded text-xs">+50</button>
+                        <button onclick="changeCoin('${u}', -50)" class="bg-red-600 px-3 py-1 rounded text-xs">-50</button>
                     </div>
                 </div>
             `).join('');
