@@ -22,7 +22,7 @@
 
         <!-- Login Screen -->
         <div id="login-screen" class="bg-white p-6 rounded-2xl shadow-xl max-w-md mx-auto">
-            <h2 class="text-lg font-bold mb-4 text-center">59</h2>
+            <h2 class="text-lg font-bold mb-4 text-center">ဝင်ရောက်ရန်</h2>
             <div id="user-list" class="grid grid-cols-2 gap-2 mb-6"></div>
             <div class="border-t pt-4">
                 <input type="text" id="new-user-name" class="p-3 border rounded-lg w-full mb-2" placeholder="အမည်သစ်">
@@ -46,7 +46,7 @@
             <div id="admin-panel" class="hidden-ui bg-gray-900 text-white p-6 rounded-2xl mb-6 shadow-xl">
                 <h3 class="font-bold text-yellow-400 mb-4 text-lg">Admin Panel</h3>
                 <select id="user-select-admin" class="text-black w-full p-3 mb-3 rounded-lg"></select>
-                <div id="admin-user-balance" class="mb-4 text-center font-bold text-xl bg-gray-800 p-2 rounded">ရွေးထားသူ - 0 Coins</div>
+                <div id="admin-user-balance" class="mb-4 text-center font-bold text-xl bg-gray-800 p-2 rounded text-white">ရွေးထားသူ - 0 Coins</div>
                 
                 <input type="number" id="coin-amount" class="text-black w-full p-3 mb-3 rounded-lg" placeholder="Coin ပမာဏ">
                 <div class="flex gap-3 mb-3">
@@ -120,7 +120,6 @@
             if(currentUserId && !users[currentUserId] && !isAdmin) {
                 localStorage.removeItem('game_uid');
                 currentUserId = null;
-                location.reload();
             }
 
             if(currentUserId || isAdmin) {
@@ -162,12 +161,31 @@
             renderGrid();
         }
 
+        function renderUserList() {
+            const list = document.getElementById('user-list');
+            if(!list) return;
+            list.innerHTML = '';
+            Object.keys(users).forEach(uid => {
+                const btn = document.createElement('button');
+                btn.className = "bg-white p-3 border rounded-lg shadow-sm text-sm hover:bg-gray-50 text-center font-bold";
+                btn.innerText = users[uid].name;
+                btn.onclick = () => {
+                    const pass = prompt("စကားဝှက်:");
+                    if(pass === users[uid].password) {
+                        localStorage.setItem('game_uid', uid);
+                        currentUserId = uid;
+                        updateUI();
+                    } else { showMsg("စကားဝှက် မှားနေသည်", true); }
+                };
+                list.appendChild(btn);
+            });
+        }
+
         function renderGrid() {
             const grid = document.getElementById('animal-grid');
             if(!grid || (!currentUserId && !isAdmin)) return;
             grid.innerHTML = '';
             
-            // Calculate total bets for all animals for admin view
             let totalBetsPerAnimal = new Array(36).fill(0);
             if (isAdmin) {
                 Object.values(users).forEach(u => {
@@ -200,7 +218,6 @@
             });
         }
 
-        // Admin Listeners
         document.getElementById('user-select-admin').onchange = () => {
             const uid = document.getElementById('user-select-admin').value;
             document.getElementById('admin-user-balance').innerText = `ရွေးထားသူ - ${users[uid]?.balance || 0} Coins`;
@@ -237,7 +254,8 @@
         };
 
         document.getElementById('admin-login-trigger').onclick = () => {
-            if(prompt("Admin Password:") === 'admin123') { 
+            const pass = prompt("Admin Password:");
+            if(pass === 'admin123') { 
                 isAdmin = true; localStorage.setItem('is_admin', 'true');
                 updateUI(); 
             }
