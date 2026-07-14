@@ -109,36 +109,53 @@
         db.ref('users').on('value', (snap) => { users = snap.val() || {}; updateUI(); });
         db.ref('adminState').on('value', (snap) => { adminState = snap.val() || { nextReveal: 0, processed: true }; updateUI(); });
 
-        // Timer Logic updated for reliability
+        // Timer Logic updated for better clarity
         setInterval(() => {
-            try {
-                const display = document.getElementById('timer-display');
-                if(!display) return;
-                
-                const now = Date.now();
-                const diff = adminState.nextReveal - now;
-                
-                if (diff > 0) {
-                    const mins = Math.floor(diff / 60000);
-                    const secs = Math.floor((diff % 60000) / 1000);
-                    display.innerText = `${mins}:${secs < 10 ? '0' + secs : secs}`;
-                } else {
-                    // If time is up, trigger calculation if needed
-                    if (!adminState.processed) {
-                        display.innerText = "ရလဒ်ထွက်နေသည်...";
-                        calculateResults(true);
-                    } else {
-                        display.innerText = "လာမည့်ပွဲ စောင့်ဆိုင်းနေသည်...";
-                    }
+            const display = document.getElementById('timer-display');
+            if(!display) return;
+            const diff = adminState.nextReveal - Date.now();
+            
+            if (diff > 0) {
+                const mins = Math.floor(diff / 60000);
+                const secs = Math.floor((diff % 60000) / 1000);
+                display.innerText = `${mins}:${secs < 10 ? '0' + secs : secs}`;
+            } else {
+                display.innerText = "ရလဒ်ထွက်ရှိနေသည်...";
+                // ဘရောင်ဆာဖွင့်ထားစဉ် အချိန်ပြည့်ပါက အလိုအလျောက်တွက်ချက်ရန်
+                if (!adminState.processed) {
+                    calculateResults(true);
                 }
-            } catch (e) {
-                console.error("Timer error:", e);
             }
-        }, 500); // Increased frequency to 500ms for more responsiveness
+        }, 1000);
+
+        // Load ဖြစ်ချိန်တွင် အချိန်ကျော်လွန်နေပါက ချက်ချင်းစစ်ဆေးရန်
+        window.addEventListener('load', () => {
+            db.ref('adminState').once('value', (snap) => {
+                const state = snap.val();
+                if (state && !state.processed && Date.now() >= state.nextReveal) {
+                    calculateResults(true);
+                }
+            });
+        });
 
         function calculateResults(isAuto = false) {
-            if (adminState.processed) return;
+            // Transaction အသုံးပြု၍ တစ်ပြိုင်နက်တည်း ရလဒ်များစွာ မထွက်စေရန်
+            db.ref('adminState').transaction((state) => {
+                if (!state || state.processed) return; 
+                if (Date.now() < state.nextReveal) return;
+                
+                return {
+                    ...state,
+                    processed: true
+                };
+            }, (error, committed, snapshot) => {
+                if (committed) {
+                    performGameLogic();
+                }
+            });
+        }
 
+        function performGameLogic() {
             let totalBets = new Array(gameData.length).fill(0);
             Object.keys(users).forEach(uid => {
                 if(users[uid].selections) {
@@ -207,48 +224,15 @@
 
         function renderGrid() {
             const grid = document.getElementById('animal-grid');
-            const listContent = document.getElementById('bets-list-content');
-            if(!grid || (!currentUserId && !isAdmin)) return;
-            
-            // Calculate aggregate bets
-            let globalBets = new Array(gameData.length).fill(0);
-            Object.keys(users).forEach(uid => {
-                if(users[uid].selections) {
-                    Object.keys(users[uid].selections).forEach(idx => {
-                        globalBets[idx] += users[uid].selections[idx];
-                    });
-                }
-            });
-            
-            if(isAdmin) {
-                let html = '';
-                Object.keys(users).forEach(uid => {
-                    if(users[uid].selections) {
-                        Object.keys(users[uid].selections).forEach(idx => {
-                            html += `<div>${users[uid].name}: ${gameData[idx]} (${users[uid].selections[idx]})</div>`;
-                        });
-                    }
-                });
-                listContent.innerHTML = html || 'လောင်းထားသူမရှိသေးပါ။';
-            }
-
+            if(!grid) return;
             grid.innerHTML = '';
+            
             gameData.forEach((name, i) => {
-                const betCount = (users[currentUserId] && users[currentUserId].selections) ? (users[currentUserId].selections[i] || 0) : 0;
-                const total = globalBets[i];
-                const div = document.createElement('div');
-                div.className = "bg-white p-3 rounded-xl shadow-sm text-center border relative flex flex-col items-center select-none";
-                div.innerHTML = `
-                    <div class="font-bold text-sm mb-1">${name}</div>
-                    <div class="text-[10px] text-gray-500 mb-1">စုစုပေါင်း: ${total}</div>
-                    ${!isAdmin ? `
-                    <div class="flex gap-2 items-center">
-                        <button class="px-3 py-1 bg-red-100 rounded text-red-700 font-bold active:scale-95 transition-transform" onclick="changeBet(${i}, -1)">-</button>
-                        <span class="px-2 font-bold min-w-[20px]">${betCount}</span>
-                        <button class="px-3 py-1 bg-green-100 rounded text-green-700 font-bold active:scale-95 transition-transform" onclick="changeBet(${i}, 1)">+</button>
-                    </div>` : ''}
-                `;
-                grid.appendChild(div);
+                const btn = document.createElement('button');
+                btn.className = "p-3 bg-white border border-gray-200 rounded-xl shadow-sm text-sm hover:bg-blue-50 transition";
+                btn.innerText = name;
+                btn.onclick = () => changeBet(i, 1);
+                grid.appendChild(btn);
             });
         }
 
