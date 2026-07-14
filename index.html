@@ -21,7 +21,7 @@
 
         <!-- Login Screen -->
         <div id="login-screen" class="bg-white p-6 rounded-2xl shadow-xl max-w-md mx-auto">
-            <h2 class="text-lg font-bold mb-4 text-center">ဥအကောင့်ဝင်ရန်</h2>
+            <h2 class="text-lg font-bold mb-4 text-center">အကောင့်ဝင်ရန်</h2>
             <div class="mb-6 space-y-2">
                 <input type="text" id="login-name" class="p-3 border rounded-lg w-full" placeholder="အမည် (User ID)">
                 <input type="password" id="login-pass" class="p-3 border rounded-lg w-full" placeholder="စကားဝှက်">
@@ -108,6 +108,13 @@
             const display = document.getElementById('timer-display');
             if(!display) return;
             const diff = adminState.nextReveal - Date.now();
+            
+            // Auto calculate logic
+            if (diff <= 0 && !adminState.isProcessing) {
+                // Anyone can trigger if time is up to ensure game flows
+                autoCalculateResult();
+            }
+
             if (diff > 0) {
                 const mins = Math.floor(diff / 60000);
                 const secs = Math.floor((diff % 60000) / 1000);
@@ -134,18 +141,14 @@
                 }
             });
 
-            let winnerIdx = 0;
-            if(grandTotal >= 30) {
-                winnerIdx = totalBetsPerAnimal.indexOf(Math.min(...totalBetsPerAnimal));
-            } else {
-                winnerIdx = 0;
-            }
+            // Logic: Pick lowest bet as winner
+            let winnerIdx = grandTotal >= 5 ? totalBetsPerAnimal.indexOf(Math.min(...totalBetsPerAnimal)) : 0;
 
             Object.keys(users).forEach(uid => {
                 const u = users[uid];
                 if(u.selections && u.selections[winnerIdx] > 0) {
                     const winAmt = u.selections[winnerIdx] * 36;
-                    db.ref(`users/${uid}/balance`).set((u.balance || 0) + winAmt);
+                    db.ref(`users/${uid}/balance`).set(Number(u.balance || 0) + winAmt);
                     db.ref(`users/${uid}/lastTurnResult`).set({animal: gameData[winnerIdx], win: winAmt});
                 } else {
                     db.ref(`users/${uid}/lastTurnResult`).set({animal: gameData[winnerIdx], win: 0});
@@ -189,28 +192,24 @@
         }
 
         window.changeBet = (i, delta) => {
-            if (!currentUserId || !users[currentUserId]) return;
             const user = users[currentUserId];
+            if(!user || adminState.nextReveal <= Date.now() + 1000) return showMsg("အချိန်ကုန်သွားပါပြီ", true);
             
-            // Check time
-            if(adminState.nextReveal <= Date.now()) return showMsg("အချိန်ကုန်သွားပါပြီ", true);
-            
-            const currentBalance = user.balance || 0;
+            const currentBalance = Number(user.balance || 0);
             const currentBets = user.selections || {};
-            const betCount = currentBets[i] || 0;
+            const currentBet = Number(currentBets[i] || 0);
             
-            // Betting Logic
             if(delta > 0) {
                 if(currentBalance >= 1) {
                     db.ref(`users/${currentUserId}/balance`).set(currentBalance - 1);
-                    db.ref(`users/${currentUserId}/selections/${i}`).set(betCount + 1);
+                    db.ref(`users/${currentUserId}/selections/${i}`).set(currentBet + 1);
                 } else {
                     showMsg("Coin မလုံလောက်ပါ", true);
                 }
             } else {
-                if(betCount > 0) {
+                if(currentBet > 0) {
                     db.ref(`users/${currentUserId}/balance`).set(currentBalance + 1);
-                    db.ref(`users/${currentUserId}/selections/${i}`).set(betCount - 1);
+                    db.ref(`users/${currentUserId}/selections/${i}`).set(currentBet - 1);
                 }
             }
         };
@@ -224,20 +223,16 @@
                 const betCount = (users[currentUserId] && users[currentUserId].selections) ? (users[currentUserId].selections[i] || 0) : 0;
                 const div = document.createElement('div');
                 div.className = "bg-white p-3 rounded-xl shadow-sm text-center border relative";
-                
-                // Add conditional rendering for admin/user
-                if(isAdmin) {
-                    div.innerHTML = `<div class="font-bold text-sm mb-2">${name}</div>`;
-                } else {
-                    div.innerHTML = `
-                        <div class="font-bold text-sm mb-2">${name}</div>
-                        <div class="flex gap-1 justify-center items-center">
-                            <button onclick="window.changeBet(${i}, -1)" class="w-8 h-8 flex items-center justify-center bg-red-100 rounded text-red-700 font-bold hover:bg-red-200">-</button>
-                            <span class="w-8 text-center font-bold text-lg">${betCount}</span>
-                            <button onclick="window.changeBet(${i}, 1)" class="w-8 h-8 flex items-center justify-center bg-green-100 rounded text-green-700 font-bold hover:bg-green-200">+</button>
+                div.innerHTML = `
+                    <div class="font-bold text-sm mb-2">${name}</div>
+                    ${!isAdmin ? `
+                        <div class="flex gap-1 justify-center">
+                            <button onclick="window.changeBet(${i}, -1)" class="w-8 h-8 bg-red-100 rounded text-red-700 font-bold">-</button>
+                            <span class="w-8 font-bold text-lg">${betCount}</span>
+                            <button onclick="window.changeBet(${i}, 1)" class="w-8 h-8 bg-green-100 rounded text-green-700 font-bold">+</button>
                         </div>
-                    `;
-                }
+                    ` : ''}
+                `;
                 grid.appendChild(div);
             });
         }
@@ -274,13 +269,13 @@
         document.getElementById('add-coin-btn').onclick = () => {
             const uid = document.getElementById('user-select-admin').value;
             const amt = parseInt(document.getElementById('coin-amount').value);
-            if(uid && amt) db.ref(`users/${uid}/balance`).set((users[uid].balance || 0) + amt);
+            if(uid && amt) db.ref(`users/${uid}/balance`).set(Number(users[uid].balance || 0) + amt);
         };
 
         document.getElementById('sub-coin-btn').onclick = () => {
             const uid = document.getElementById('user-select-admin').value;
             const amt = parseInt(document.getElementById('coin-amount').value);
-            if(uid && amt) db.ref(`users/${uid}/balance`).set(Math.max(0, (users[uid].balance || 0) - amt));
+            if(uid && amt) db.ref(`users/${uid}/balance`).set(Math.max(0, Number(users[uid].balance || 0) - amt));
         };
         
         updateUI();
