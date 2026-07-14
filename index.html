@@ -21,7 +21,7 @@
 
         <!-- Login Screen -->
         <div id="login-screen" class="bg-white p-6 rounded-2xl shadow-xl max-w-md mx-auto">
-            <h2 class="text-lg font-bold mb-4 text-center">ဝင်ပါ</h2>
+            <h2 class="text-lg font-bold mb-4 text-center">ကဝင်ပါ </h2>
             <div class="mb-6 space-y-2">
                 <input type="text" id="login-name" class="p-3 border rounded-lg w-full" placeholder="အမည် (User ID)">
                 <input type="password" id="login-pass" class="p-3 border rounded-lg w-full" placeholder="စကားဝှက်">
@@ -109,19 +109,28 @@
         db.ref('users').on('value', (snap) => { users = snap.val() || {}; updateUI(); });
         db.ref('adminState').on('value', (snap) => { adminState = snap.val() || { nextReveal: 0, processed: true }; updateUI(); });
 
+        // Timer Logic updated for reliability
         setInterval(() => {
             const display = document.getElementById('timer-display');
             if(!display) return;
-            const diff = adminState.nextReveal - Date.now();
+            
+            const now = Date.now();
+            const diff = adminState.nextReveal - now;
+            
             if (diff > 0) {
                 const mins = Math.floor(diff / 60000);
                 const secs = Math.floor((diff % 60000) / 1000);
                 display.innerText = `${mins}:${secs < 10 ? '0' + secs : secs}`;
             } else {
-                display.innerText = "ဂိမ်းရပ်နားထားသည်";
-                if (!adminState.processed) calculateResults(true);
+                // If time is up, trigger calculation if needed
+                if (!adminState.processed) {
+                    display.innerText = "ရလဒ်ထွက်နေသည်...";
+                    calculateResults(true);
+                } else {
+                    display.innerText = "ဂိမ်းရပ်နားထားသည်";
+                }
             }
-        }, 1000);
+        }, 500); // Increased frequency to 500ms for more responsiveness
 
         function calculateResults(isAuto = false) {
             if (adminState.processed) return;
