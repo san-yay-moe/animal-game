@@ -10,6 +10,7 @@
     <style>
         .hidden-ui { display: none !important; }
         .bet-badge { position: absolute; top: -5px; right: -5px; }
+        body { font-family: 'Inter', sans-serif; }
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen p-4">
@@ -20,7 +21,8 @@
         <div id="login-screen" class="bg-white p-6 rounded-2xl shadow-xl max-w-md mx-auto">
             <h2 class="text-lg font-bold mb-4 text-center">အကောင့်ဝင်ရန်</h2>
             <input type="text" id="user-name" class="w-full p-3 border rounded mb-4" placeholder="အမည် (Name)">
-            <button id="login-btn" class="w-full bg-blue-600 text-white p-3 rounded font-bold">ဝင်ရောက်မည်</button>
+            <button id="login-btn" class="w-full bg-blue-600 text-white p-3 rounded font-bold mb-3">ဝင်ရောက်မည်</button>
+            <button id="admin-login-btn" class="w-full bg-gray-800 text-white p-3 rounded font-bold">Admin အဖြစ် ဝင်ရန်</button>
         </div>
 
         <!-- Game UI -->
@@ -32,9 +34,10 @@
             <div class="text-center font-bold text-xl mb-4 text-blue-700">အချိန်: <span id="timer">--:--</span></div>
             <div id="animal-grid" class="grid grid-cols-4 sm:grid-cols-6 gap-2"></div>
             
-            <div id="admin-panel" class="hidden-ui mt-8 bg-gray-800 p-4 rounded-xl text-white">
-                <h3 class="font-bold mb-2">Admin Panel</h3>
-                <div id="admin-user-list" class="text-sm"></div>
+            <!-- Admin Panel -->
+            <div id="admin-panel" class="hidden-ui mt-8 bg-gray-900 text-white p-6 rounded-2xl shadow-xl">
+                <h3 class="font-bold text-yellow-400 mb-4 text-lg">Admin Panel</h3>
+                <div id="admin-user-list" class="space-y-3 text-sm"></div>
             </div>
         </div>
     </div>
@@ -55,6 +58,7 @@
         const animals = ["မြင်း", "ရွှေနဂါး", "လိပ်ပြာ", "ဆတ်", "မြွေ", "မျောက်", "ပင့်ကူ", "ဗျိုင်း", "ငန်း", "ခရု", "ဆင်", "ရွှေငါး", "ကြက်", "လိပ်", "ကျီး", "ကျား", "ဝက်", "ဒေါင်း", "ယုန်", "ခွေး", "ပုစွန်", "ဆိတ်", "နွား", "ဖား", "ပျား", "ကြွက်", "ငါးရှဉ့်", "ကျားသစ်", "ခြင်္သေ့", "သမင်", "ဝံပုလွေ", "လင်းယုန်", "ကြောင်", "ပုရွက်ဆိတ်", "ပိုးကောင်", "ငါး"];
         
         let currentUser = localStorage.getItem('game_uid');
+        let isAdmin = localStorage.getItem('is_admin') === 'true';
         let users = {};
         let adminState = { nextReveal: Date.now() + 180000 };
 
@@ -69,7 +73,7 @@
                 document.getElementById('timer').innerText = `${m}:${s < 10 ? '0'+s : s}`;
             } else {
                 document.getElementById('timer').innerText = "ရလဒ်ထွက်နေသည်...";
-                if(currentUser === Object.keys(users)[0]) processGame(); // Only first user processes
+                if(isAdmin || Object.keys(users)[0] === currentUser) processGame();
             }
         }, 1000);
 
@@ -82,7 +86,6 @@
                 db.ref(`users/${uid}/selections`).remove();
             });
             db.ref('adminState/nextReveal').set(Date.now() + 180000);
-            alert("ရလဒ်ထွက်ပါပြီ: " + animals[winner]);
         }
 
         document.getElementById('login-btn').onclick = async () => {
@@ -96,21 +99,30 @@
             updateUI();
         };
 
+        document.getElementById('admin-login-btn').onclick = () => {
+            if(prompt("Admin Password:") === 'admin123') {
+                isAdmin = true; localStorage.setItem('is_admin', 'true'); updateUI();
+            } else alert("Password မှားသည်");
+        };
+
         function updateUI() {
-            if(currentUser && users[currentUser]) {
+            if((currentUser && users[currentUser]) || isAdmin) {
                 document.getElementById('login-screen').classList.add('hidden-ui');
                 document.getElementById('game-ui').classList.remove('hidden-ui');
-                document.getElementById('user-display').innerText = `${users[currentUser].name} | Coin: ${users[currentUser].balance}`;
+                if(!isAdmin) document.getElementById('user-display').innerText = `${users[currentUser].name} | Coin: ${users[currentUser].balance}`;
                 
-                if(currentUser === 'admin') document.getElementById('admin-panel').classList.remove('hidden-ui');
+                if(isAdmin) {
+                    document.getElementById('admin-panel').classList.remove('hidden-ui');
+                    renderAdminPanel();
+                }
                 renderGrid();
-                if(currentUser === 'admin') renderAdminPanel();
             }
         }
 
         function renderGrid() {
             const grid = document.getElementById('animal-grid');
             grid.innerHTML = '';
+            if(isAdmin) return;
             animals.forEach((a, i) => {
                 const count = (users[currentUser].selections && users[currentUser].selections[i]) ? users[currentUser].selections[i] : 0;
                 const btn = document.createElement('button');
@@ -127,12 +139,21 @@
 
         function renderAdminPanel() {
             const list = document.getElementById('admin-user-list');
-            list.innerHTML = Object.keys(users).map(u => `<div>${users[u].name}: ${users[u].balance} Coins</div>`).join('');
+            list.innerHTML = Object.keys(users).map(u => `
+                <div class="flex justify-between items-center bg-gray-800 p-2 rounded">
+                    <span>${users[u].name}: ${users[u].balance}</span>
+                    <div class="flex gap-2">
+                        <button onclick="changeCoin('${u}', 10)" class="bg-blue-600 px-2 rounded">+</button>
+                        <button onclick="changeCoin('${u}', -10)" class="bg-red-600 px-2 rounded">-</button>
+                    </div>
+                </div>
+            `).join('');
         }
 
+        window.changeCoin = (uid, amt) => db.ref(`users/${uid}/balance`).set((users[uid].balance || 0) + amt);
         document.getElementById('logout-btn').onclick = () => { localStorage.clear(); location.reload(); };
         
-        if(currentUser) updateUI();
+        if(currentUser || isAdmin) updateUI();
     </script>
 </body>
 </html>
