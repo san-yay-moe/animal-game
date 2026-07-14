@@ -21,7 +21,7 @@
 
         <!-- Login Screen -->
         <div id="login-screen" class="bg-white p-6 rounded-2xl shadow-xl max-w-md mx-auto">
-            <h2 class="text-lg font-bold mb-4 text-center">ကဝင်ပါ </h2>
+            <h2 class="text-lg font-bold mb-4 text-center">အကောင့်ဝင်ရန်</h2>
             <div class="mb-6 space-y-2">
                 <input type="text" id="login-name" class="p-3 border rounded-lg w-full" placeholder="အမည် (User ID)">
                 <input type="password" id="login-pass" class="p-3 border rounded-lg w-full" placeholder="စကားဝှက်">
@@ -111,24 +111,28 @@
 
         // Timer Logic updated for reliability
         setInterval(() => {
-            const display = document.getElementById('timer-display');
-            if(!display) return;
-            
-            const now = Date.now();
-            const diff = adminState.nextReveal - now;
-            
-            if (diff > 0) {
-                const mins = Math.floor(diff / 60000);
-                const secs = Math.floor((diff % 60000) / 1000);
-                display.innerText = `${mins}:${secs < 10 ? '0' + secs : secs}`;
-            } else {
-                // If time is up, trigger calculation if needed
-                if (!adminState.processed) {
-                    display.innerText = "ရလဒ်ထွက်နေသည်...";
-                    calculateResults(true);
+            try {
+                const display = document.getElementById('timer-display');
+                if(!display) return;
+                
+                const now = Date.now();
+                const diff = adminState.nextReveal - now;
+                
+                if (diff > 0) {
+                    const mins = Math.floor(diff / 60000);
+                    const secs = Math.floor((diff % 60000) / 1000);
+                    display.innerText = `${mins}:${secs < 10 ? '0' + secs : secs}`;
                 } else {
-                    display.innerText = "ဂိမ်းရပ်နားထားသည်";
+                    // If time is up, trigger calculation if needed
+                    if (!adminState.processed) {
+                        display.innerText = "ရလဒ်ထွက်နေသည်...";
+                        calculateResults(true);
+                    } else {
+                        display.innerText = "လာမည့်ပွဲ စောင့်ဆိုင်းနေသည်...";
+                    }
                 }
+            } catch (e) {
+                console.error("Timer error:", e);
             }
         }, 500); // Increased frequency to 500ms for more responsiveness
 
