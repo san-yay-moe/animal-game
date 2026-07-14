@@ -117,6 +117,11 @@
                         <div id="user-balance-content"></div>
                     </div>
                 </div>
+                <!-- Admin Active Chats List -->
+                <div id="active-chats-list" class="bg-white/10 p-4 rounded-2xl mb-4 text-sm max-h-60 overflow-y-auto border border-white/10">
+                    <h4 class="font-bold mb-2 text-yellow-400">Active Chats:</h4>
+                    <div id="active-chats-content"></div>
+                </div>
                 <div class="flex flex-col md:flex-row gap-2 mb-2">
                     <input type="text" id="new-password-admin" class="text-black p-3 rounded-xl flex-grow" placeholder="New Password">
                     <button id="change-pass-btn" class="bg-purple-600 px-4 py-3 rounded-xl font-bold">Pass ပြင်</button>
@@ -181,6 +186,19 @@
             const chatMessages = document.getElementById('chat-messages');
             chatMessages.appendChild(div);
             chatMessages.scrollTop = chatMessages.scrollHeight;
+        });
+
+        // Track active chats
+        db.ref('privateChat').on('value', (snap) => {
+            const activeChats = snap.val() || {};
+            const container = document.getElementById('active-chats-content');
+            if(!isAdmin) return;
+            let html = '';
+            Object.keys(activeChats).forEach(uid => {
+                const name = users[uid] ? users[uid].name : "Unknown";
+                html += `<div class="cursor-pointer hover:text-white text-blue-300 py-1" onclick="openPrivateChat('${uid}', '${name}')">💬 ${name}</div>`;
+            });
+            container.innerHTML = html || 'Chat လတ်တလောမရှိပါ။';
         });
 
         // Private Chat Logic
