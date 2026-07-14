@@ -12,12 +12,13 @@
         body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
     </style>
 </head>
-<body class="min-h-screen p-2">
+<body class="min-h-screen p-4">
     <div id="message-box" class="fixed top-5 right-5 z-50 hidden p-4 rounded-xl shadow-2xl text-white"></div>
 
-    <div id="app" class="max-w-sm mx-auto">
+    <!-- main app container: max-w-4xl allows Web/Admin view -->
+    <div id="app" class="max-w-4xl mx-auto">
         <!-- Login Screen -->
-        <div id="login-screen" class="bg-white p-5 rounded-3xl shadow-xl border border-gray-100">
+        <div id="login-screen" class="bg-white p-5 rounded-3xl shadow-xl border border-gray-100 max-w-sm mx-auto mt-10">
             <h1 class="text-2xl font-black text-gray-800 mb-6 text-center tracking-tight">တိရစ္ဆာန် လောင်းကစား</h1>
             <div class="mb-4 space-y-3">
                 <input type="text" id="login-name" class="p-3 bg-gray-50 border-none rounded-xl w-full focus:ring-2 focus:ring-blue-500 transition" placeholder="အမည် (User ID)">
@@ -29,57 +30,56 @@
 
         <!-- Game UI -->
         <div id="game-ui" class="hidden-ui">
-            <!-- Header Card -->
-            <div class="bg-white p-4 rounded-2xl shadow-lg mb-4 flex flex-col justify-between gap-3 border border-gray-100">
-                <div class="flex justify-between items-center">
-                    <p id="current-user-display" class="font-bold text-gray-500 text-xs uppercase tracking-wider"></p>
-                    <p class="text-xl font-black text-gray-800">Coins: <span id="coin-balance" class="text-blue-600">0</span></p>
-                </div>
-                <div class="flex gap-2 w-full">
-                    <button id="open-chat-btn" class="flex-1 bg-gray-100 text-gray-600 py-2 rounded-xl font-bold text-sm hover:bg-gray-200 active:scale-95">💬 Chat</button>
-                    <button id="logout-btn" class="flex-1 bg-red-50 text-red-600 py-2 rounded-xl font-bold text-sm hover:bg-red-100 active:scale-95">Logout</button>
-                </div>
-            </div>
-
-            <!-- Chat Modal -->
-            <div id="chat-modal" class="hidden-ui fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-                <div id="chat-container" class="bg-white p-6 rounded-3xl shadow-2xl border border-gray-100 w-full max-w-lg">
-                    <div class="flex justify-between items-center mb-4">
-                        <h4 class="font-bold text-gray-500 text-xs uppercase">Public Chat</h4>
-                        <button id="close-chat-btn" class="text-gray-400 hover:text-gray-800">✕</button>
+            
+            <!-- Mobile View Wrap for Game Interface -->
+            <div class="max-w-sm mx-auto">
+                <!-- Header Card -->
+                <div class="bg-white p-4 rounded-2xl shadow-lg mb-4 flex flex-col justify-between gap-3 border border-gray-100">
+                    <div class="flex justify-between items-center">
+                        <p id="current-user-display" class="font-bold text-gray-500 text-xs uppercase tracking-wider"></p>
+                        <p class="text-xl font-black text-gray-800">Coins: <span id="coin-balance" class="text-blue-600">0</span></p>
                     </div>
-                    <div id="chat-messages" class="h-60 overflow-y-auto mb-4 space-y-2 text-sm bg-gray-50 p-4 rounded-2xl"></div>
-                    <div class="flex gap-2">
-                        <input type="text" id="chat-input" class="flex-grow p-4 bg-gray-100 border-none rounded-xl focus:ring-2 focus:ring-blue-500" placeholder="စာရိုက်ပါ...">
-                        <button id="send-chat-btn" class="bg-blue-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-blue-700">ပို့</button>
+                    <div class="flex gap-2 w-full">
+                        <button id="open-chat-btn" class="flex-1 bg-gray-100 text-gray-600 py-2 rounded-xl font-bold text-sm hover:bg-gray-200 active:scale-95">💬 Chat</button>
+                        <button id="logout-btn" class="flex-1 bg-red-50 text-red-600 py-2 rounded-xl font-bold text-sm hover:bg-red-100 active:scale-95">Logout</button>
                     </div>
                 </div>
+
+                <!-- Chat Modal -->
+                <div id="chat-modal" class="hidden-ui fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                    <div id="chat-container" class="bg-white p-6 rounded-3xl shadow-2xl border border-gray-100 w-full max-w-lg">
+                        <div class="flex justify-between items-center mb-4">
+                            <h4 class="font-bold text-gray-500 text-xs uppercase">Public Chat</h4>
+                            <button id="close-chat-btn" class="text-gray-400 hover:text-gray-800">✕</button>
+                        </div>
+                        <div id="chat-messages" class="h-60 overflow-y-auto mb-4 space-y-2 text-sm bg-gray-50 p-4 rounded-2xl"></div>
+                        <div class="flex gap-2">
+                            <input type="text" id="chat-input" class="flex-grow p-4 bg-gray-100 border-none rounded-xl focus:ring-2 focus:ring-blue-500" placeholder="စာရိုက်ပါ...">
+                            <button id="send-chat-btn" class="bg-blue-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-blue-700">ပို့</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stats & Info -->
+                <div class="grid grid-cols-1 gap-3 mb-4">
+                    <div id="user-game-info" class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+                        <h4 class="font-bold text-gray-500 text-xs uppercase mb-1">လက်ရှိလောင်းထားမှု</h4>
+                        <p class="text-xl font-black text-gray-800"><span id="current-bet-count" class="text-red-500">0</span> coin</p>
+                        <div id="win-loss-status" class="text-xs font-bold mt-2 text-gray-400">စောင့်ဆိုင်းနေသည်...</div>
+                    </div>
+                    <div class="bg-blue-600 p-4 rounded-2xl shadow-lg flex flex-row justify-between items-center text-white">
+                        <h4 class="font-bold text-blue-100 text-xs uppercase">ဂိမ်းအချိန်</h4>
+                        <span id="timer-display" class="text-3xl font-black font-mono tracking-tighter">--:--</span>
+                    </div>
+                </div>
+
+                <div id="result-display" class="hidden-ui bg-yellow-400 p-4 rounded-2xl text-center font-black text-lg mb-4 shadow-lg text-yellow-900"></div>
+
+                <div class="grid grid-cols-3 gap-2" id="animal-grid"></div>
             </div>
 
-            <!-- Admin Messaging -->
-            <div id="admin-chat-section" class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 mb-4">
-                <h4 class="font-bold text-gray-500 text-xs uppercase mb-2">Admin သို့ စာပို့ရန်</h4>
-                <div class="flex gap-2">
-                    <input type="text" id="admin-chat-input" class="flex-grow p-3 bg-gray-100 border-none rounded-xl" placeholder="စာရိုက်ပါ...">
-                    <button id="send-admin-msg-btn" class="bg-blue-600 text-white px-4 py-3 rounded-xl font-bold">ပို့</button>
-                </div>
-            </div>
-
-            <!-- Stats & Info -->
-            <div class="grid grid-cols-1 gap-3 mb-4">
-                <div id="user-game-info" class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
-                    <h4 class="font-bold text-gray-500 text-xs uppercase mb-1">လက်ရှိလောင်းထားမှု</h4>
-                    <p class="text-xl font-black text-gray-800"><span id="current-bet-count" class="text-red-500">0</span> coin</p>
-                    <div id="win-loss-status" class="text-xs font-bold mt-2 text-gray-400">စောင့်ဆိုင်းနေသည်...</div>
-                </div>
-                <div class="bg-blue-600 p-4 rounded-2xl shadow-lg flex flex-row justify-between items-center text-white">
-                    <h4 class="font-bold text-blue-100 text-xs uppercase">ဂိမ်းအချိန်</h4>
-                    <span id="timer-display" class="text-3xl font-black font-mono tracking-tighter">--:--</span>
-                </div>
-            </div>
-
-            <!-- Admin Panel -->
-            <div id="admin-panel" class="hidden-ui bg-gray-900 text-white p-8 rounded-3xl mb-6 shadow-2xl">
+            <!-- Admin Panel (Web Responsive View) -->
+            <div id="admin-panel" class="hidden-ui bg-gray-900 text-white p-8 rounded-3xl mt-8 mb-6 shadow-2xl w-full">
                 <h3 class="font-bold text-yellow-400 mb-6 text-xl tracking-tight">Admin Control</h3>
                 <div class="mb-6 flex flex-wrap gap-2 justify-center">
                     <button class="timer-btn w-12 h-12 rounded-full border-2 border-yellow-400 text-yellow-400 font-bold hover:bg-yellow-400 hover:text-black transition" onclick="setTimer(1)">1</button>
@@ -88,27 +88,25 @@
                     <button class="timer-btn w-12 h-12 rounded-full border-2 border-yellow-400 text-yellow-400 font-bold hover:bg-yellow-400 hover:text-black transition" onclick="setTimer(10)">10</button>
                     <button class="timer-btn w-12 h-12 rounded-full border-2 border-yellow-400 text-yellow-400 font-bold hover:bg-yellow-400 hover:text-black transition" onclick="setTimer(30)">30</button>
                 </div>
-                <div class="grid grid-cols-1 gap-4 mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                     <button id="reset-game-btn" class="bg-green-600 py-4 rounded-2xl font-bold hover:bg-green-700 transition">Reset</button>
                     <button id="calc-result-btn" class="bg-yellow-600 py-4 rounded-2xl font-bold hover:bg-yellow-700 transition">ရလဒ်ထုတ်</button>
                 </div>
-                <div id="user-messages-container" class="bg-white/10 p-4 rounded-2xl mb-4 text-sm max-h-40 overflow-y-auto border border-white/10">
-                    <h4 class="font-bold mb-2 text-yellow-400">User များထံမှ စာများ:</h4>
-                    <div id="user-messages-content"></div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div id="bets-list-container" class="bg-white/10 p-4 rounded-2xl mb-4 text-sm max-h-60 overflow-y-auto border border-white/10">
+                        <h4 class="font-bold mb-2 text-yellow-400">လောင်းထားသူများ:</h4>
+                        <div id="bets-list-content"></div>
+                    </div>
+                    <div id="user-balance-list" class="bg-white/10 p-4 rounded-2xl mb-4 text-sm max-h-60 overflow-y-auto border border-white/10">
+                        <h4 class="font-bold mb-2 text-yellow-400">User များ၏ Coins:</h4>
+                        <div id="user-balance-content"></div>
+                    </div>
                 </div>
-                <div id="bets-list-container" class="bg-white/10 p-4 rounded-2xl mb-4 text-sm max-h-40 overflow-y-auto border border-white/10">
-                    <h4 class="font-bold mb-2 text-yellow-400">လောင်းထားသူများ:</h4>
-                    <div id="bets-list-content"></div>
-                </div>
-                <div id="user-balance-list" class="bg-white/10 p-4 rounded-2xl mb-4 text-sm max-h-40 overflow-y-auto border border-white/10">
-                    <h4 class="font-bold mb-2 text-yellow-400">User များ၏ Coins:</h4>
-                    <div id="user-balance-content"></div>
-                </div>
-                <div class="flex gap-2 mb-2">
+                <div class="flex flex-col md:flex-row gap-2 mb-2">
                     <input type="text" id="new-password-admin" class="text-black p-3 rounded-xl flex-grow" placeholder="New Password">
                     <button id="change-pass-btn" class="bg-purple-600 px-4 py-3 rounded-xl font-bold">Pass ပြင်</button>
                 </div>
-                <div class="flex gap-2">
+                <div class="flex flex-col md:flex-row gap-2">
                     <select id="user-select-admin" class="text-black p-3 rounded-xl flex-grow"></select>
                     <input type="number" id="coin-amount" class="text-black p-3 rounded-xl w-24" placeholder="Coin">
                     <button id="add-coin-btn" class="bg-blue-600 px-4 py-3 rounded-xl font-bold">+</button>
@@ -116,10 +114,6 @@
                     <button id="delete-user-btn" class="bg-red-600 px-4 py-3 rounded-xl font-bold">ဖျက်</button>
                 </div>
             </div>
-
-            <div id="result-display" class="hidden-ui bg-yellow-400 p-4 rounded-2xl text-center font-black text-lg mb-4 shadow-lg text-yellow-900"></div>
-
-            <div class="grid grid-cols-3 gap-2" id="animal-grid"></div>
         </div>
     </div>
 
@@ -161,7 +155,6 @@
         db.ref('users').on('value', (snap) => { users = snap.val() || {}; updateUI(); });
         db.ref('adminState').on('value', (snap) => { adminState = snap.val() || { nextReveal: 0, processed: true }; updateUI(); });
 
-        // Chat Listener
         db.ref('chat').limitToLast(20).on('child_added', (snap) => {
             const msg = snap.val();
             const div = document.createElement('div');
@@ -172,34 +165,12 @@
             chatMessages.scrollTop = chatMessages.scrollHeight;
         });
 
-        // Admin Message Listener
-        db.ref('adminMessages').limitToLast(10).on('child_added', (snap) => {
-            const msg = snap.val();
-            const div = document.createElement('div');
-            div.className = "border-b pb-1 border-white/20 mb-2";
-            div.innerHTML = `<span class="font-bold text-yellow-400">${msg.name}:</span> ${msg.text}`;
-            const container = document.getElementById('user-messages-content');
-            if(container) {
-                container.prepend(div);
-            }
-        });
-
         document.getElementById('send-chat-btn').onclick = () => {
             const input = document.getElementById('chat-input');
             const text = input.value.trim();
             if(text && users[currentUserId]) {
                 db.ref('chat').push({ name: users[currentUserId].name, text: text, timestamp: Date.now() });
                 input.value = '';
-            }
-        };
-
-        document.getElementById('send-admin-msg-btn').onclick = () => {
-            const input = document.getElementById('admin-chat-input');
-            const text = input.value.trim();
-            if(text && users[currentUserId]) {
-                db.ref('adminMessages').push({ name: users[currentUserId].name, text: text, timestamp: Date.now() });
-                input.value = '';
-                showMsg("စာပို့ပြီးပါပြီ");
             }
         };
 
@@ -323,7 +294,12 @@
         }
 
         function updateUI() {
-            if(currentUserId && !users[currentUserId] && !isAdmin) { localStorage.removeItem('game_uid'); currentUserId = null; }
+            // FIX: Only log out if users data is loaded and the user doesn't exist.
+            if (currentUserId && Object.keys(users).length > 0 && !users[currentUserId] && !isAdmin) { 
+                localStorage.removeItem('game_uid'); 
+                currentUserId = null; 
+            }
+            
             if(currentUserId || isAdmin) {
                 document.getElementById('login-screen').classList.add('hidden-ui');
                 document.getElementById('game-ui').classList.remove('hidden-ui');
@@ -333,7 +309,6 @@
                     document.getElementById('current-bet-count').innerText = totalBet;
                     const statusDiv = document.getElementById('win-loss-status');
                     
-                    // ရလဒ်ထုတ်ပြီးမှ (processed = true) နိုင်ငွေကို ပြပါမည်
                     if(adminState.processed && adminState.lastWinner) {
                         const winIdx = gameData.indexOf(adminState.lastWinner);
                         if(user.selections && user.selections[winIdx]) {
