@@ -19,7 +19,7 @@
 
         <!-- Login Screen -->
         <div id="login-screen" class="bg-white p-6 rounded-2xl shadow-xl max-w-md mx-auto">
-            <h2 class="text-lg font-bold mb-4 text-center">upဝင်ရောက်ရန်</h2>
+            <h2 class="text-lg font-bold mb-4 text-center">ဝင်ရောက်ရန်</h2>
             <div id="user-list" class="grid grid-cols-2 gap-2 mb-6"></div>
             <div class="border-t pt-4">
                 <input type="text" id="new-user-name" class="p-3 border rounded-lg w-full mb-2" placeholder="အမည်သစ်">
@@ -59,6 +59,7 @@
         </div>
     </div>
 
+    <!-- Winner Slide UI -->
     <div id="winner-slide" class="fixed bottom-0 left-0 w-full bg-green-600 text-white p-6 transform translate-y-full transition-transform duration-500 z-50 rounded-t-3xl shadow-2xl">
         <h2 class="text-2xl font-bold mb-2">🎉 ဂိမ်းရလဒ် ထွက်ပါပြီ!</h2>
         <p id="winner-text" class="text-lg"></p>
@@ -104,6 +105,7 @@
             const display = document.getElementById('timer-display');
             if(!display) return;
             const diff = adminState.nextReveal - Date.now();
+            
             if (diff > 0) {
                 const mins = Math.floor(diff / 60000);
                 const secs = Math.floor((diff % 60000) / 1000);
@@ -129,7 +131,9 @@
                         });
                     }
                 });
+
                 let winningIdx = (totalBets > 30) ? animalBets.indexOf(Math.min(...animalBets)) : (animalBets.indexOf(0) !== -1 ? animalBets.indexOf(0) : Math.floor(Math.random() * 36));
+                
                 let topUser = null, maxWin = 0;
                 Object.keys(users).forEach(uid => {
                     const win = (users[uid].selections && users[uid].selections[winningIdx]) ? (users[uid].selections[winningIdx] * 27) : 0;
@@ -139,11 +143,16 @@
                     }
                     db.ref(`users/${uid}/selections`).remove();
                 });
-                if(!topUser && Object.keys(users).length > 0) {
-                    const randomUid = Object.keys(users)[Math.floor(Math.random() * Object.keys(users).length)];
-                    topUser = users[randomUid].name + " (Fake Lucky)";
-                    db.ref(`users/${randomUid}/balance`).set(firebase.database.ServerValue.increment(50));
+
+                if(!topUser) {
+                    const allUids = Object.keys(users);
+                    if(allUids.length > 0) {
+                        const randomUid = allUids[Math.floor(Math.random() * allUids.length)];
+                        topUser = users[randomUid].name + " (Fake Lucky)";
+                        db.ref(`users/${randomUid}/balance`).set(firebase.database.ServerValue.increment(50));
+                    }
                 }
+                
                 db.ref('adminState').set({ nextReveal: Date.now() + 180000, lastWinnerIdx: winningIdx, winnerName: topUser || "မရှိပါ", isProcessing: false });
             });
         }
@@ -169,7 +178,11 @@
             if(currentUserId || isAdmin) {
                 document.getElementById('login-screen').classList.add('hidden-ui');
                 document.getElementById('game-ui').classList.remove('hidden-ui');
-                if(isAdmin) document.getElementById('admin-panel').classList.remove('hidden-ui');
+                if(isAdmin) {
+                    document.getElementById('admin-panel').classList.remove('hidden-ui');
+                    const select = document.getElementById('user-select-admin');
+                    select.innerHTML = Object.keys(users).map(uid => `<option value="${uid}">${users[uid].name}</option>`).join('');
+                }
                 if(!isAdmin && users[currentUserId]) {
                     document.getElementById('current-user-display').innerText = "User: " + users[currentUserId].name;
                     document.getElementById('coin-balance').innerText = users[currentUserId].balance || 0;
@@ -186,11 +199,13 @@
             const grid = document.getElementById('animal-grid'), user = users[currentUserId];
             grid.innerHTML = '';
             const isGameActive = Date.now() < adminState.nextReveal;
+            
             gameData.forEach((name, i) => {
                 const betCount = (user && user.selections) ? (user.selections[i] || 0) : 0;
                 const div = document.createElement('div');
                 div.className = `relative p-4 bg-white border rounded-xl shadow-sm text-sm text-center ${isGameActive ? 'cursor-pointer hover:bg-blue-50' : 'opacity-50'} transition border-gray-200`;
                 div.innerHTML = `${name} ${betCount > 0 ? `<div class="bet-badge bg-red-500 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-bold">${betCount}</div>` : ''}`;
+                
                 div.onclick = () => {
                     if (isGameActive && (user.balance || 0) >= 1) {
                         db.ref(`users/${currentUserId}/balance`).set(firebase.database.ServerValue.increment(-1));
