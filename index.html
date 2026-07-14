@@ -19,7 +19,7 @@
 
         <!-- Login Screen -->
         <div id="login-screen" class="bg-white p-6 rounded-2xl shadow-xl max-w-md mx-auto">
-            <h2 class="text-lg font-bold mb-4 text-center">ဝင်ရောက်ရန်</h2>
+            <h2 class="text-lg font-bold mb-4 text-center">* ဝင်ရောက်ရန်</h2>
             <div id="user-list" class="grid grid-cols-2 gap-2 mb-6"></div>
             <div class="border-t pt-4">
                 <input type="text" id="new-user-name" class="p-3 border rounded-lg w-full mb-2" placeholder="အမည်သစ်">
@@ -52,6 +52,11 @@
 
             <div class="bg-blue-50 p-4 rounded-xl text-center font-bold mb-6 border border-blue-100">
                 အချိန် - <span id="timer-display" class="text-blue-800 text-2xl font-mono">--:--</span>
+            </div>
+
+            <!-- New: Display Total Bet for this turn -->
+            <div class="bg-white p-3 rounded-xl shadow-sm mb-4 border text-center text-sm font-bold text-gray-700">
+                လက်ရှိပွဲတွင် လောင်းထားသည့် Coin: <span id="current-total-bet" class="text-red-600">0</span>
             </div>
 
             <div id="result-display" class="hidden-ui bg-yellow-100 p-4 rounded-xl text-center font-bold text-lg mb-6 border border-yellow-300"></div>
@@ -109,19 +114,24 @@
             
             Object.keys(users).forEach(uid => {
                 if(users[uid].selections) {
+                    let userTotalBet = 0;
                     gameData.forEach((_, i) => {
                         const b = users[uid].selections[i] || 0;
                         animalBets[i] += b;
                         totalBets += b;
+                        userTotalBet += b;
                     });
+
+                    // Logic to calculate win/loss per user
+                    let winningIdx = -1;
+                    // ... (will be determined below) ...
                 }
             });
 
+            // Re-calculate after knowing totalBets
             let winningIdx = -1;
             let multiplier = 0;
-
             if (totalBets > 30) {
-                // Logic: Find min bet
                 let minVal = Infinity;
                 gameData.forEach((_, i) => {
                     if (animalBets[i] > 0 && animalBets[i] < minVal) {
@@ -131,19 +141,30 @@
                 });
                 multiplier = 27;
             } else {
-                // Logic: Find zero bet
                 let zeros = [];
                 gameData.forEach((_, i) => { if(animalBets[i] === 0) zeros.push(i); });
                 winningIdx = zeros[Math.floor(Math.random() * zeros.length)];
                 multiplier = 0;
             }
 
-            // Distribute winnings
+            // Distribute winnings and save result
             Object.keys(users).forEach(uid => {
-                const win = (users[uid].selections && users[uid].selections[winningIdx]) ? (users[uid].selections[winningIdx] * multiplier) : 0;
-                if(win > 0) {
+                const userSelections = users[uid].selections || {};
+                let userTotalBet = 0;
+                gameData.forEach((_, i) => userTotalBet += (userSelections[i] || 0));
+
+                const win = (userSelections[winningIdx]) ? (userSelections[winningIdx] * multiplier) : 0;
+                
+                if(userTotalBet > 0) {
                     const newBal = (users[uid].balance || 0) + win;
                     db.ref(`users/${uid}/balance`).set(newBal);
+                    // Save Last Result
+                    db.ref(`users/${uid}/lastTurnResult`).set({
+                        bet: userTotalBet,
+                        win: win,
+                        net: win - userTotalBet,
+                        animal: gameData[winningIdx]
+                    });
                 }
                 db.ref(`users/${uid}/selections`).remove();
             });
@@ -159,9 +180,22 @@
                 document.getElementById('login-screen').classList.add('hidden-ui');
                 document.getElementById('game-ui').classList.remove('hidden-ui');
                 if(isAdmin) document.getElementById('admin-panel').classList.remove('hidden-ui');
-                if(users[currentUserId]) {
+                if(!isAdmin && users[currentUserId]) {
                     document.getElementById('current-user-display').innerText = "User: " + users[currentUserId].name;
                     document.getElementById('coin-balance').innerText = users[currentUserId].balance || 0;
+                    
+                    // Show Last Turn Result
+                    if(users[currentUserId].lastTurnResult) {
+                        const res = users[currentUserId].lastTurnResult;
+                        document.getElementById('result-display').classList.remove('hidden-ui');
+                        document.getElementById('result-display').innerHTML = `
+                            <div class="text-sm">အနိုင်ရ - ${res.animal}</div>
+                            <div class="text-lg ${res.net >= 0 ? 'text-green-700' : 'text-red-700'}">
+                                ${res.net >= 0 ? 'နိုင်' : 'ရှုံး'} - ${Math.abs(res.net)} Coin
+                            </div>
+                            <div class="text-xs text-gray-500">လောင်းထား - ${res.bet} | ပြန်ရ - ${res.win}</div>
+                        `;
+                    }
                 }
             } else {
                 document.getElementById('login-screen').classList.remove('hidden-ui');
@@ -210,8 +244,11 @@
             const grid = document.getElementById('animal-grid');
             grid.innerHTML = '';
             const user = users[currentUserId];
+            let totalBet = 0;
+            
             gameData.forEach((name, i) => {
                 const betCount = (user && user.selections) ? (user.selections[i] || 0) : 0;
+                totalBet += betCount;
                 const div = document.createElement('div');
                 div.className = "relative p-4 bg-white border rounded-xl shadow-sm text-sm text-center cursor-pointer hover:bg-blue-50 transition border-gray-200";
                 div.innerHTML = `${name} ${betCount > 0 ? `<div class="bet-badge bg-red-500 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-bold">${betCount}</div>` : ''}`;
@@ -220,9 +257,12 @@
                     if ((user.balance || 0) < 1) return;
                     db.ref(`users/${currentUserId}/balance`).set((user.balance || 0) - 1);
                     db.ref(`users/${currentUserId}/selections/${i}`).set((betCount + 1));
+                    // Clear result display when starting new bet
+                    db.ref(`users/${currentUserId}/lastTurnResult`).remove();
                 };
                 grid.appendChild(div);
             });
+            document.getElementById('current-total-bet').innerText = totalBet;
         }
 
         document.getElementById('add-user-btn').onclick = () => {
