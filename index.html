@@ -40,6 +40,12 @@
                 <button id="logout-btn" class="bg-red-50 text-red-600 px-4 py-2 rounded-lg font-bold text-sm hover:bg-red-100 transition">Logout</button>
             </div>
 
+            <!-- User Bet Summary -->
+            <div id="user-game-info" class="bg-white p-4 rounded-xl shadow-sm mb-6 border border-blue-100">
+                <h4 class="font-bold text-gray-600 mb-1 text-sm">လက်ရှိလောင်းထားမှုစုစုပေါင်း: <span id="current-bet-count" class="text-red-600">0</span> coin</h4>
+                <div id="win-loss-status" class="text-sm font-bold mt-2 text-gray-500">နောက်ဆုံးပွဲရလဒ် စောင့်ဆိုင်းနေသည်...</div>
+            </div>
+
             <!-- Admin Panel -->
             <div id="admin-panel" class="hidden-ui bg-gray-900 text-white p-6 rounded-2xl mb-6 shadow-xl">
                 <h3 class="font-bold text-yellow-400 mb-4 text-lg">Admin Panel</h3>
@@ -226,6 +232,24 @@
             if(currentUserId || isAdmin) {
                 document.getElementById('login-screen').classList.add('hidden-ui');
                 document.getElementById('game-ui').classList.remove('hidden-ui');
+                
+                // Show Bet summary and win/loss
+                const user = users[currentUserId];
+                if(user) {
+                    const totalBet = user.selections ? Object.values(user.selections).reduce((a, b) => a + b, 0) : 0;
+                    document.getElementById('current-bet-count').innerText = totalBet;
+                    
+                    const statusDiv = document.getElementById('win-loss-status');
+                    if(adminState.lastWinner) {
+                        const winIdx = gameData.indexOf(adminState.lastWinner);
+                        if(user.selections && user.selections[winIdx]) {
+                            statusDiv.innerHTML = `<span class="text-green-600">🎉 သင်နိုင်ပါသည်! အနိုင်ရငွေ: ${user.selections[winIdx] * 27}</span>`;
+                        } else {
+                            statusDiv.innerHTML = `<span class="text-gray-500">နောက်ဆုံးပွဲရလဒ် - ${adminState.lastWinner} (မနိုင်ပါ)</span>`;
+                        }
+                    }
+                }
+
                 if(isAdmin) {
                     document.getElementById('admin-panel').classList.remove('hidden-ui');
                     const select = document.getElementById('user-select-admin');
@@ -272,3 +296,4 @@
     </script>
 </body>
 </html>
+```eof
