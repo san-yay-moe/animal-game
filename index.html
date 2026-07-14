@@ -96,6 +96,13 @@
             <!-- Admin Panel -->
             <div id="admin-panel" class="hidden-ui bg-gray-900 text-white p-8 rounded-3xl mt-8 mb-6 shadow-2xl w-full">
                 <h3 class="font-bold text-yellow-400 mb-6 text-xl tracking-tight">Admin Control</h3>
+                <div class="mb-6 flex flex-wrap gap-2 justify-center">
+                    <button class="timer-btn w-12 h-12 rounded-full border-2 border-yellow-400 text-yellow-400 font-bold hover:bg-yellow-400 hover:text-black transition" onclick="setTimer(1)">1</button>
+                    <button class="timer-btn w-12 h-12 rounded-full border-2 border-yellow-400 text-yellow-400 font-bold hover:bg-yellow-400 hover:text-black transition" onclick="setTimer(3)">3</button>
+                    <button class="timer-btn w-12 h-12 rounded-full border-2 border-yellow-400 text-yellow-400 font-bold hover:bg-yellow-400 hover:text-black transition" onclick="setTimer(5)">5</button>
+                    <button class="timer-btn w-12 h-12 rounded-full border-2 border-yellow-400 text-yellow-400 font-bold hover:bg-yellow-400 hover:text-black transition" onclick="setTimer(10)">10</button>
+                    <button class="timer-btn w-12 h-12 rounded-full border-2 border-yellow-400 text-yellow-400 font-bold hover:bg-yellow-400 hover:text-black transition" onclick="setTimer(30)">30</button>
+                </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                     <button id="reset-game-btn" class="bg-green-600 py-4 rounded-2xl font-bold hover:bg-green-700 transition">Reset</button>
                     <button id="calc-result-btn" class="bg-yellow-600 py-4 rounded-2xl font-bold hover:bg-yellow-700 transition">ရလဒ်ထုတ်</button>
@@ -154,8 +161,14 @@
         let adminState = { nextReveal: 0, processed: true, lastWinner: "" };
         let currentUserId = localStorage.getItem('game_uid');
         let isAdmin = localStorage.getItem('is_admin') === 'true';
+        let selectedMinutes = 3;
         let activePrivateChatUid = null;
         let privateChatListener = null;
+
+        function setTimer(m) {
+            selectedMinutes = m;
+            showMsg(m + " မိနစ် ရွေးချယ်ပြီးပါပြီ");
+        }
 
         db.ref('users').on('value', (snap) => { users = snap.val() || {}; updateUI(); });
         db.ref('adminState').on('value', (snap) => { adminState = snap.val() || { nextReveal: 0, processed: true }; updateUI(); });
@@ -172,17 +185,14 @@
 
         // Private Chat Logic
         function openPrivateChat(uid, name) {
-            // Remove previous listener if exists
             if (activePrivateChatUid && privateChatListener) {
                 db.ref('privateChat/' + activePrivateChatUid).off('child_added', privateChatListener);
             }
-
             activePrivateChatUid = uid;
-            document.getElementById('private-chat-title').innerText = "Chat with " + name;
+            document.getElementById('private-chat-title').innerText = "Chat with " + (isAdmin ? name : "Admin");
             document.getElementById('private-chat-messages').innerHTML = '';
             document.getElementById('private-chat-modal').classList.remove('hidden-ui');
 
-            // Define listener function
             privateChatListener = (snap) => {
                 const msg = snap.val();
                 const div = document.createElement('div');
@@ -192,8 +202,6 @@
                 container.appendChild(div);
                 container.scrollTop = container.scrollHeight;
             };
-
-            // Start listener
             db.ref('privateChat/' + activePrivateChatUid).limitToLast(20).on('child_added', privateChatListener);
         }
 
@@ -221,6 +229,7 @@
                 activePrivateChatUid = null;
             }
         };
+
         document.getElementById('open-chat-btn').onclick = () => document.getElementById('chat-modal').classList.remove('hidden-ui');
         document.getElementById('close-chat-btn').onclick = () => document.getElementById('chat-modal').classList.add('hidden-ui');
 
@@ -233,7 +242,21 @@
             }
         };
 
-        function calculateResults() {
+        setInterval(() => {
+            const display = document.getElementById('timer-display');
+            if(!display) return;
+            const diff = adminState.nextReveal - Date.now();
+            if (diff > 0) {
+                const mins = Math.floor(diff / 60000);
+                const secs = Math.floor((diff % 60000) / 1000);
+                display.innerText = `${mins}:${secs < 10 ? '0' + secs : secs}`;
+            } else {
+                display.innerText = "ဂိမ်းရပ်";
+                if (!adminState.processed) calculateResults(true);
+            }
+        }, 1000);
+
+        function calculateResults(isAuto = false) {
             if (adminState.processed) return;
             let totalBets = new Array(gameData.length).fill(0);
             Object.keys(users).forEach(uid => {
@@ -418,8 +441,8 @@
             }
         };
         document.getElementById('reset-game-btn').onclick = () => {
-            db.ref('adminState').update({ nextReveal: Date.now() + 180000, processed: false });
-            showMsg("ဂိမ်းအား Reset ချပြီးပါပြီ");
+            db.ref('adminState').update({ nextReveal: Date.now() + (selectedMinutes * 60000), processed: false });
+            showMsg("ဂိမ်းအား Reset ချပြီးပါပြီ (" + selectedMinutes + " မိနစ်)");
         };
         document.getElementById('calc-result-btn').onclick = () => calculateResults();
         document.getElementById('login-existing-btn').onclick = () => {
