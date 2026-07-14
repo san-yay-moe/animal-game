@@ -168,13 +168,13 @@
         let isAdmin = localStorage.getItem('is_admin') === 'true';
         let selectedMinutes = 3;
         let activePrivateChatUid = null;
-let privateChatListener = null;
-let activeChatsData = {}; // Added to track chat state globally
-let lastLeader = ""; // Added to track leader for notifications
+let audioCtx = null; 
 
 function playNotificationSound() {
     try {
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        
         const oscillator = audioCtx.createOscillator();
         const gainNode = audioCtx.createGain();
         oscillator.type = 'sine';
