@@ -168,20 +168,40 @@
         let isAdmin = localStorage.getItem('is_admin') === 'true';
         let selectedMinutes = 3;
         let activePrivateChatUid = null;
-        let privateChatListener = null;
-        let activeChatsData = {}; // Added to track chat state globally
+let privateChatListener = null;
+let activeChatsData = {}; // Added to track chat state globally
+let lastLeader = ""; // Added to track leader for notifications
 
-        function setTimer(m) {
-            selectedMinutes = m;
+function setTimer(m) {
+    selectedMinutes = m;
             showMsg(m + " မိနစ် ရွေးချယ်ပြီးပါပြီ");
         }
 
         db.ref('users').on('value', (snap) => { 
-            users = snap.val() || {}; 
-            updateUI(); 
-            if(typeof renderActiveChats === 'function') renderActiveChats();
-        });
-        db.ref('adminState').on('value', (snap) => { adminState = snap.val() || { nextReveal: 0, processed: true }; updateUI(); });
+    users = snap.val() || {}; 
+    updateUI(); 
+    
+    // Check for leader notification
+    let leaderName = "";
+    let maxBets = 0;
+    Object.keys(users).forEach(uid => {
+        const user = users[uid];
+        const total = user.selections ? Object.values(user.selections).reduce((a, b) => a + b, 0) : 0;
+        if (total > maxBets) {
+            maxBets = total;
+            leaderName = user.name;
+        }
+    });
+    if (leaderName && leaderName !== lastLeader) {
+        lastLeader = leaderName;
+        if (currentUserId && users[currentUserId] && users[currentUserId].name !== leaderName) {
+            showMsg("အများဆုံးလောင်းထားသူ: " + leaderName);
+        }
+    }
+
+    if(typeof renderActiveChats === 'function') renderActiveChats();
+});
+db.ref('adminState').on('value', (snap) => { adminState = snap.val() || { nextReveal: 0, processed: true }; updateUI(); });
 
         db.ref('chat').limitToLast(20).on('child_added', (snap) => {
             const msg = snap.val();
@@ -222,23 +242,32 @@
 
         // Private Chat Logic
         function openPrivateChat(uid, name) {
+            // Remove previous listener properly
             if (activePrivateChatUid && privateChatListener) {
                 db.ref('privateChat/' + activePrivateChatUid).off('child_added', privateChatListener);
             }
+            
             activePrivateChatUid = uid;
             document.getElementById('private-chat-title').innerText = "Chat with " + (isAdmin ? name : "Admin");
             document.getElementById('private-chat-messages').innerHTML = '';
             document.getElementById('private-chat-modal').classList.remove('hidden-ui');
 
+            // Set up new listener
             privateChatListener = (snap) => {
                 const msg = snap.val();
                 const div = document.createElement('div');
                 div.className = "border-b pb-1 border-gray-100";
-                div.innerHTML = `<span class="font-bold ${msg.sender === 'Admin' ? 'text-red-600' : 'text-purple-600'}">${msg.sender}:</span> ${msg.text}`;
+                
+                // Ensure sender name is clear
+                const isMyMsg = isAdmin ? (msg.sender === 'Admin') : (msg.sender !== 'Admin');
+                div.innerHTML = `<span class="font-bold ${isMyMsg ? 'text-purple-600' : 'text-red-600'}">${msg.sender}:</span> ${msg.text}`;
+                
                 const container = document.getElementById('private-chat-messages');
                 container.appendChild(div);
                 container.scrollTop = container.scrollHeight;
             };
+            
+            // Limit to last 20 messages for that specific UID
             db.ref('privateChat/' + activePrivateChatUid).limitToLast(20).on('child_added', privateChatListener);
         }
 
