@@ -18,7 +18,7 @@
     <div id="app" class="max-w-4xl mx-auto">
         <!-- Login Screen -->
         <div id="login-screen" class="bg-white p-8 rounded-3xl shadow-2xl max-w-md mx-auto border border-gray-100">
-            <h1 class="text-3xl font-black text-gray-800 mb-8 text-center tracking-tight">တိရစ္ဆာန် လောင်းကစား </h1>
+            <h1 class="text-3xl font-black text-gray-800 mb-8 text-center tracking-tight">UP</h1>
             <div class="mb-6 space-y-4">
                 <input type="text" id="login-name" class="p-4 bg-gray-50 border-none rounded-2xl w-full focus:ring-2 focus:ring-blue-500 transition" placeholder="အမည် (User ID)">
                 <input type="password" id="login-pass" class="p-4 bg-gray-50 border-none rounded-2xl w-full focus:ring-2 focus:ring-blue-500 transition" placeholder="စကားဝှက်">
@@ -72,10 +72,12 @@
             <!-- Admin Panel -->
             <div id="admin-panel" class="hidden-ui bg-gray-900 text-white p-8 rounded-3xl mb-6 shadow-2xl">
                 <h3 class="font-bold text-yellow-400 mb-6 text-xl tracking-tight">Admin Control</h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                    <button id="reset-game-btn" class="bg-green-600 py-4 rounded-2xl font-bold hover:bg-green-700 transition">Reset</button>
-                    <button id="calc-result-btn" class="bg-yellow-600 py-4 rounded-2xl font-bold hover:bg-yellow-700 transition">ရလဒ်ထုတ်မည်</button>
-                    <input type="number" id="timer-minutes" class="text-black p-4 rounded-2xl w-full md:col-span-2" placeholder="မိနစ်" value="3">
+                <div class="grid grid-cols-1 gap-4 mb-6">
+                    <div class="flex gap-2">
+                        <input type="number" id="timer-minutes" class="text-black p-4 rounded-2xl w-full" placeholder="မိနစ်" value="3">
+                        <button id="reset-game-btn" class="bg-green-600 px-6 rounded-2xl font-bold hover:bg-green-700 transition">Reset</button>
+                    </div>
+                    <button id="calc-result-btn" class="bg-yellow-600 py-4 rounded-2xl font-bold hover:bg-yellow-700 transition">ရလဒ်ထုတ်</button>
                 </div>
                 <div id="bets-list-container" class="bg-white/10 p-4 rounded-2xl mb-4 text-sm max-h-40 overflow-y-auto border border-white/10">
                     <h4 class="font-bold mb-2 text-yellow-400">လောင်းထားသူများ:</h4>
@@ -354,9 +356,7 @@
             const mins = parseInt(document.getElementById('timer-minutes').value) || 3;
             db.ref('adminState').update({ nextReveal: Date.now() + (mins * 60000), processed: false });
         };
-        const calcBtn = document.getElementById('calc-result-btn');
-        if (calcBtn) calcBtn.onclick = () => calculateResults();
-        
+        document.getElementById('calc-result-btn').onclick = () => calculateResults();
         document.getElementById('login-existing-btn').onclick = () => {
             const n = document.getElementById('login-name').value.trim();
             const p = document.getElementById('login-pass').value.trim();
