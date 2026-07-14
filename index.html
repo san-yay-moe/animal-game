@@ -18,7 +18,6 @@
     <div id="app" class="max-w-4xl mx-auto">
         <h1 class="text-2xl font-bold text-gray-800 mb-6 text-center">တိရစ္ဆာန် လောင်းကစား (၃၆ ကောင်)</h1>
 
-        <!-- Login Screen -->
         <div id="login-screen" class="bg-white p-6 rounded-2xl shadow-xl max-w-md mx-auto">
             <h2 class="text-lg font-bold mb-4 text-center">ဝင်ရောက်ရန်</h2>
             <div id="user-list" class="grid grid-cols-2 gap-2 mb-6"></div>
@@ -30,7 +29,6 @@
             <button id="admin-login-trigger" class="w-full mt-4 bg-gray-800 text-white font-bold py-3 rounded-lg hover:bg-gray-900 transition">Admin ဝင်ရောက်ရန်</button>
         </div>
 
-        <!-- Game UI -->
         <div id="game-ui" class="hidden-ui">
             <div class="bg-white p-4 rounded-2xl shadow-sm mb-6 flex justify-between items-center border border-gray-100">
                 <div>
@@ -40,7 +38,6 @@
                 <button id="logout-btn" class="bg-red-50 text-red-600 px-4 py-2 rounded-lg font-bold text-sm hover:bg-red-100 transition">Logout</button>
             </div>
 
-            <!-- Admin Panel -->
             <div id="admin-panel" class="hidden-ui bg-gray-900 text-white p-6 rounded-2xl mb-6 shadow-xl">
                 <h3 class="font-bold text-yellow-400 mb-4 text-lg">Admin Panel</h3>
                 <select id="user-select-admin" class="text-black w-full p-3 mb-3 rounded-lg"></select>
@@ -61,7 +58,6 @@
         </div>
     </div>
 
-    <!-- Winner Slide UI -->
     <div id="winner-slide" class="fixed bottom-0 left-0 w-full bg-green-600 text-white p-6 transform translate-y-full transition-transform duration-500 z-50 rounded-t-3xl shadow-2xl">
         <h2 class="text-2xl font-bold mb-2">🎉 ဂိမ်းရလဒ် ထွက်ပါပြီ!</h2>
         <p id="winner-text" class="text-lg"></p>
@@ -82,31 +78,27 @@
         
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
-
         const gameData = ["မြင်း", "ရွှေနဂါး", "လိပ်ပြာ", "ဆတ်", "မြွေ", "မျောက်", "ပင့်ကူ", "ဗျိုင်း", "ငန်း", "ခရု", "ဆင်", "ရွှေငါး", "ကြက်", "လိပ်", "ကျီး", "ကျား", "ဝက်", "ဒေါင်း", "ယုန်", "ခွေး", "ပုစွန်", "ဆိတ်", "နွား", "ဖား", "ပျား", "ကြွက်", "ငါးရှဉ့်", "ကျားသစ်", "ခြင်္သေ့", "သမင်", "ဝံပုလွေ", "လင်းယုန်", "ကြောင်", "ပုရွက်ဆိတ်", "ပိုးကောင်", "ငါး"];
 
-        let users = {};
-        let adminState = { nextReveal: Date.now() + 180000, isProcessing: false };
-        let currentUserId = localStorage.getItem('game_uid');
-        let isAdmin = localStorage.getItem('is_admin') === 'true';
+        let users = {}, adminState = { nextReveal: Date.now() + 180000, isProcessing: false };
+        let currentUserId = localStorage.getItem('game_uid'), isAdmin = localStorage.getItem('is_admin') === 'true';
 
         db.ref('users').on('value', (snap) => { users = snap.val() || {}; updateUI(); });
         db.ref('adminState').on('value', (snap) => { 
-            const oldState = adminState;
-            adminState = snap.val() || adminState; 
-            if(oldState.lastWinnerIdx !== adminState.lastWinnerIdx && adminState.lastWinnerIdx !== undefined) {
-                showWinnerSlide();
+            const newState = snap.val();
+            if(newState) {
+                if(newState.lastWinnerIdx !== adminState.lastWinnerIdx && newState.lastWinnerIdx !== undefined) showWinnerSlide(newState);
+                adminState = newState;
+                updateUI();
             }
-            updateUI(); 
         });
 
-        /* STREAMING_CHUNK:Defining Game logic functions */
-        function showWinnerSlide() {
+        /* STREAMING_CHUNK:Game Logic */
+        function showWinnerSlide(state) {
             const slide = document.getElementById('winner-slide');
-            const text = document.getElementById('winner-text');
-            const winner = adminState.winnerName || "ဘယ်သူမှမနိုင်";
-            text.innerText = `အနိုင်ရတဲ့အကောင် - ${gameData[adminState.lastWinnerIdx]}\nအနိုင်ရသူ - ${winner}`;
+            document.getElementById('winner-text').innerText = `အနိုင်ရတဲ့အကောင် - ${gameData[state.lastWinnerIdx]}\nအနိုင်ရသူ - ${state.winnerName}`;
             slide.classList.remove('translate-y-full');
+            setTimeout(() => slide.classList.add('translate-y-full'), 10000);
         }
 
         setInterval(() => {
@@ -118,184 +110,114 @@
                 const mins = Math.floor(diff / 60000);
                 const secs = Math.floor((diff % 60000) / 1000);
                 display.innerText = `${mins}:${secs < 10 ? '0' + secs : secs}`;
-            } else {
-                display.innerText = "ရလဒ်ထွက်နေသည်...";
-                if (!adminState.isProcessing) processGame();
+            } else if (!adminState.isProcessing) {
+                display.innerText = "ရလဒ်တွက်နေသည်...";
+                processGame();
             }
         }, 1000);
 
         function processGame() {
-            db.ref('adminState/isProcessing').set(true);
-            
-            let totalBets = 0;
-            let animalBets = new Array(36).fill(0);
-            Object.keys(users).forEach(uid => {
-                if(users[uid].selections) {
-                    gameData.forEach((_, i) => {
-                        const b = users[uid].selections[i] || 0;
-                        animalBets[i] += b;
-                        totalBets += b;
-                    });
-                }
-            });
+            db.ref('adminState').transaction(state => {
+                if (!state || state.isProcessing) return;
+                state.isProcessing = true;
+                return state;
+            }).then(() => {
+                let totalBets = 0, animalBets = new Array(36).fill(0);
+                Object.keys(users).forEach(uid => {
+                    if(users[uid].selections) {
+                        gameData.forEach((_, i) => {
+                            const b = users[uid].selections[i] || 0;
+                            animalBets[i] += b; totalBets += b;
+                        });
+                    }
+                });
 
-            let winningIdx = 0;
-            if(totalBets > 30) {
-                let min = Infinity;
-                animalBets.forEach((b, i) => { if(b < min) { min = b; winningIdx = i; } });
-            } else {
-                let zeroIdx = animalBets.findIndex(b => b === 0);
-                winningIdx = (zeroIdx !== -1) ? zeroIdx : Math.floor(Math.random() * 36);
-            }
-
-            let topUser = null;
-            let maxWin = 0;
-            let multiplier = 27;
-
-            Object.keys(users).forEach(uid => {
-                const userSelections = users[uid].selections || {};
-                const win = (userSelections[winningIdx]) ? (userSelections[winningIdx] * multiplier) : 0;
+                let winningIdx = (totalBets > 30) ? animalBets.indexOf(Math.min(...animalBets)) : (animalBets.indexOf(0) !== -1 ? animalBets.indexOf(0) : Math.floor(Math.random() * 36));
                 
-                if(win > 0) {
-                    if(win > maxWin) { maxWin = win; topUser = users[uid].name; }
-                    db.ref(`users/${uid}/balance`).set((users[uid].balance || 0) + win);
-                }
-                db.ref(`users/${uid}/selections`).remove();
-            });
+                let topUser = null, maxWin = 0;
+                Object.keys(users).forEach(uid => {
+                    const win = (users[uid].selections && users[uid].selections[winningIdx]) ? (users[uid].selections[winningIdx] * 27) : 0;
+                    if(win > 0) {
+                        if(win > maxWin) { maxWin = win; topUser = users[uid].name; }
+                        db.ref(`users/${uid}/balance`).set(firebase.database.ServerValue.increment(win));
+                    }
+                    db.ref(`users/${uid}/selections`).remove();
+                });
 
-            if(!topUser) {
-                const allUids = Object.keys(users);
-                if(allUids.length > 0) {
-                    const randomUid = allUids[Math.floor(Math.random() * allUids.length)];
-                    topUser = users[randomUid].name + " (Fake Lucky)";
-                    db.ref(`users/${randomUid}/balance`).set((users[randomUid].balance || 0) + 50);
-                } else {
-                    topUser = "မရှိပါ";
+                if(!topUser) {
+                    const allUids = Object.keys(users);
+                    if(allUids.length > 0) {
+                        const randomUid = allUids[Math.floor(Math.random() * allUids.length)];
+                        topUser = users[randomUid].name + " (Fake Lucky)";
+                        db.ref(`users/${randomUid}/balance`).set(firebase.database.ServerValue.increment(50));
+                    }
                 }
-            }
-            
-            db.ref('adminState').update({
-                nextReveal: Date.now() + 180000,
-                lastWinnerIdx: winningIdx,
-                winnerName: topUser,
-                isProcessing: false
+                
+                db.ref('adminState').set({ nextReveal: Date.now() + 180000, lastWinnerIdx: winningIdx, winnerName: topUser || "မရှိပါ", isProcessing: false });
             });
         }
 
-        /* STREAMING_CHUNK:Rendering UI */
-        function renderUserList() {
-            const list = document.getElementById('user-list');
-            if(!list) return;
-            list.innerHTML = '';
-            Object.keys(users).forEach(uid => {
-                const btn = document.createElement('button');
-                btn.className = "bg-white p-3 border rounded-lg shadow-sm text-sm hover:bg-gray-50 text-center";
-                btn.innerText = users[uid].name;
-                btn.onclick = () => {
-                    const pass = prompt("စကားဝှက်:");
-                    if(pass === users[uid].password) {
-                        localStorage.setItem('game_uid', uid);
-                        currentUserId = uid;
-                        updateUI();
-                    } else { alert("စကားဝှက် မှားနေသည်"); }
-                };
-                list.appendChild(btn);
-            });
-        }
-
+        /* STREAMING_CHUNK:UI Rendering */
         function updateUI() {
             if(currentUserId || isAdmin) {
                 document.getElementById('login-screen').classList.add('hidden-ui');
                 document.getElementById('game-ui').classList.remove('hidden-ui');
-                if(isAdmin) {
-                    document.getElementById('admin-panel').classList.remove('hidden-ui');
-                    const select = document.getElementById('user-select-admin');
-                    select.innerHTML = Object.keys(users).map(uid => `<option value="${uid}">${users[uid].name}</option>`).join('');
-                }
+                if(isAdmin) document.getElementById('admin-panel').classList.remove('hidden-ui');
                 if(!isAdmin && users[currentUserId]) {
                     document.getElementById('current-user-display').innerText = "User: " + users[currentUserId].name;
                     document.getElementById('coin-balance').innerText = users[currentUserId].balance || 0;
                 }
+                renderGrid();
             } else {
                 document.getElementById('login-screen').classList.remove('hidden-ui');
                 document.getElementById('game-ui').classList.add('hidden-ui');
                 renderUserList();
             }
-            renderGrid();
         }
 
         function renderGrid() {
-            const grid = document.getElementById('animal-grid');
-            if(!grid) return;
+            const grid = document.getElementById('animal-grid'), user = users[currentUserId];
             grid.innerHTML = '';
-            const user = users[currentUserId];
             const isGameActive = Date.now() < adminState.nextReveal;
             
             gameData.forEach((name, i) => {
                 const betCount = (user && user.selections) ? (user.selections[i] || 0) : 0;
                 const div = document.createElement('div');
-                div.className = `relative p-4 bg-white border rounded-xl shadow-sm text-sm text-center ${isGameActive ? 'cursor-pointer hover:bg-blue-50' : 'opacity-50 cursor-not-allowed'} transition border-gray-200`;
+                div.className = `relative p-4 bg-white border rounded-xl shadow-sm text-sm text-center ${isGameActive ? 'cursor-pointer hover:bg-blue-50' : 'opacity-50'} transition border-gray-200`;
                 div.innerHTML = `${name} ${betCount > 0 ? `<div class="bet-badge bg-red-500 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-bold">${betCount}</div>` : ''}`;
                 
                 div.onclick = () => {
-                    if (!isGameActive || isAdmin || !currentUserId) return;
-                    if ((user.balance || 0) < 1) return;
-                    
-                    db.ref(`users/${currentUserId}/balance`).set((user.balance || 0) - 1);
-                    db.ref(`users/${currentUserId}/selections/${i}`).set((betCount + 1));
+                    if (isGameActive && (user.balance || 0) >= 1) {
+                        db.ref(`users/${currentUserId}/balance`).set(firebase.database.ServerValue.increment(-1));
+                        db.ref(`users/${currentUserId}/selections/${i}`).set(firebase.database.ServerValue.increment(1));
+                    }
                 };
                 grid.appendChild(div);
             });
         }
 
-        /* STREAMING_CHUNK:Defining event handlers */
         document.getElementById('add-user-btn').onclick = async () => {
             const n = document.getElementById('new-user-name').value.trim();
             const p = document.getElementById('new-user-pass').value.trim();
-            if(!n || !p) return alert("အမည်နှင့် စကားဝှက်ဖြည့်ပါ");
+            if(!n || !p) return alert("အမည်/စကားဝှက်ဖြည့်ပါ");
             const uid = n.replace(/[^a-z0-9]/gi, '');
             const snap = await db.ref('users/' + uid).once('value');
-            if(snap.exists()) alert("အသုံးပြုသူရှိနှင့်ပြီးသားပါ");
-            else {
-                await db.ref('users/' + uid).set({ name: n, password: p, balance: 100, selections: {} });
-                localStorage.setItem('game_uid', uid);
-                currentUserId = uid;
-                updateUI();
-            }
+            if(!snap.exists()) {
+                await db.ref('users/' + uid).set({ name: n, password: p, balance: 100 });
+                localStorage.setItem('game_uid', uid); currentUserId = uid; updateUI();
+            } else alert("အသုံးပြုသူရှိနှင့်ပြီးသားပါ");
         };
 
         document.getElementById('admin-login-trigger').onclick = () => {
-            if(prompt("Admin Password:") === 'admin123') { 
-                isAdmin = true; localStorage.setItem('is_admin', 'true');
-                updateUI(); 
-            }
+            if(prompt("Admin Password:") === 'admin123') { isAdmin = true; localStorage.setItem('is_admin', 'true'); updateUI(); }
         };
 
-        document.getElementById('logout-btn').onclick = () => {
-            localStorage.removeItem('game_uid'); localStorage.removeItem('is_admin');
-            location.reload();
-        };
-
-        document.getElementById('add-coin-btn').onclick = () => {
-            const uid = document.getElementById('user-select-admin').value;
-            const amt = parseInt(document.getElementById('coin-amount').value);
-            if(uid && amt) {
-                db.ref(`users/${uid}/balance`).set((users[uid].balance || 0) + amt);
-            }
-        };
-
-        document.getElementById('sub-coin-btn').onclick = () => {
-            const uid = document.getElementById('user-select-admin').value;
-            const amt = parseInt(document.getElementById('coin-amount').value);
-            if(uid && amt) {
-                db.ref(`users/${uid}/balance`).set(Math.max(0, (users[uid].balance || 0) - amt));
-            }
-        };
+        document.getElementById('logout-btn').onclick = () => { localStorage.clear(); location.reload(); };
+        document.getElementById('add-coin-btn').onclick = () => db.ref(`users/${document.getElementById('user-select-admin').value}/balance`).set(firebase.database.ServerValue.increment(parseInt(document.getElementById('coin-amount').value)));
+        document.getElementById('sub-coin-btn').onclick = () => db.ref(`users/${document.getElementById('user-select-admin').value}/balance`).set(firebase.database.ServerValue.increment(-parseInt(document.getElementById('coin-amount').value)));
         
         updateUI();
     </script>
 </body>
 </html>
 ```eof
-
-အခုဆိုရင် ဂိမ်းအချိန်ကုန်သွားတာနဲ့ အလိုအလျောက် ရလဒ်ထွက်ပြီး (၃) မိနစ်အကြာမှာ နောက်ပွဲအသစ် စတင်နိုင်ဖို့အတွက် အချိန်ကို အလိုအလျောက် ပြန်ချိန်ပေးသွားမှာ ဖြစ်ပါတယ်။ User တွေလည်း ပွဲစတာနဲ့ ချက်ချင်းလောင်းလို့ ရပါပြီ။ စမ်းသပ်ကြည့်ပေးပါဦးခင်ဗျာ။
