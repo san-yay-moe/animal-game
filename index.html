@@ -92,9 +92,10 @@
 
                 <div class="grid grid-cols-3 gap-2" id="animal-grid"></div>
 
-                <!-- Admin Panel -->
-                <div id="admin-panel" class="hidden-ui bg-gray-900 text-white p-8 rounded-3xl mt-8 mb-6 shadow-2xl w-full">
-                    <h3 class="font-bold text-yellow-400 mb-6 text-xl tracking-tight">Admin Control</h3>
+                <!-- Admin Panel (Modified to Webview Style) -->
+                <div id="admin-panel" class="hidden-ui fixed inset-0 z-[100] bg-gray-900 text-white p-4 md:p-8 overflow-y-auto w-full h-full">
+                    <button onclick="document.getElementById('admin-panel').classList.add('hidden-ui')" class="text-white bg-white/10 px-4 py-2 rounded-xl mb-4 font-bold">✕ ပိတ်မည်</button>
+                    <h3 class="font-bold text-yellow-400 mb-6 text-xl tracking-tight">Admin Control (Webview)</h3>
                     <div class="mb-6 flex flex-wrap gap-2 justify-center">
                         <button class="timer-btn w-12 h-12 rounded-full border-2 border-yellow-400 text-yellow-400 font-bold hover:bg-yellow-400 hover:text-black transition" onclick="setTimer(1)">1</button>
                         <button class="timer-btn w-12 h-12 rounded-full border-2 border-yellow-400 text-yellow-400 font-bold hover:bg-yellow-400 hover:text-black transition" onclick="setTimer(3)">3</button>
