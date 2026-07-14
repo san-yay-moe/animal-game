@@ -21,7 +21,7 @@
 
         <!-- Login Screen -->
         <div id="login-screen" class="bg-white p-6 rounded-2xl shadow-xl max-w-md mx-auto">
-            <h2 class="text-lg font-bold mb-4 text-center">အကောင့်ဝင်ရန်</h2>
+            <h2 class="text-lg font-bold mb-4 text-center">ဥအကောင့်ဝင်ရန်</h2>
             <div class="mb-6 space-y-2">
                 <input type="text" id="login-name" class="p-3 border rounded-lg w-full" placeholder="အမည် (User ID)">
                 <input type="password" id="login-pass" class="p-3 border rounded-lg w-full" placeholder="စကားဝှက်">
@@ -189,20 +189,28 @@
         }
 
         window.changeBet = (i, delta) => {
+            if (!currentUserId || !users[currentUserId]) return;
             const user = users[currentUserId];
-            if(!user || adminState.nextReveal <= Date.now()) return;
             
-            const currentBet = (user.selections && user.selections[i]) ? user.selections[i] : 0;
+            // Check time
+            if(adminState.nextReveal <= Date.now()) return showMsg("အချိန်ကုန်သွားပါပြီ", true);
             
+            const currentBalance = user.balance || 0;
+            const currentBets = user.selections || {};
+            const betCount = currentBets[i] || 0;
+            
+            // Betting Logic
             if(delta > 0) {
-                if(user.balance >= 1) {
-                    db.ref(`users/${currentUserId}/balance`).set(user.balance - 1);
-                    db.ref(`users/${currentUserId}/selections/${i}`).set(currentBet + 1);
+                if(currentBalance >= 1) {
+                    db.ref(`users/${currentUserId}/balance`).set(currentBalance - 1);
+                    db.ref(`users/${currentUserId}/selections/${i}`).set(betCount + 1);
+                } else {
+                    showMsg("Coin မလုံလောက်ပါ", true);
                 }
             } else {
-                if(currentBet > 0) {
-                    db.ref(`users/${currentUserId}/balance`).set(user.balance + 1);
-                    db.ref(`users/${currentUserId}/selections/${i}`).set(currentBet - 1);
+                if(betCount > 0) {
+                    db.ref(`users/${currentUserId}/balance`).set(currentBalance + 1);
+                    db.ref(`users/${currentUserId}/selections/${i}`).set(betCount - 1);
                 }
             }
         };
@@ -216,16 +224,20 @@
                 const betCount = (users[currentUserId] && users[currentUserId].selections) ? (users[currentUserId].selections[i] || 0) : 0;
                 const div = document.createElement('div');
                 div.className = "bg-white p-3 rounded-xl shadow-sm text-center border relative";
-                div.innerHTML = `
-                    <div class="font-bold text-sm mb-2">${name}</div>
-                    ${!isAdmin ? `
-                        <div class="flex gap-1 justify-center">
-                            <button onclick="window.changeBet(${i}, -1)" class="px-3 py-1 bg-red-100 rounded">-</button>
-                            <span class="px-2 font-bold">${betCount}</span>
-                            <button onclick="window.changeBet(${i}, 1)" class="px-3 py-1 bg-green-100 rounded">+</button>
+                
+                // Add conditional rendering for admin/user
+                if(isAdmin) {
+                    div.innerHTML = `<div class="font-bold text-sm mb-2">${name}</div>`;
+                } else {
+                    div.innerHTML = `
+                        <div class="font-bold text-sm mb-2">${name}</div>
+                        <div class="flex gap-1 justify-center items-center">
+                            <button onclick="window.changeBet(${i}, -1)" class="w-8 h-8 flex items-center justify-center bg-red-100 rounded text-red-700 font-bold hover:bg-red-200">-</button>
+                            <span class="w-8 text-center font-bold text-lg">${betCount}</span>
+                            <button onclick="window.changeBet(${i}, 1)" class="w-8 h-8 flex items-center justify-center bg-green-100 rounded text-green-700 font-bold hover:bg-green-200">+</button>
                         </div>
-                    ` : ''}
-                `;
+                    `;
+                }
                 grid.appendChild(div);
             });
         }
