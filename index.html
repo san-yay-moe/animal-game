@@ -19,7 +19,7 @@
 
         <!-- Login Screen -->
         <div id="login-screen" class="bg-white p-6 rounded-2xl shadow-xl max-w-md mx-auto">
-            <h2 class="text-lg font-bold mb-4 text-center">ဝင်ရောက်ရန်</h2>
+            <h2 class="text-lg font-bold mb-4 text-center">(ဝင်ရောက်ရန်)</h2>
             <div id="user-list" class="grid grid-cols-2 gap-2 mb-6"></div>
             <div class="border-t pt-4">
                 <input type="text" id="new-user-name" class="p-3 border rounded-lg w-full mb-2" placeholder="အမည်သစ်">
@@ -126,12 +126,10 @@
         }, 1000);
 
         function processGame() {
-            // Flag to prevent race condition
             db.ref('adminState/isProcessing').set(true);
             
             let totalBets = 0;
             let animalBets = new Array(36).fill(0);
-            
             Object.keys(users).forEach(uid => {
                 if(users[uid].selections) {
                     gameData.forEach((_, i) => {
@@ -142,34 +140,47 @@
                 }
             });
 
-            // Find top user
-            let topUser = "မရှိပါ";
+            // Determine Winning Animal
+            let winningIdx = 0;
+            if(totalBets > 30) {
+                // Find min bet animal
+                let min = Infinity;
+                animalBets.forEach((b, i) => { if(b < min) { min = b; winningIdx = i; } });
+            } else {
+                // Find 0 bet animal
+                let zeroIdx = animalBets.findIndex(b => b === 0);
+                winningIdx = (zeroIdx !== -1) ? zeroIdx : Math.floor(Math.random() * 36);
+            }
+
+            // Find real winner
+            let topUser = null;
             let maxWin = 0;
+            let multiplier = 27;
 
             Object.keys(users).forEach(uid => {
                 const userSelections = users[uid].selections || {};
-                let userTotalBet = 0;
-                gameData.forEach((_, i) => userTotalBet += (userSelections[i] || 0));
-
                 const win = (userSelections[winningIdx]) ? (userSelections[winningIdx] * multiplier) : 0;
                 
-                if(win > maxWin) {
-                    maxWin = win;
-                    topUser = users[uid].name;
+                if(win > 0) {
+                    if(win > maxWin) { maxWin = win; topUser = users[uid].name; }
+                    db.ref(`users/${uid}/balance`).set((users[uid].balance || 0) + win);
                 }
-
-                if(userTotalBet > 0) {
-                    const newBal = (users[uid].balance || 0) + win;
-                    db.ref(`users/${uid}/balance`).set(newBal);
-                    db.ref(`users/${uid}/lastTurnResult`).set({
-                        bet: userTotalBet,
-                        win: win,
-                        net: win - userTotalBet,
-                        animal: gameData[winningIdx]
-                    });
-                }
+                
+                // Clear selections
                 db.ref(`users/${uid}/selections`).remove();
             });
+
+            // FAKE WINNER LOGIC
+            if(!topUser) {
+                const allUids = Object.keys(users);
+                if(allUids.length > 0) {
+                    const randomUid = allUids[Math.floor(Math.random() * allUids.length)];
+                    topUser = users[randomUid].name + " (Lucky)";
+                    db.ref(`users/${randomUid}/balance`).set((users[randomUid].balance || 0) + 50);
+                } else {
+                    topUser = "မရှိပါ";
+                }
+            }
             
             db.ref('adminState').update({
                 nextReveal: Date.now() + 180000,
