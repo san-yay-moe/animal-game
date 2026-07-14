@@ -19,7 +19,7 @@
 
         <!-- Login Screen -->
         <div id="login-screen" class="bg-white p-6 rounded-2xl shadow-xl max-w-md mx-auto">
-            <h2 class="text-lg font-bold mb-4 text-center">*ဝင်ရောက်ရန်*</h2>
+            <h2 class="text-lg font-bold mb-4 text-center">ဝင်ရောက်ရန်</h2>
             <div id="user-list" class="grid grid-cols-2 gap-2 mb-6"></div>
             <div class="border-t pt-4">
                 <input type="text" id="new-user-name" class="p-3 border rounded-lg w-full mb-2" placeholder="အမည်သစ်">
@@ -64,6 +64,13 @@
         </div>
     </div>
 
+    <!-- Winner Slide UI -->
+    <div id="winner-slide" class="fixed bottom-0 left-0 w-full bg-green-600 text-white p-6 transform translate-y-full transition-transform duration-500 z-50 rounded-t-3xl shadow-2xl">
+        <h2 class="text-2xl font-bold mb-2">🎉 ဂိမ်းရလဒ် ထွက်ပါပြီ!</h2>
+        <p id="winner-text" class="text-lg"></p>
+        <button onclick="document.getElementById('winner-slide').classList.add('translate-y-full')" class="mt-4 bg-white text-green-600 w-full py-2 rounded-lg font-bold">Ok</button>
+    </div>
+
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyBbRZLUYhEvTHoCscb2ul_JURGsfBjCF4s",
@@ -86,7 +93,22 @@
         let isAdmin = localStorage.getItem('is_admin') === 'true';
 
         db.ref('users').on('value', (snap) => { users = snap.val() || {}; updateUI(); });
-        db.ref('adminState').on('value', (snap) => { adminState = snap.val() || adminState; updateUI(); });
+        db.ref('adminState').on('value', (snap) => { 
+            const oldWinner = adminState.lastWinnerIdx;
+            adminState = snap.val() || adminState; 
+            if(oldWinner !== adminState.lastWinnerIdx && adminState.lastWinnerIdx !== -1) {
+                showWinnerSlide();
+            }
+            updateUI(); 
+        });
+
+        function showWinnerSlide() {
+            const slide = document.getElementById('winner-slide');
+            const text = document.getElementById('winner-text');
+            const winner = adminState.winnerName || "ဘယ်သူမှမနိုင်";
+            text.innerText = `အနိုင်ရတဲ့အကောင် - ${gameData[adminState.lastWinnerIdx]}\nအများဆုံးအနိုင်ရသူ - ${winner}`;
+            slide.classList.remove('translate-y-full');
+        }
 
         setInterval(() => {
             const display = document.getElementById('timer-display');
@@ -99,13 +121,14 @@
                 display.innerText = `${mins}:${secs < 10 ? '0' + secs : secs}`;
             } else {
                 display.innerText = "ရလဒ်ထွက်နေသည်...";
-                processGame();
+                if (!adminState.isProcessing) processGame();
             }
         }, 1000);
 
         function processGame() {
-            if(adminState.nextReveal > Date.now() - 10000 && adminState.nextReveal < Date.now() + 10000) return;
-
+            // Flag to prevent race condition
+            db.ref('adminState/isProcessing').set(true);
+            
             let totalBets = 0;
             let animalBets = new Array(36).fill(0);
             
@@ -119,23 +142,9 @@
                 }
             });
 
-            let winningIdx = -1;
-            let multiplier = 0;
-            if (totalBets > 30) {
-                let minVal = Infinity;
-                gameData.forEach((_, i) => {
-                    if (animalBets[i] > 0 && animalBets[i] < minVal) {
-                        minVal = animalBets[i];
-                        winningIdx = i;
-                    }
-                });
-                multiplier = 27;
-            } else {
-                let zeros = [];
-                gameData.forEach((_, i) => { if(animalBets[i] === 0) zeros.push(i); });
-                winningIdx = zeros[Math.floor(Math.random() * zeros.length)];
-                multiplier = 0;
-            }
+            // Find top user
+            let topUser = "မရှိပါ";
+            let maxWin = 0;
 
             Object.keys(users).forEach(uid => {
                 const userSelections = users[uid].selections || {};
@@ -144,6 +153,11 @@
 
                 const win = (userSelections[winningIdx]) ? (userSelections[winningIdx] * multiplier) : 0;
                 
+                if(win > maxWin) {
+                    maxWin = win;
+                    topUser = users[uid].name;
+                }
+
                 if(userTotalBet > 0) {
                     const newBal = (users[uid].balance || 0) + win;
                     db.ref(`users/${uid}/balance`).set(newBal);
@@ -157,7 +171,12 @@
                 db.ref(`users/${uid}/selections`).remove();
             });
             
-            db.ref('adminState/nextReveal').set(Date.now() + 180000);
+            db.ref('adminState').update({
+                nextReveal: Date.now() + 180000,
+                lastWinnerIdx: winningIdx,
+                winnerName: topUser,
+                isProcessing: false
+            });
         }
 
         function renderUserList() {
