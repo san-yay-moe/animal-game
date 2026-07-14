@@ -193,12 +193,22 @@
             const activeChats = snap.val() || {};
             const container = document.getElementById('active-chats-content');
             if(!isAdmin) return;
-            let html = '';
-            Object.keys(activeChats).forEach(uid => {
-                const name = users[uid] ? users[uid].name : "Unknown";
-                html += `<div class="cursor-pointer hover:text-white text-blue-300 py-1" onclick="openPrivateChat('${uid}', '${name}')">💬 ${name}</div>`;
+            container.innerHTML = '';
+            
+            const chatList = Object.keys(activeChats);
+            if (chatList.length === 0) {
+                container.innerHTML = 'Chat လတ်တလောမရှိပါ။';
+                return;
+            }
+
+            chatList.forEach(uid => {
+                const name = (users[uid] && users[uid].name) ? users[uid].name : ("User: " + uid.substring(0, 5));
+                const div = document.createElement('div');
+                div.className = "cursor-pointer hover:text-white text-blue-300 py-1";
+                div.innerText = "💬 " + name;
+                div.onclick = () => openPrivateChat(uid, name);
+                container.appendChild(div);
             });
-            container.innerHTML = html || 'Chat လတ်တလောမရှိပါ။';
         });
 
         // Private Chat Logic
