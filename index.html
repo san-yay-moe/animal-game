@@ -21,7 +21,7 @@
 
         <!-- Login Screen -->
         <div id="login-screen" class="bg-white p-6 rounded-2xl shadow-xl max-w-md mx-auto">
-            <h2 class="text-lg font-bold mb-4 text-center">UP</h2>
+            <h2 class="text-lg font-bold mb-4 text-center">ကအကောင့်ဝင်ရန်</h2>
             <div class="mb-6 space-y-2">
                 <input type="text" id="login-name" class="p-3 border rounded-lg w-full" placeholder="အမည် (User ID)">
                 <input type="password" id="login-pass" class="p-3 border rounded-lg w-full" placeholder="စကားဝှက်">
@@ -47,6 +47,13 @@
                     <button id="reset-game-btn" class="bg-green-600 py-3 rounded-xl font-bold">ဂိမ်းအသစ်ဖွင့်မည် (Reset)</button>
                     <button id="calc-result-btn" class="bg-yellow-600 py-3 rounded-xl font-bold">ရလဒ်ထုတ်မည်</button>
                 </div>
+                
+                <!-- လောင်းထားမှုများစာရင်း -->
+                <div id="bets-list-container" class="bg-white text-black p-3 rounded-lg mb-4 text-sm max-h-40 overflow-y-auto">
+                    <h4 class="font-bold mb-2">လက်ရှိ လောင်းထားမှုများ -</h4>
+                    <div id="bets-list-content"></div>
+                </div>
+
                 <select id="user-select-admin" class="text-black w-full p-3 mb-3 rounded-lg"></select>
                 <input type="number" id="coin-amount" class="text-black w-full p-3 mb-3 rounded-lg" placeholder="Coin ပမာဏ">
                 <div class="flex gap-3 mb-3">
@@ -100,63 +107,62 @@
             const display = document.getElementById('timer-display');
             if(!display) return;
             const diff = adminState.nextReveal - Date.now();
-            
             if (diff > 0) {
                 const mins = Math.floor(diff / 60000);
                 const secs = Math.floor((diff % 60000) / 1000);
                 display.innerText = `${mins}:${secs < 10 ? '0' + secs : secs}`;
             } else {
-                display.innerText = "ရလဒ်တွက်ချက်နေသည်...";
-                if (!adminState.processed) {
-                    calculateResults(true);
-                }
+                if (!adminState.processed) calculateResults(true);
             }
         }, 1000);
 
         function calculateResults(isAuto = false) {
             if (adminState.processed) return;
 
-            const winnerIdx = Math.floor(Math.random() * gameData.length);
-            const winnerName = gameData[winnerIdx];
-            
-            // Payout Logic
+            // Logic: အနည်းဆုံး coin လောင်းထားတဲ့အကောင်ကို ရှာမယ်
+            let totalBets = new Array(gameData.length).fill(0);
             Object.keys(users).forEach(uid => {
-                const user = users[uid];
-                let winnings = 0;
-                
-                // If user played, check winnings
-                if(user.selections && user.selections[winnerIdx]) {
-                    winnings = user.selections[winnerIdx] * 27;
-                }
-                
-                // Update balance if they played
-                if(user.selections) {
-                    db.ref(`users/${uid}`).update({
-                        balance: (user.balance || 0) + winnings,
-                        selections: null // Reset bets for next round
+                if(users[uid].selections) {
+                    Object.keys(users[uid].selections).forEach(idx => {
+                        totalBets[idx] += users[uid].selections[idx];
                     });
                 }
             });
 
-            // Set state to processed and update winner
+            // အနည်းဆုံးကိုရှာမယ်
+            let minVal = Math.min(...totalBets);
+            let candidates = [];
+            totalBets.forEach((val, idx) => { if(val === minVal) candidates.push(idx); });
+            
+            // Randomly choose among the least if multiple exist
+            let winnerIdx = candidates[Math.floor(Math.random() * candidates.length)];
+            let winnerName = gameData[winnerIdx];
+            
+            Object.keys(users).forEach(uid => {
+                const user = users[uid];
+                let winnings = 0;
+                if(user.selections && user.selections[winnerIdx]) {
+                    winnings = user.selections[winnerIdx] * 27;
+                }
+                
+                db.ref(`users/${uid}`).update({
+                    balance: (user.balance || 0) + winnings,
+                    selections: null
+                });
+            });
+
             db.ref('adminState').update({
-                nextReveal: Date.now() + 180000, // 3 minutes for next round
+                nextReveal: Date.now() + 180000,
                 lastWinner: winnerName,
                 processed: true 
             });
 
-            // Re-enable processing for the next round after a delay
-            setTimeout(() => {
-                db.ref('adminState').update({ processed: false });
-            }, 5000);
-
-            if (!isAuto) showMsg("ရလဒ်ထွက်ရှိပြီး ဂိမ်းအသစ်စတင်ပါပြီ။");
+            setTimeout(() => { db.ref('adminState').update({ processed: false }); }, 5000);
         }
 
         function changeBet(i, delta) {
             const user = users[currentUserId];
-            if(!user) return;
-            if(adminState.nextReveal <= Date.now()) return showMsg("ဂိမ်းရပ်နားထားသည်", true);
+            if(!user || adminState.nextReveal <= Date.now()) return;
             
             const currentBet = (user.selections && user.selections[i]) ? user.selections[i] : 0;
             const balance = Number(user.balance || 0);
@@ -176,7 +182,21 @@
 
         function renderGrid() {
             const grid = document.getElementById('animal-grid');
+            const listContent = document.getElementById('bets-list-content');
             if(!grid || (!currentUserId && !isAdmin)) return;
+            
+            if(isAdmin) {
+                let html = '';
+                Object.keys(users).forEach(uid => {
+                    if(users[uid].selections) {
+                        Object.keys(users[uid].selections).forEach(idx => {
+                            html += `<div>${users[uid].name}: ${gameData[idx]} (${users[uid].selections[idx]})</div>`;
+                        });
+                    }
+                });
+                listContent.innerHTML = html || 'လောင်းထားသူမရှိသေးပါ။';
+            }
+
             grid.innerHTML = '';
             gameData.forEach((name, i) => {
                 const betCount = (users[currentUserId] && users[currentUserId].selections) ? (users[currentUserId].selections[i] || 0) : 0;
@@ -200,11 +220,7 @@
             if(currentUserId || isAdmin) {
                 document.getElementById('login-screen').classList.add('hidden-ui');
                 document.getElementById('game-ui').classList.remove('hidden-ui');
-                if(isAdmin) {
-                    document.getElementById('admin-panel').classList.remove('hidden-ui');
-                    const select = document.getElementById('user-select-admin');
-                    select.innerHTML = Object.keys(users).map(uid => `<option value="${uid}">${users[uid].name}</option>`).join('');
-                }
+                if(isAdmin) document.getElementById('admin-panel').classList.remove('hidden-ui');
                 if(!isAdmin && users[currentUserId]) {
                     document.getElementById('current-user-display').innerText = "User: " + users[currentUserId].name;
                     document.getElementById('coin-balance').innerText = users[currentUserId].balance || 0;
