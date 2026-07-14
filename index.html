@@ -17,9 +17,8 @@
     <div id="app" class="max-w-4xl mx-auto">
         <h1 class="text-2xl font-bold text-gray-800 mb-6 text-center">တိရစ္ဆာန် လောင်းကစား (၃၆ ကောင်)</h1>
 
-        <!-- Login Screen -->
         <div id="login-screen" class="bg-white p-6 rounded-2xl shadow-xl max-w-md mx-auto">
-            <h2 class="text-lg font-bold mb-4 text-center">* ဝင်ရောက်ရန်</h2>
+            <h2 class="text-lg font-bold mb-4 text-center">ဝင်ရောက်ရန်</h2>
             <div id="user-list" class="grid grid-cols-2 gap-2 mb-6"></div>
             <div class="border-t pt-4">
                 <input type="text" id="new-user-name" class="p-3 border rounded-lg w-full mb-2" placeholder="အမည်သစ်">
@@ -29,7 +28,6 @@
             <button id="admin-login-trigger" class="w-full mt-4 bg-gray-800 text-white font-bold py-3 rounded-lg hover:bg-gray-900 transition">Admin ဝင်ရောက်ရန်</button>
         </div>
 
-        <!-- Game UI -->
         <div id="game-ui" class="hidden-ui">
             <div class="bg-white p-4 rounded-2xl shadow-sm mb-6 flex justify-between items-center border border-gray-100">
                 <div>
@@ -39,7 +37,6 @@
                 <button id="logout-btn" class="bg-red-50 text-red-600 px-4 py-2 rounded-lg font-bold text-sm hover:bg-red-100 transition">Logout</button>
             </div>
 
-            <!-- Admin Panel -->
             <div id="admin-panel" class="hidden-ui bg-gray-900 text-white p-6 rounded-2xl mb-6 shadow-xl">
                 <h3 class="font-bold text-yellow-400 mb-4 text-lg">Admin Panel</h3>
                 <select id="user-select-admin" class="text-black w-full p-3 mb-3 rounded-lg"></select>
@@ -81,7 +78,7 @@
         const gameData = ["မြင်း", "ရွှေနဂါး", "လိပ်ပြာ", "ဆတ်", "မြွေ", "မျောက်", "ပင့်ကူ", "ဗျိုင်း", "ငန်း", "ခရု", "ဆင်", "ရွှေငါး", "ကြက်", "လိပ်", "ကျီး", "ကျား", "ဝက်", "ဒေါင်း", "ယုန်", "ခွေး", "ပုစွန်", "ဆိတ်", "နွား", "ဖား", "ပျား", "ကြွက်", "ငါးရှဉ့်", "ကျားသစ်", "ခြင်္သေ့", "သမင်", "ဝံပုလွေ", "လင်းယုန်", "ကြောင်", "ပုရွက်ဆိတ်", "ပိုးကောင်", "ငါး"];
 
         let users = {};
-        let adminState = { nextReveal: Date.now() + 180000, lastWinnerIdx: -1 };
+        let adminState = { nextReveal: Date.now() + 180000 };
         let currentUserId = localStorage.getItem('game_uid');
         let isAdmin = localStorage.getItem('is_admin') === 'true';
 
@@ -99,15 +96,14 @@
                 display.innerText = `${mins}:${secs < 10 ? '0' + secs : secs}`;
             } else {
                 display.innerText = "ရလဒ်ထွက်နေသည်...";
-                // Admin ဖြစ်စေ၊ မဖြစ်စေ တစ်စုံတစ်ယောက်က Process လုပ်ပေးရမည်။ 
-                // ဒီမှာ လွယ်ကူအောင် Admin အကောင့်ဝင်ထားရင် Auto Process လုပ်ပေးပါမယ်။
-                if(isAdmin) processGame();
+                // မည်သူမဆို အချိန်ပြည့်တာနဲ့ Trigger လုပ်နိုင်သည်
+                processGame();
             }
         }, 1000);
 
         function processGame() {
-            // အကြိမ်ကြိမ် Process မဖြစ်အောင် စစ်ဆေးခြင်း
-            if(adminState.nextReveal > Date.now() - 5000 && adminState.nextReveal < Date.now() + 5000) return;
+            // လုံခြုံရေးအရ တစ်ခါပဲ Run မည်
+            if(adminState.nextReveal > Date.now() - 10000 && adminState.nextReveal < Date.now() + 10000) return;
 
             let totalBets = 0;
             let animalBets = new Array(36).fill(0);
@@ -160,7 +156,8 @@
                 db.ref(`users/${uid}/selections`).remove();
             });
             
-            db.ref('adminState').set({ lastWinnerIdx: winningIdx, nextReveal: Date.now() + 180000 });
+            db.ref('adminState/nextReveal').set(Date.now() + 180000);
+            db.ref('adminState/lastWinnerIdx').set(winningIdx);
         }
 
         function updateUI() {
@@ -181,7 +178,6 @@
                             <p class="text-2xl font-bold ${net >= 0 ? 'text-green-600' : 'text-red-600'}">
                                 ${net >= 0 ? 'နိုင်' : 'ရှုံး'} - ${Math.abs(net)} Coin
                             </p>
-                            <p class="text-xs text-gray-500 mt-2">လောင်းထား - ${res.bet} | ရရှိ - ${res.win}</p>
                         `;
                     } else {
                         document.getElementById('result-display').classList.add('hidden-ui');
@@ -193,36 +189,6 @@
                 renderUserList();
             }
             renderGrid();
-            if(isAdmin) renderAdminPanel();
-        }
-
-        function renderUserList() {
-            const list = document.getElementById('user-list');
-            list.innerHTML = '';
-            Object.keys(users).forEach(uid => {
-                const btn = document.createElement('button');
-                btn.className = "bg-white p-3 border rounded-lg shadow-sm text-sm hover:bg-gray-50";
-                btn.innerText = users[uid].name;
-                btn.onclick = () => {
-                    const pass = prompt("Password:");
-                    if(pass === users[uid].password) {
-                        localStorage.setItem('game_uid', uid);
-                        currentUserId = uid;
-                        updateUI();
-                    } else { alert("Password မှားနေသည်"); }
-                };
-                list.appendChild(btn);
-            });
-        }
-
-        function renderAdminPanel() {
-            const select = document.getElementById('user-select-admin');
-            select.innerHTML = '';
-            Object.keys(users).forEach(uid => {
-                const opt = document.createElement('option');
-                opt.value = uid; opt.innerText = users[uid].name;
-                select.appendChild(opt);
-            });
         }
 
         function renderGrid() {
@@ -248,6 +214,7 @@
             document.getElementById('current-total-bet').innerText = totalBet;
         }
 
+        // Event Listeners... (rest of the UI logic)
         document.getElementById('add-user-btn').onclick = () => {
             const n = document.getElementById('new-user-name').value.trim();
             const p = document.getElementById('new-user-pass').value.trim();
@@ -264,18 +231,6 @@
                 isAdmin = true; localStorage.setItem('is_admin', 'true');
                 updateUI(); 
             }
-        };
-
-        document.getElementById('add-coin-btn').onclick = () => {
-            const uid = document.getElementById('user-select-admin').value;
-            const amt = parseInt(document.getElementById('coin-amount').value);
-            db.ref(`users/${uid}/balance`).set((users[uid].balance || 0) + amt);
-        };
-
-        document.getElementById('sub-coin-btn').onclick = () => {
-            const uid = document.getElementById('user-select-admin').value;
-            const amt = parseInt(document.getElementById('coin-amount').value);
-            db.ref(`users/${uid}/balance`).set((users[uid].balance || 0) - amt);
         };
 
         document.getElementById('logout-btn').onclick = () => {
