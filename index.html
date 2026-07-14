@@ -14,12 +14,13 @@
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen p-4">
+    <!-- STREAMING_CHUNK:Initializing HTML Structure -->
     <div id="app" class="max-w-4xl mx-auto">
         <h1 class="text-2xl font-bold text-gray-800 mb-6 text-center">တိရစ္ဆာန် လောင်းကစား (၃၆ ကောင်)</h1>
 
         <!-- Login Screen -->
         <div id="login-screen" class="bg-white p-6 rounded-2xl shadow-xl max-w-md mx-auto">
-            <h2 class="text-lg font-bold mb-4 text-center">&ဝင်ရောက်ရန်</h2>
+            <h2 class="text-lg font-bold mb-4 text-center">ဝင်ရောက်ရန်</h2>
             <div id="user-list" class="grid grid-cols-2 gap-2 mb-6"></div>
             <div class="border-t pt-4">
                 <input type="text" id="new-user-name" class="p-3 border rounded-lg w-full mb-2" placeholder="အမည်သစ်">
@@ -68,6 +69,7 @@
     </div>
 
     <script>
+        /* STREAMING_CHUNK:Configuring Firebase */
         const firebaseConfig = {
             apiKey: "AIzaSyBbRZLUYhEvTHoCscb2ul_JURGsfBjCF4s",
             authDomain: "birthday-62720.firebaseapp.com",
@@ -84,25 +86,26 @@
         const gameData = ["မြင်း", "ရွှေနဂါး", "လိပ်ပြာ", "ဆတ်", "မြွေ", "မျောက်", "ပင့်ကူ", "ဗျိုင်း", "ငန်း", "ခရု", "ဆင်", "ရွှေငါး", "ကြက်", "လိပ်", "ကျီး", "ကျား", "ဝက်", "ဒေါင်း", "ယုန်", "ခွေး", "ပုစွန်", "ဆိတ်", "နွား", "ဖား", "ပျား", "ကြွက်", "ငါးရှဉ့်", "ကျားသစ်", "ခြင်္သေ့", "သမင်", "ဝံပုလွေ", "လင်းယုန်", "ကြောင်", "ပုရွက်ဆိတ်", "ပိုးကောင်", "ငါး"];
 
         let users = {};
-        let adminState = { nextReveal: Date.now() + 180000 };
+        let adminState = { nextReveal: Date.now() + 180000, isProcessing: false };
         let currentUserId = localStorage.getItem('game_uid');
         let isAdmin = localStorage.getItem('is_admin') === 'true';
 
         db.ref('users').on('value', (snap) => { users = snap.val() || {}; updateUI(); });
         db.ref('adminState').on('value', (snap) => { 
-            const oldWinner = adminState.lastWinnerIdx;
+            const oldState = adminState;
             adminState = snap.val() || adminState; 
-            if(oldWinner !== adminState.lastWinnerIdx && adminState.lastWinnerIdx !== -1) {
+            if(oldState.lastWinnerIdx !== adminState.lastWinnerIdx && adminState.lastWinnerIdx !== undefined) {
                 showWinnerSlide();
             }
             updateUI(); 
         });
 
+        /* STREAMING_CHUNK:Defining Game logic functions */
         function showWinnerSlide() {
             const slide = document.getElementById('winner-slide');
             const text = document.getElementById('winner-text');
             const winner = adminState.winnerName || "ဘယ်သူမှမနိုင်";
-            text.innerText = `အနိုင်ရတဲ့အကောင် - ${gameData[adminState.lastWinnerIdx]}\nအများဆုံးအနိုင်ရသူ - ${winner}`;
+            text.innerText = `အနိုင်ရတဲ့အကောင် - ${gameData[adminState.lastWinnerIdx]}\nအနိုင်ရသူ - ${winner}`;
             slide.classList.remove('translate-y-full');
         }
 
@@ -117,7 +120,6 @@
                 display.innerText = `${mins}:${secs < 10 ? '0' + secs : secs}`;
             } else {
                 display.innerText = "ရလဒ်ထွက်နေသည်...";
-                // Allow any client to process the game if it's over
                 if (!adminState.isProcessing) processGame();
             }
         }, 1000);
@@ -180,6 +182,7 @@
             });
         }
 
+        /* STREAMING_CHUNK:Rendering UI */
         function renderUserList() {
             const list = document.getElementById('user-list');
             if(!list) return;
@@ -226,15 +229,16 @@
             if(!grid) return;
             grid.innerHTML = '';
             const user = users[currentUserId];
+            const isGameActive = Date.now() < adminState.nextReveal;
+            
             gameData.forEach((name, i) => {
                 const betCount = (user && user.selections) ? (user.selections[i] || 0) : 0;
                 const div = document.createElement('div');
-                div.className = "relative p-4 bg-white border rounded-xl shadow-sm text-sm text-center cursor-pointer hover:bg-blue-50 transition border-gray-200";
+                div.className = `relative p-4 bg-white border rounded-xl shadow-sm text-sm text-center ${isGameActive ? 'cursor-pointer hover:bg-blue-50' : 'opacity-50 cursor-not-allowed'} transition border-gray-200`;
                 div.innerHTML = `${name} ${betCount > 0 ? `<div class="bet-badge bg-red-500 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-bold">${betCount}</div>` : ''}`;
                 
                 div.onclick = () => {
-                    // Betting Logic fix: ensure we only block if the game is strictly closed
-                    if (isAdmin || !currentUserId || Date.now() >= adminState.nextReveal) return;
+                    if (!isGameActive || isAdmin || !currentUserId) return;
                     if ((user.balance || 0) < 1) return;
                     
                     db.ref(`users/${currentUserId}/balance`).set((user.balance || 0) - 1);
@@ -244,6 +248,7 @@
             });
         }
 
+        /* STREAMING_CHUNK:Defining event handlers */
         document.getElementById('add-user-btn').onclick = async () => {
             const n = document.getElementById('new-user-name').value.trim();
             const p = document.getElementById('new-user-pass').value.trim();
@@ -291,3 +296,6 @@
     </script>
 </body>
 </html>
+```eof
+
+အခုဆိုရင် ဂိမ်းအချိန်ကုန်သွားတာနဲ့ အလိုအလျောက် ရလဒ်ထွက်ပြီး (၃) မိနစ်အကြာမှာ နောက်ပွဲအသစ် စတင်နိုင်ဖို့အတွက် အချိန်ကို အလိုအလျောက် ပြန်ချိန်ပေးသွားမှာ ဖြစ်ပါတယ်။ User တွေလည်း ပွဲစတာနဲ့ ချက်ချင်းလောင်းလို့ ရပါပြီ။ စမ်းသပ်ကြည့်ပေးပါဦးခင်ဗျာ။
