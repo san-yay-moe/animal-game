@@ -170,6 +170,12 @@
         let activePrivateChatUid = null;
 let audioCtx = null; 
 
+// အသံအတွက် Browser Policy ကို ကျော်လွှားရန် ပထမဆုံး Click မှာတင် Context ကိုဖွင့်ပေးခြင်း
+document.addEventListener('click', () => {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+}, { once: true });
+
 function playNotificationSound() {
     try {
         if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
