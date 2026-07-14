@@ -19,7 +19,7 @@
 
         <!-- Login Screen -->
         <div id="login-screen" class="bg-white p-6 rounded-2xl shadow-xl max-w-md mx-auto">
-            <h2 class="text-lg font-bold mb-4 text-center">* ဝင်ရောက်ရန်</h2>
+            <h2 class="text-lg font-bold mb-4 text-center">ဝင်ရောက်ရန်</h2>
             <div id="user-list" class="grid grid-cols-2 gap-2 mb-6"></div>
             <div class="border-t pt-4">
                 <input type="text" id="new-user-name" class="p-3 border rounded-lg w-full mb-2" placeholder="အမည်သစ်">
@@ -39,7 +39,7 @@
                 <button id="logout-btn" class="bg-red-50 text-red-600 px-4 py-2 rounded-lg font-bold text-sm hover:bg-red-100 transition">Logout</button>
             </div>
 
-            <!-- Admin Panel (Only for Admin) -->
+            <!-- Admin Panel -->
             <div id="admin-panel" class="hidden-ui bg-gray-900 text-white p-6 rounded-2xl mb-6 shadow-xl">
                 <h3 class="font-bold text-yellow-400 mb-4 text-lg">Admin Panel</h3>
                 <select id="user-select-admin" class="text-black w-full p-3 mb-3 rounded-lg"></select>
@@ -54,9 +54,8 @@
                 အချိန် - <span id="timer-display" class="text-blue-800 text-2xl font-mono">--:--</span>
             </div>
 
-            <!-- New: Display Total Bet for this turn -->
             <div class="bg-white p-3 rounded-xl shadow-sm mb-4 border text-center text-sm font-bold text-gray-700">
-                လက်ရှိပွဲတွင် လောင်းထားသည့် Coin: <span id="current-total-bet" class="text-red-600">0</span>
+                လက်ရှိလောင်းထား - <span id="current-total-bet" class="text-red-600">0</span>
             </div>
 
             <div id="result-display" class="hidden-ui bg-yellow-100 p-4 rounded-xl text-center font-bold text-lg mb-6 border border-yellow-300"></div>
@@ -86,7 +85,6 @@
         let currentUserId = localStorage.getItem('game_uid');
         let isAdmin = localStorage.getItem('is_admin') === 'true';
 
-        // Firebase Sync
         db.ref('users').on('value', (snap) => { users = snap.val() || {}; updateUI(); });
         db.ref('adminState').on('value', (snap) => { adminState = snap.val() || adminState; updateUI(); });
 
@@ -101,10 +99,7 @@
                 display.innerText = `${mins}:${secs < 10 ? '0' + secs : secs}`;
             } else {
                 display.innerText = "ရလဒ်ထွက်နေသည်...";
-                // Admin triggers calculation automatically
-                if(isAdmin) {
-                    processGame();
-                }
+                if(isAdmin) processGame();
             }
         }, 1000);
 
@@ -114,21 +109,14 @@
             
             Object.keys(users).forEach(uid => {
                 if(users[uid].selections) {
-                    let userTotalBet = 0;
                     gameData.forEach((_, i) => {
                         const b = users[uid].selections[i] || 0;
                         animalBets[i] += b;
                         totalBets += b;
-                        userTotalBet += b;
                     });
-
-                    // Logic to calculate win/loss per user
-                    let winningIdx = -1;
-                    // ... (will be determined below) ...
                 }
             });
 
-            // Re-calculate after knowing totalBets
             let winningIdx = -1;
             let multiplier = 0;
             if (totalBets > 30) {
@@ -147,7 +135,6 @@
                 multiplier = 0;
             }
 
-            // Distribute winnings and save result
             Object.keys(users).forEach(uid => {
                 const userSelections = users[uid].selections || {};
                 let userTotalBet = 0;
@@ -158,7 +145,6 @@
                 if(userTotalBet > 0) {
                     const newBal = (users[uid].balance || 0) + win;
                     db.ref(`users/${uid}/balance`).set(newBal);
-                    // Save Last Result
                     db.ref(`users/${uid}/lastTurnResult`).set({
                         bet: userTotalBet,
                         win: win,
@@ -169,10 +155,7 @@
                 db.ref(`users/${uid}/selections`).remove();
             });
             
-            db.ref('adminState').set({ 
-                lastWinnerIdx: winningIdx, 
-                nextReveal: Date.now() + 180000 
-            });
+            db.ref('adminState').set({ lastWinnerIdx: winningIdx, nextReveal: Date.now() + 180000 });
         }
 
         function updateUI() {
@@ -184,16 +167,16 @@
                     document.getElementById('current-user-display').innerText = "User: " + users[currentUserId].name;
                     document.getElementById('coin-balance').innerText = users[currentUserId].balance || 0;
                     
-                    // Show Last Turn Result
                     if(users[currentUserId].lastTurnResult) {
                         const res = users[currentUserId].lastTurnResult;
+                        const net = res.win - res.bet;
                         document.getElementById('result-display').classList.remove('hidden-ui');
                         document.getElementById('result-display').innerHTML = `
-                            <div class="text-sm">အနိုင်ရ - ${res.animal}</div>
-                            <div class="text-lg ${res.net >= 0 ? 'text-green-700' : 'text-red-700'}">
-                                ${res.net >= 0 ? 'နိုင်' : 'ရှုံး'} - ${Math.abs(res.net)} Coin
-                            </div>
-                            <div class="text-xs text-gray-500">လောင်းထား - ${res.bet} | ပြန်ရ - ${res.win}</div>
+                            <p>အနိုင်ရ - ${res.animal}</p>
+                            <p class="text-2xl font-bold ${net >= 0 ? 'text-green-600' : 'text-red-600'}">
+                                ${net >= 0 ? 'နိုင်' : 'ရှုံး'} - ${Math.abs(net)} Coin
+                            </p>
+                            <p class="text-xs text-gray-500 mt-2">လောင်းထား - ${res.bet} | ရရှိ - ${res.win}</p>
                         `;
                     }
                 }
@@ -201,11 +184,6 @@
                 document.getElementById('login-screen').classList.remove('hidden-ui');
                 document.getElementById('game-ui').classList.add('hidden-ui');
                 renderUserList();
-            }
-            
-            if(adminState.lastWinnerIdx !== -1) {
-                document.getElementById('result-display').classList.remove('hidden-ui');
-                document.getElementById('result-display').innerText = "အနိုင်ရသူ - " + gameData[adminState.lastWinnerIdx];
             }
             renderGrid();
             if(isAdmin) renderAdminPanel();
@@ -245,7 +223,6 @@
             grid.innerHTML = '';
             const user = users[currentUserId];
             let totalBet = 0;
-            
             gameData.forEach((name, i) => {
                 const betCount = (user && user.selections) ? (user.selections[i] || 0) : 0;
                 totalBet += betCount;
@@ -257,7 +234,6 @@
                     if ((user.balance || 0) < 1) return;
                     db.ref(`users/${currentUserId}/balance`).set((user.balance || 0) - 1);
                     db.ref(`users/${currentUserId}/selections/${i}`).set((betCount + 1));
-                    // Clear result display when starting new bet
                     db.ref(`users/${currentUserId}/lastTurnResult`).remove();
                 };
                 grid.appendChild(div);
