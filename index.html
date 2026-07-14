@@ -117,7 +117,6 @@
         }, 1000);
 
         function updateUI() {
-            // Check for login status
             const isAuthenticated = currentUserId || isAdmin;
 
             if(isAuthenticated) {
@@ -184,7 +183,6 @@
             if(!grid || (!currentUserId && !isAdmin)) return;
             grid.innerHTML = '';
             
-            // Calculate total bets for all animals for admin view
             let totalBetsPerAnimal = new Array(36).fill(0);
             if (isAdmin) {
                 Object.values(users).forEach(u => {
@@ -217,7 +215,6 @@
             });
         }
 
-        // Admin Listeners
         document.getElementById('user-select-admin').onchange = () => {
             const uid = document.getElementById('user-select-admin').value;
             document.getElementById('admin-user-balance').innerText = `ရွေးထားသူ - ${users[uid]?.balance || 0} Coins`;
@@ -278,7 +275,6 @@
             if(uid && amt) db.ref(`users/${uid}/balance`).set(Math.max(0, (users[uid].balance || 0) - amt));
         };
         
-        // Initial call
         updateUI();
     </script>
 </body>
