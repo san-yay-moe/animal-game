@@ -21,7 +21,7 @@
 
         <!-- Login Screen -->
         <div id="login-screen" class="bg-white p-6 rounded-2xl shadow-xl max-w-md mx-auto">
-            <h2 class="text-lg font-bold mb-4 text-center">အကောင့်ဝင်ရန်</h2>
+            <h2 class="text-lg font-bold mb-4 text-center">UP</h2>
             <div class="mb-6 space-y-2">
                 <input type="text" id="login-name" class="p-3 border rounded-lg w-full" placeholder="အမည် (User ID)">
                 <input type="password" id="login-pass" class="p-3 border rounded-lg w-full" placeholder="စကားဝှက်">
@@ -123,27 +123,29 @@
             Object.keys(users).forEach(uid => {
                 const user = users[uid];
                 let winnings = 0;
+                
+                // If user played, check winnings
                 if(user.selections && user.selections[winnerIdx]) {
-                    winnings = user.selections[winnerIdx] * 36;
+                    winnings = user.selections[winnerIdx] * 27;
                 }
                 
-                // Only write to db if user actually made a bet, to save bandwidth
+                // Update balance if they played
                 if(user.selections) {
                     db.ref(`users/${uid}`).update({
                         balance: (user.balance || 0) + winnings,
-                        selections: null // Reset bets
+                        selections: null // Reset bets for next round
                     });
                 }
             });
 
-            // Set state to processed and auto-restart new round immediately
+            // Set state to processed and update winner
             db.ref('adminState').update({
-                nextReveal: Date.now() + 180000, 
+                nextReveal: Date.now() + 180000, // 3 minutes for next round
                 lastWinner: winnerName,
                 processed: true 
             });
 
-            // Automatically unlock processing for the *next* round to ensure continuity
+            // Re-enable processing for the next round after a delay
             setTimeout(() => {
                 db.ref('adminState').update({ processed: false });
             }, 5000);
