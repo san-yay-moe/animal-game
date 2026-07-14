@@ -169,13 +169,18 @@
         let selectedMinutes = 3;
         let activePrivateChatUid = null;
         let privateChatListener = null;
+        let activeChatsData = {}; // Added to track chat state globally
 
         function setTimer(m) {
             selectedMinutes = m;
             showMsg(m + " မိနစ် ရွေးချယ်ပြီးပါပြီ");
         }
 
-        db.ref('users').on('value', (snap) => { users = snap.val() || {}; updateUI(); });
+        db.ref('users').on('value', (snap) => { 
+            users = snap.val() || {}; 
+            updateUI(); 
+            if(typeof renderActiveChats === 'function') renderActiveChats();
+        });
         db.ref('adminState').on('value', (snap) => { adminState = snap.val() || { nextReveal: 0, processed: true }; updateUI(); });
 
         db.ref('chat').limitToLast(20).on('child_added', (snap) => {
@@ -189,13 +194,12 @@
         });
 
         // Track active chats
-        db.ref('privateChat').on('value', (snap) => {
-            const activeChats = snap.val() || {};
+        function renderActiveChats() {
             const container = document.getElementById('active-chats-content');
-            if(!isAdmin) return;
+            if(!container) return;
             container.innerHTML = '';
             
-            const chatList = Object.keys(activeChats);
+            const chatList = Object.keys(activeChatsData);
             if (chatList.length === 0) {
                 container.innerHTML = 'Chat လတ်တလောမရှိပါ။';
                 return;
@@ -204,11 +208,16 @@
             chatList.forEach(uid => {
                 const name = (users[uid] && users[uid].name) ? users[uid].name : ("User: " + uid.substring(0, 5));
                 const div = document.createElement('div');
-                div.className = "cursor-pointer hover:text-white text-blue-300 py-1";
+                div.className = "cursor-pointer hover:text-white text-blue-300 py-2 border-b border-white/10 last:border-0";
                 div.innerText = "💬 " + name;
-                div.onclick = () => openPrivateChat(uid, name);
+                div.onclick = function() { openPrivateChat(uid, name); };
                 container.appendChild(div);
             });
+        }
+
+        db.ref('privateChat').on('value', (snap) => {
+            activeChatsData = snap.val() || {};
+            renderActiveChats();
         });
 
         // Private Chat Logic
@@ -237,8 +246,9 @@
             const input = document.getElementById('private-chat-input');
             const text = input.value.trim();
             if(text && activePrivateChatUid) {
+                let senderName = isAdmin ? 'Admin' : (users[currentUserId] && users[currentUserId].name ? users[currentUserId].name : currentUserId);
                 db.ref('privateChat/' + activePrivateChatUid).push({
-                    sender: isAdmin ? 'Admin' : users[currentUserId].name,
+                    sender: senderName,
                     text: text,
                     timestamp: Date.now()
                 });
