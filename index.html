@@ -19,7 +19,7 @@
 
         <!-- Login Screen -->
         <div id="login-screen" class="bg-white p-6 rounded-2xl shadow-xl max-w-md mx-auto">
-            <h2 class="text-lg font-bold mb-4 text-center">ဝင်ရောက်ရန်</h2>
+            <h2 class="text-lg font-bold mb-4 text-center">* ဝင်ရောက်ရန်</h2>
             <div id="user-list" class="grid grid-cols-2 gap-2 mb-6"></div>
             <div class="border-t pt-4">
                 <input type="text" id="new-user-name" class="p-3 border rounded-lg w-full mb-2" placeholder="အမည်သစ်">
@@ -99,11 +99,16 @@
                 display.innerText = `${mins}:${secs < 10 ? '0' + secs : secs}`;
             } else {
                 display.innerText = "ရလဒ်ထွက်နေသည်...";
+                // Admin ဖြစ်စေ၊ မဖြစ်စေ တစ်စုံတစ်ယောက်က Process လုပ်ပေးရမည်။ 
+                // ဒီမှာ လွယ်ကူအောင် Admin အကောင့်ဝင်ထားရင် Auto Process လုပ်ပေးပါမယ်။
                 if(isAdmin) processGame();
             }
         }, 1000);
 
         function processGame() {
+            // အကြိမ်ကြိမ် Process မဖြစ်အောင် စစ်ဆေးခြင်း
+            if(adminState.nextReveal > Date.now() - 5000 && adminState.nextReveal < Date.now() + 5000) return;
+
             let totalBets = 0;
             let animalBets = new Array(36).fill(0);
             
@@ -178,6 +183,8 @@
                             </p>
                             <p class="text-xs text-gray-500 mt-2">လောင်းထား - ${res.bet} | ရရှိ - ${res.win}</p>
                         `;
+                    } else {
+                        document.getElementById('result-display').classList.add('hidden-ui');
                     }
                 }
             } else {
