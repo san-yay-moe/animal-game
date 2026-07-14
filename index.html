@@ -18,7 +18,7 @@
     <div id="app" class="max-w-4xl mx-auto">
         <!-- Login Screen -->
         <div id="login-screen" class="bg-white p-8 rounded-3xl shadow-2xl max-w-md mx-auto border border-gray-100">
-            <h1 class="text-3xl font-black text-gray-800 mb-8 text-center tracking-tight">UP</h1>
+            <h1 class="text-3xl font-black text-gray-800 mb-8 text-center tracking-tight">တိရစ္ဆာန် လောင်းကစား </h1>
             <div class="mb-6 space-y-4">
                 <input type="text" id="login-name" class="p-4 bg-gray-50 border-none rounded-2xl w-full focus:ring-2 focus:ring-blue-500 transition" placeholder="အမည် (User ID)">
                 <input type="password" id="login-pass" class="p-4 bg-gray-50 border-none rounded-2xl w-full focus:ring-2 focus:ring-blue-500 transition" placeholder="စကားဝှက်">
@@ -72,11 +72,15 @@
             <!-- Admin Panel -->
             <div id="admin-panel" class="hidden-ui bg-gray-900 text-white p-8 rounded-3xl mb-6 shadow-2xl">
                 <h3 class="font-bold text-yellow-400 mb-6 text-xl tracking-tight">Admin Control</h3>
+                <div class="mb-6 flex flex-wrap gap-2 justify-center">
+                    <button class="timer-btn w-12 h-12 rounded-full border-2 border-yellow-400 text-yellow-400 font-bold hover:bg-yellow-400 hover:text-black transition" onclick="setTimer(1)">1</button>
+                    <button class="timer-btn w-12 h-12 rounded-full border-2 border-yellow-400 text-yellow-400 font-bold hover:bg-yellow-400 hover:text-black transition" onclick="setTimer(3)">3</button>
+                    <button class="timer-btn w-12 h-12 rounded-full border-2 border-yellow-400 text-yellow-400 font-bold hover:bg-yellow-400 hover:text-black transition" onclick="setTimer(5)">5</button>
+                    <button class="timer-btn w-12 h-12 rounded-full border-2 border-yellow-400 text-yellow-400 font-bold hover:bg-yellow-400 hover:text-black transition" onclick="setTimer(10)">10</button>
+                    <button class="timer-btn w-12 h-12 rounded-full border-2 border-yellow-400 text-yellow-400 font-bold hover:bg-yellow-400 hover:text-black transition" onclick="setTimer(30)">30</button>
+                </div>
                 <div class="grid grid-cols-1 gap-4 mb-6">
-                    <div class="flex gap-2">
-                        <input type="number" id="timer-minutes" class="text-black p-4 rounded-2xl w-full" placeholder="မိနစ်" value="3">
-                        <button id="reset-game-btn" class="bg-green-600 px-6 rounded-2xl font-bold hover:bg-green-700 transition">Reset</button>
-                    </div>
+                    <button id="reset-game-btn" class="bg-green-600 py-4 rounded-2xl font-bold hover:bg-green-700 transition">Reset</button>
                     <button id="calc-result-btn" class="bg-yellow-600 py-4 rounded-2xl font-bold hover:bg-yellow-700 transition">ရလဒ်ထုတ်</button>
                 </div>
                 <div id="bets-list-container" class="bg-white/10 p-4 rounded-2xl mb-4 text-sm max-h-40 overflow-y-auto border border-white/10">
@@ -134,6 +138,12 @@
         let adminState = { nextReveal: 0, processed: true, lastWinner: "" };
         let currentUserId = localStorage.getItem('game_uid');
         let isAdmin = localStorage.getItem('is_admin') === 'true';
+        let selectedMinutes = 3;
+
+        function setTimer(m) {
+            selectedMinutes = m;
+            showMsg(m + " မိနစ် ရွေးချယ်ပြီးပါပြီ");
+        }
 
         db.ref('users').on('value', (snap) => { users = snap.val() || {}; updateUI(); });
         db.ref('adminState').on('value', (snap) => { adminState = snap.val() || { nextReveal: 0, processed: true }; updateUI(); });
@@ -353,8 +363,8 @@
             }
         };
         document.getElementById('reset-game-btn').onclick = () => {
-            const mins = parseInt(document.getElementById('timer-minutes').value) || 3;
-            db.ref('adminState').update({ nextReveal: Date.now() + (mins * 60000), processed: false });
+            db.ref('adminState').update({ nextReveal: Date.now() + (selectedMinutes * 60000), processed: false });
+            showMsg("ဂိမ်းအား Reset ချပြီးပါပြီ (" + selectedMinutes + " မိနစ်)");
         };
         document.getElementById('calc-result-btn').onclick = () => calculateResults();
         document.getElementById('login-existing-btn').onclick = () => {
