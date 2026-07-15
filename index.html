@@ -47,14 +47,17 @@
                 <p class="text-xl font-black text-gray-800"><span id="current-bet-count" class="text-red-500">0</span> coin</p>
                 <div id="win-loss-status" class="text-xs font-bold mt-2 text-gray-400">စောင့်ဆိုင်းနေသည်...</div>
             </div>
-            <div class="bg-blue-600 p-4 rounded-2xl shadow-lg flex flex-row justify-between items-center text-white">
+        </div>
+
+        <!-- Main Content -->
+        <div id="game-content" class="flex-1 bg-gray-50 p-4 md:p-8 overflow-y-auto min-h-0">
+            <div id="result-display" class="hidden-ui bg-yellow-400 p-4 rounded-2xl text-center font-black text-lg mb-6 shadow-lg text-yellow-900"></div>
+            
+            <div class="bg-blue-600 p-4 rounded-2xl shadow-lg flex flex-row justify-between items-center text-white mb-6">
                 <h4 class="font-bold text-blue-100 text-xs uppercase">အချိန်</h4>
                 <span id="timer-display" class="text-3xl font-black font-mono tracking-tighter">--:--</span>
             </div>
-        </div>
 
-        <div id="game-content" class="flex-1 bg-gray-50 p-4 md:p-8 overflow-y-auto min-h-0">
-            <div id="result-display" class="hidden-ui bg-yellow-400 p-4 rounded-2xl text-center font-black text-lg mb-6 shadow-lg text-yellow-900"></div>
             <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-6 gap-3" id="animal-grid"></div>
 
             <div id="admin-panel" class="hidden-ui bg-gray-900 text-white p-4 md:p-8 mt-8 rounded-3xl">
