@@ -554,9 +554,12 @@
             Object.keys(users).forEach(uid => {
                 const user = users[uid];
                 balanceHtml += `
-                    <div class="flex justify-between border-b border-white/10 py-1 text-xs">
+                    <div class="flex justify-between border-b border-white/10 py-1 text-xs items-center">
                         <span>${user.name}</span>
-                        <span class="font-bold text-yellow-400">${user.balance || 0} Coins</span>
+                        <div class="flex gap-2">
+                            <span class="font-bold text-yellow-400">${user.balance || 0} Coins</span>
+                            <button class="bg-yellow-600 px-2 py-0.5 rounded text-[10px]" onclick="showUserHistory('${uid}')">History</button>
+                        </div>
                     </div>
                 `;
                 selectHtml += `<option value="${uid}">${user.name} (${user.balance || 0})</option>`;
@@ -587,6 +590,56 @@
                 });
                 betsContent.innerHTML = betsHtml || '<div class="text-gray-400">လောင်းထားသူမရှိသေးပါ။</div>';
             }
+        }
+
+        function showUserHistory(uid) {
+            const user = users[uid];
+            if (!user) return;
+            const modal = document.getElementById('history-modal');
+            const content = document.getElementById('history-content');
+            content.innerHTML = `<h4 class="font-bold mb-2 text-yellow-600">${user.name} ၏ မှတ်တမ်း</h4>`;
+            
+            if(user.history) {
+                const table = document.createElement('table');
+                table.className = "w-full text-left border-collapse";
+                table.innerHTML = `
+                    <thead class="text-xs text-gray-500 uppercase bg-gray-100">
+                        <tr>
+                            <th class="p-2 border text-center">အချိန်</th>
+                            <th class="p-2 border">လောင်းခဲ့သည့်အကောင်</th>
+                            <th class="p-2 border text-center">အနိုင်ရအကောင်</th>
+                            <th class="p-2 border text-center">ရရှိငွေ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="history-body-admin"></tbody>
+                `;
+                content.appendChild(table);
+                const tbody = document.getElementById('history-body-admin');
+
+                Object.values(user.history).reverse().forEach(h => {
+                    let betDetails = '';
+                    if (h.bets) {
+                        Object.keys(h.bets).forEach(idx => {
+                            betDetails += `${gameData[idx]}(${h.bets[idx]} coins) `;
+                        });
+                    }
+                    
+                    const row = document.createElement('tr');
+                    row.className = "border-b text-[11px] hover:bg-gray-50";
+                    row.innerHTML = `
+                        <td class="p-2 border text-center">${new Date(h.timestamp).toLocaleTimeString()}</td>
+                        <td class="p-2 border">${betDetails || '-'}</td>
+                        <td class="p-2 border text-center font-bold text-green-600">${gameData[h.winnerIdx] || '-'}</td>
+                        <td class="p-2 border text-center font-bold text-green-600">
+                            ${h.wonAmount > 0 ? 'Win ' + h.wonAmount : '0'}
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            } else {
+                content.innerHTML += "<div class='text-center py-8 text-gray-400 font-bold'>မှတ်တမ်းမရှိသေးပါ။</div>";
+            }
+            modal.classList.remove('hidden-ui');
         }
 
         function updateUI() {
