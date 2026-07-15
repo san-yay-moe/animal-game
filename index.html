@@ -46,6 +46,7 @@
                 <h4 class="font-bold text-gray-500 text-xs uppercase mb-1">လက်ရှိလောင်းထားမှု</h4>
                 <p class="text-xl font-black text-gray-800"><span id="current-bet-count" class="text-red-500">0</span> coin</p>
                 <div id="win-loss-status" class="text-xs font-bold mt-2 text-gray-400">စောင့်ဆိုင်းနေသည်...</div>
+                <div class="mt-2 text-sm font-bold text-gray-500">အချိန်: <span id="timer-display" class="text-blue-600 font-black">--:--</span></div>
             </div>
         </div>
 
@@ -746,11 +747,11 @@
             const p = document.getElementById('login-pass').value.trim();
             if(!n || !p) { showMsg("အမည်နှင့် စကားဝှက် ထည့်ပါ", true); return; }
             const uid = n.replace(/[^a-z0-9]/gi, '');
+            localStorage.removeItem('is_admin');
             
             if(users[uid]) {
                 if(users[uid].password === p) { 
                     localStorage.setItem('game_uid', uid); 
-                    localStorage.removeItem('is_admin');
                     isAdmin = false;
                     currentUserId = uid; 
                     updateUI(); 
@@ -766,7 +767,6 @@
                     selections: null
                 }).then(() => {
                     localStorage.setItem('game_uid', uid); 
-                    localStorage.removeItem('is_admin');
                     isAdmin = false;
                     currentUserId = uid; 
                     updateUI(); 
