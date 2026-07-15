@@ -474,6 +474,19 @@
             }
         };
 
+        // Chat Modal Opening Listeners
+        document.getElementById('open-chat-btn').onclick = () => {
+            document.getElementById('chat-modal').classList.remove('hidden-ui');
+        };
+
+        document.getElementById('open-private-chat-btn').onclick = () => {
+            document.getElementById('private-chat-modal').classList.remove('hidden-ui');
+        };
+
+        document.getElementById('close-private-chat-btn').onclick = () => {
+            document.getElementById('private-chat-modal').classList.add('hidden-ui');
+        };
+
         updateUI();
     </script>
 </body>
