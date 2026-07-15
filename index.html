@@ -611,10 +611,10 @@
                             <th class="p-2 border text-center">ရရှိငွေ</th>
                         </tr>
                     </thead>
-                    <tbody id="history-body-admin"></tbody>
+                    <tbody id="history-body"></tbody>
                 `;
                 content.appendChild(table);
-                const tbody = document.getElementById('history-body-admin');
+                const tbody = document.getElementById('history-body');
 
                 Object.values(user.history).reverse().forEach(h => {
                     let betDetails = '';
