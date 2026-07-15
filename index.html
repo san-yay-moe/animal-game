@@ -214,6 +214,26 @@
             chatMessages.scrollTop = chatMessages.scrollHeight;
         });
 
+        // Chat rendering fix
+        function renderActiveChats() {
+            const container = document.getElementById('active-chats-content');
+            if(!container || !isAdmin) return;
+            db.ref('privateChats').once('value', (snap) => {
+                const chats = snap.val() || {};
+                container.innerHTML = '';
+                Object.keys(chats).forEach(uid => {
+                    const btn = document.createElement('div');
+                    btn.className = "bg-purple-500 p-2 rounded-xl mb-2 cursor-pointer hover:bg-purple-600 text-white font-bold";
+                    btn.innerText = (users[uid] ? users[uid].name : uid) + " - Chat";
+                    btn.onclick = () => {
+                        activePrivateChatUid = uid;
+                        document.getElementById('private-chat-modal').classList.remove('hidden-ui');
+                    };
+                    container.appendChild(btn);
+                });
+            });
+        }
+
         // History Table Renderer
         document.getElementById('open-history-btn').onclick = () => {
             const modal = document.getElementById('history-modal');
