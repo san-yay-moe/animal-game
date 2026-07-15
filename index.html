@@ -15,10 +15,10 @@
 <body class="h-screen overflow-hidden">
     <div id="message-box" class="fixed top-5 right-5 z-50 hidden p-4 rounded-xl shadow-2xl text-white"></div>
 
-    <!-- Login Screen (Centered Overlay) -->
+    <!-- Login Screen -->
     <div id="login-screen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-100">
         <div class="bg-white p-5 rounded-3xl shadow-xl border border-gray-100 max-w-sm w-full">
-            <h1 class="text-2xl font-black text-gray-800 mb-6 text-center tracking-tight">85</h1>
+            <h1 class="text-2xl font-black text-gray-800 mb-6 text-center tracking-tight">တိရစ္ဆာန် လောင်းကစား</h1>
             <div class="mb-4 space-y-3">
                 <input type="text" id="login-name" class="p-3 bg-gray-50 border-none rounded-xl w-full focus:ring-2 focus:ring-blue-500 transition" placeholder="အမည် (User ID)">
                 <input type="password" id="login-pass" class="p-3 bg-gray-50 border-none rounded-xl w-full focus:ring-2 focus:ring-blue-500 transition" placeholder="စကားဝှက်">
@@ -35,106 +35,22 @@
         <div class="w-full md:w-80 bg-white border-r border-gray-100 flex-shrink-0 p-4 md:p-6 overflow-y-auto flex flex-col gap-6 shadow-sm">
             <div class="flex flex-col gap-4">
                 <h1 class="text-xl font-black text-gray-800 tracking-tight">Game Panel</h1>
-                
-                <!-- User Info -->
                 <div class="bg-gray-50 p-4 rounded-2xl flex flex-col gap-2">
                     <p id="current-user-display" class="font-bold text-gray-500 text-xs uppercase tracking-wider"></p>
                     <p class="text-2xl font-black text-gray-800">Coins: <span id="coin-balance" class="text-blue-600">0</span></p>
-                </div>
-
                 <!-- Navigation -->
-                <div class="grid grid-cols-2 gap-2">
+                <div class="grid grid-cols-3 gap-2">
                     <button id="open-chat-btn" class="bg-gray-100 text-gray-600 py-2 rounded-xl font-bold text-sm hover:bg-gray-200 active:scale-95">💬 Chat</button>
                     <button id="open-private-chat-btn" class="bg-purple-100 text-purple-600 py-2 rounded-xl font-bold text-sm hover:bg-purple-200 active:scale-95">🔒 Admin</button>
-                    <button id="logout-btn" class="col-span-2 bg-red-50 text-red-600 py-2 rounded-xl font-bold text-sm hover:bg-red-100 active:scale-95">Logout</button>
+                    <button onclick="document.getElementById('admin-panel').classList.remove('hidden-ui')" class="bg-yellow-600 text-white py-2 rounded-xl font-bold text-sm hover:bg-yellow-700 active:scale-95">⚙️ Panel</button>
+                    <button id="logout-btn" class="col-span-3 bg-red-50 text-red-600 py-2 rounded-xl font-bold text-sm hover:bg-red-100 active:scale-95">Logout</button>
                 </div>
-            </div>
-
-            <!-- Stats -->
-            <div class="bg-white border border-gray-100 p-4 rounded-2xl">
-                <h4 class="font-bold text-gray-500 text-xs uppercase mb-1">လက်ရှိလောင်းထားမှု</h4>
-                <p class="text-xl font-black text-gray-800"><span id="current-bet-count" class="text-red-500">0</span> coin</p>
-                <div id="win-loss-status" class="text-xs font-bold mt-2 text-gray-400">စောင့်ဆိုင်းနေသည်...</div>
-            </div>
-
-            <!-- Timer -->
-            <div class="bg-blue-600 p-4 rounded-2xl shadow-lg flex flex-row justify-between items-center text-white">
-                <h4 class="font-bold text-blue-100 text-xs uppercase">အချိန်</h4>
-                <span id="timer-display" class="text-3xl font-black font-mono tracking-tighter">--:--</span>
             </div>
         </div>
 
-        <!-- Main Area -->
         <div class="flex-1 bg-gray-50 p-4 md:p-8 overflow-y-auto">
             <div id="result-display" class="hidden-ui bg-yellow-400 p-4 rounded-2xl text-center font-black text-lg mb-6 shadow-lg text-yellow-900"></div>
             <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-6 gap-3" id="animal-grid"></div>
-        </div>
-
-        <!-- Modals and Admin Panel remain fixed -->
-        <div id="chat-modal" class="hidden-ui fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-            <div class="bg-white p-6 rounded-3xl shadow-2xl border border-gray-100 w-full max-w-lg">
-                <div class="flex justify-between items-center mb-4">
-                    <h4 class="font-bold text-gray-500 text-xs uppercase">Public Chat</h4>
-                    <button id="close-chat-btn" class="text-gray-400 hover:text-gray-800">✕</button>
-                </div>
-                <div id="chat-messages" class="h-60 overflow-y-auto mb-4 space-y-2 text-sm bg-gray-50 p-4 rounded-2xl"></div>
-                <div class="flex gap-2">
-                    <input type="text" id="chat-input" class="flex-grow p-4 bg-gray-100 border-none rounded-xl focus:ring-2 focus:ring-blue-500" placeholder="စာရိုက်ပါ...">
-                    <button id="send-chat-btn" class="bg-blue-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-blue-700">ပို့</button>
-                </div>
-            </div>
-        </div>
-
-        <div id="private-chat-modal" class="hidden-ui fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-            <div class="bg-white p-6 rounded-3xl shadow-2xl border border-gray-100 w-full max-w-lg">
-                <div class="flex justify-between items-center mb-4">
-                    <h4 class="font-bold text-purple-500 text-xs uppercase" id="private-chat-title">Admin Chat</h4>
-                    <button id="close-private-chat-btn" class="text-gray-400 hover:text-gray-800">✕</button>
-                </div>
-                <div id="private-chat-messages" class="h-60 overflow-y-auto mb-4 space-y-2 text-sm bg-gray-50 p-4 rounded-2xl"></div>
-                <div class="flex gap-2">
-                    <input type="text" id="private-chat-input" class="flex-grow p-4 bg-gray-100 border-none rounded-xl focus:ring-2 focus:ring-purple-500" placeholder="စာရိုက်ပါ...">
-                    <button id="send-private-chat-btn" class="bg-purple-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-purple-700">ပို့</button>
-                </div>
-            </div>
-        </div>
-
-        <div id="admin-panel" class="hidden-ui fixed inset-0 z-[100] bg-gray-900 text-white p-4 md:p-8 overflow-y-auto w-full h-full">
-            <button onclick="document.getElementById('admin-panel').classList.add('hidden-ui')" class="text-white bg-white/10 px-4 py-2 rounded-xl mb-4 font-bold">✕ ပိတ်မည်</button>
-            <h3 class="font-bold text-yellow-400 mb-6 text-xl tracking-tight">Admin Control</h3>
-            <div class="mb-6 flex flex-wrap gap-2 justify-center">
-                <button class="timer-btn w-12 h-12 rounded-full border-2 border-yellow-400 text-yellow-400 font-bold hover:bg-yellow-400 hover:text-black transition" onclick="setTimer(1)">1</button>
-                <button class="timer-btn w-12 h-12 rounded-full border-2 border-yellow-400 text-yellow-400 font-bold hover:bg-yellow-400 hover:text-black transition" onclick="setTimer(3)">3</button>
-                <button class="timer-btn w-12 h-12 rounded-full border-2 border-yellow-400 text-yellow-400 font-bold hover:bg-yellow-400 hover:text-black transition" onclick="setTimer(5)">5</button>
-                <button class="timer-btn w-12 h-12 rounded-full border-2 border-yellow-400 text-yellow-400 font-bold hover:bg-yellow-400 hover:text-black transition" onclick="setTimer(10)">10</button>
-                <button class="timer-btn w-12 h-12 rounded-full border-2 border-yellow-400 text-yellow-400 font-bold hover:bg-yellow-400 hover:text-black transition" onclick="setTimer(30)">30</button>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                <button id="reset-game-btn" class="bg-green-600 py-4 rounded-2xl font-bold hover:bg-green-700 transition">Reset</button>
-                <button id="calc-result-btn" class="bg-yellow-600 py-4 rounded-2xl font-bold hover:bg-yellow-700 transition">ရလဒ်ထုတ်</button>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <div id="bets-list-container" class="bg-white/10 p-4 rounded-2xl text-sm max-h-60 overflow-y-auto border border-white/10">
-                    <h4 class="font-bold mb-2 text-yellow-400">လောင်းထားသူများ:</h4>
-                    <div id="bets-list-content"></div>
-                </div>
-                <div id="user-balance-list" class="bg-white/10 p-4 rounded-2xl text-sm max-h-60 overflow-y-auto border border-white/10">
-                    <h4 class="font-bold mb-2 text-yellow-400">User များ၏ Coins:</h4>
-                    <div id="user-balance-content"></div>
-                </div>
-            </div>
-            <div class="flex flex-col md:flex-row gap-2 mb-2">
-                <input type="text" id="new-password-admin" class="text-black p-3 rounded-xl flex-grow" placeholder="New Password">
-                <button id="change-pass-btn" class="bg-purple-600 px-4 py-3 rounded-xl font-bold">Pass ပြင်</button>
-            </div>
-            <div class="flex flex-col md:flex-row gap-2">
-                <select id="user-select-admin" class="text-black p-3 rounded-xl flex-grow"></select>
-                <input type="number" id="coin-amount" class="text-black p-3 rounded-xl w-24" placeholder="Coin">
-                <button id="add-coin-btn" class="bg-blue-600 px-4 py-3 rounded-xl font-bold">+</button>
-                <button id="sub-coin-btn" class="bg-orange-600 px-4 py-3 rounded-xl font-bold">-</button>
-                <button id="admin-chat-btn" class="bg-purple-600 px-4 py-3 rounded-xl font-bold">Chat</button>
-                <button id="delete-user-btn" class="bg-red-600 px-4 py-3 rounded-xl font-bold">ဖျက်</button>
-            </div>
         </div>
     </div>
 
@@ -167,224 +83,9 @@
         let adminState = { nextReveal: 0, processed: true, lastWinner: "" };
         let currentUserId = localStorage.getItem('game_uid');
         let isAdmin = localStorage.getItem('is_admin') === 'true';
-        let selectedMinutes = 3;
-        let activePrivateChatUid = null;
-        let audioCtx = null; 
 
-        document.addEventListener('click', () => {
-            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-        }, { once: true });
-
-        function playNotificationSound() {
-            try {
-                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                if (audioCtx.state === 'suspended') audioCtx.resume();
-                
-                const oscillator = audioCtx.createOscillator();
-                const gainNode = audioCtx.createGain();
-                oscillator.type = 'sine';
-                oscillator.frequency.setValueAtTime(880, audioCtx.currentTime);
-                gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
-                oscillator.connect(gainNode);
-                gainNode.connect(audioCtx.destination);
-                oscillator.start();
-                oscillator.stop(audioCtx.currentTime + 0.2);
-            } catch(e) { console.error("Sound error", e); }
-        }
-
-        function setTimer(m) {
-            selectedMinutes = m;
-            showMsg(m + " မိနစ် ရွေးချယ်ပြီးပါပြီ");
-        }
-
-        db.ref('users').on('value', (snap) => { 
-            users = snap.val() || {}; 
-            updateUI(); 
-            
-            let leaderName = "";
-            let maxBets = 0;
-            Object.keys(users).forEach(uid => {
-                const user = users[uid];
-                const total = user.selections ? Object.values(user.selections).reduce((a, b) => a + b, 0) : 0;
-                if (total > maxBets) {
-                    maxBets = total;
-                    leaderName = user.name;
-                }
-            });
-            if (leaderName && leaderName !== lastLeader) {
-                lastLeader = leaderName;
-                if (currentUserId && users[currentUserId] && users[currentUserId].name !== leaderName) {
-                    showMsg("အများဆုံးလောင်းထားသူ: " + leaderName);
-                }
-            }
-
-            if(typeof renderActiveChats === 'function') renderActiveChats();
-        });
+        db.ref('users').on('value', (snap) => { users = snap.val() || {}; updateUI(); });
         db.ref('adminState').on('value', (snap) => { adminState = snap.val() || { nextReveal: 0, processed: true }; updateUI(); });
-
-        db.ref('chat').limitToLast(20).on('child_added', (snap) => {
-            const msg = snap.val();
-            const div = document.createElement('div');
-            div.className = "border-b pb-1 border-gray-100";
-            const timeStr = msg.timestamp ? `<span class="text-[10px] text-gray-400 ml-2">${new Date(msg.timestamp).toLocaleString()}</span>` : '';
-            div.innerHTML = `<span class="font-bold text-blue-600">${msg.name}:</span> ${msg.text} ${timeStr}`;
-            const chatMessages = document.getElementById('chat-messages');
-            chatMessages.appendChild(div);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        });
-
-        function renderActiveChats() {
-            const container = document.getElementById('active-chats-content');
-            if(!container) return;
-            container.innerHTML = '';
-            
-            const chatList = Object.keys(activeChatsData || {});
-            if (chatList.length === 0) {
-                container.innerHTML = 'Chat လတ်တလောမရှိပါ။';
-                return;
-            }
-
-            chatList.forEach(uid => {
-                const name = (users[uid] && users[uid].name) ? users[uid].name : ("User: " + uid.substring(0, 5));
-                const div = document.createElement('div');
-                div.className = "cursor-pointer hover:text-white text-blue-300 py-2 border-b border-white/10 last:border-0";
-                div.innerText = "💬 " + name;
-                div.onclick = function() { openPrivateChat(uid, name); };
-                container.appendChild(div);
-            });
-        }
-
-        db.ref('privateChat').on('value', (snap) => {
-            activeChatsData = snap.val() || {};
-            renderActiveChats();
-        });
-
-        function openPrivateChat(uid, name) {
-            if (activePrivateChatUid && privateChatListener) {
-                db.ref('privateChat/' + activePrivateChatUid).off('child_added', privateChatListener);
-            }
-            
-            activePrivateChatUid = uid;
-            document.getElementById('private-chat-title').innerText = "Chat with " + (isAdmin ? name : "Admin");
-            document.getElementById('private-chat-messages').innerHTML = '';
-            document.getElementById('private-chat-modal').classList.remove('hidden-ui');
-
-            privateChatListener = (snap) => {
-                const msg = snap.val();
-                
-                if (isAdmin && msg.sender !== 'Admin') {
-                    playNotificationSound();
-                    showMsg("Admin, Private Chat အသစ်ဝင်လာပါတယ်!");
-                }
-
-                const div = document.createElement('div');
-                div.className = "border-b pb-1 border-gray-100";
-                
-                const isMyMsg = isAdmin ? (msg.sender === 'Admin') : (msg.sender !== 'Admin');
-                const timeStr = msg.timestamp ? `<span class="text-[10px] text-gray-400 ml-2">${new Date(msg.timestamp).toLocaleString()}</span>` : '';
-                div.innerHTML = `<span class="font-bold ${isMyMsg ? 'text-purple-600' : 'text-red-600'}">${msg.sender}:</span> ${msg.text} ${timeStr}`;
-                
-                const container = document.getElementById('private-chat-messages');
-                container.appendChild(div);
-                container.scrollTop = container.scrollHeight;
-            };
-            
-            db.ref('privateChat/' + activePrivateChatUid).limitToLast(20).on('child_added', privateChatListener);
-        }
-
-        document.getElementById('send-private-chat-btn').onclick = () => {
-            const input = document.getElementById('private-chat-input');
-            const text = input.value.trim();
-            if(text && activePrivateChatUid) {
-                let senderName = isAdmin ? 'Admin' : (users[currentUserId] && users[currentUserId].name ? users[currentUserId].name : currentUserId);
-                db.ref('privateChat/' + activePrivateChatUid).push({
-                    sender: senderName,
-                    text: text,
-                    timestamp: Date.now()
-                });
-                input.value = '';
-            }
-        };
-
-        document.getElementById('open-private-chat-btn').onclick = () => {
-            if(!isAdmin && currentUserId) openPrivateChat(currentUserId, "Admin");
-        };
-
-        document.getElementById('close-private-chat-btn').onclick = () => {
-            document.getElementById('private-chat-modal').classList.add('hidden-ui');
-            if (activePrivateChatUid && privateChatListener) {
-                db.ref('privateChat/' + activePrivateChatUid).off('child_added', privateChatListener);
-                activePrivateChatUid = null;
-            }
-        };
-
-        document.getElementById('open-chat-btn').onclick = () => document.getElementById('chat-modal').classList.remove('hidden-ui');
-        document.getElementById('close-chat-btn').onclick = () => document.getElementById('chat-modal').classList.add('hidden-ui');
-
-        document.getElementById('send-chat-btn').onclick = () => {
-            const input = document.getElementById('chat-input');
-            const text = input.value.trim();
-            if(text && users[currentUserId]) {
-                db.ref('chat').push({ name: users[currentUserId].name, text: text, timestamp: Date.now() });
-                input.value = '';
-            }
-        };
-
-        setInterval(() => {
-            const display = document.getElementById('timer-display');
-            if(!display) return;
-            const diff = adminState.nextReveal - Date.now();
-            if (diff > 0) {
-                const mins = Math.floor(diff / 60000);
-                const secs = Math.floor((diff % 60000) / 1000);
-                display.innerText = `${mins}:${secs < 10 ? '0' + secs : secs}`;
-            } else {
-                display.innerText = "ဂိမ်းရပ်";
-                if (!adminState.processed) calculateResults(true);
-            }
-        }, 1000);
-
-        function calculateResults(isAuto = false) {
-            if (adminState.processed) return;
-            let totalBets = new Array(gameData.length).fill(0);
-            Object.keys(users).forEach(uid => {
-                if(users[uid].selections) {
-                    Object.keys(users[uid].selections).forEach(idx => {
-                        totalBets[idx] += users[uid].selections[idx];
-                    });
-                }
-            });
-            let zeroBetIndices = [];
-            totalBets.forEach((val, idx) => { if(val === 0) zeroBetIndices.push(idx); });
-            let winnerIdx;
-            if(zeroBetIndices.length > 0) {
-                winnerIdx = zeroBetIndices[Math.floor(Math.random() * zeroBetIndices.length)];
-            } else {
-                let minVal = Math.min(...totalBets);
-                let minIndices = [];
-                totalBets.forEach((val, idx) => { if(val === minVal) minIndices.push(idx); });
-                winnerIdx = minIndices[Math.floor(Math.random() * minIndices.length)];
-            }
-            let winnerName = gameData[winnerIdx];
-            Object.keys(users).forEach(uid => {
-                const user = users[uid];
-                let winnings = 0;
-                if(user.selections && user.selections[winnerIdx]) {
-                    winnings = user.selections[winnerIdx] * 27;
-                }
-                db.ref(`users/${uid}`).update({
-                    balance: (user.balance || 0) + winnings,
-                    selections: null
-                });
-            });
-            db.ref('adminState').update({
-                nextReveal: Date.now() + 180000,
-                lastWinner: winnerName,
-                processed: true 
-            });
-            setTimeout(() => { db.ref('adminState').update({ processed: false }); }, 5000);
-        }
 
         function changeBet(i, delta) {
             const user = users[currentUserId];
@@ -406,93 +107,32 @@
 
         function renderGrid() {
             const grid = document.getElementById('animal-grid');
-            const listContent = document.getElementById('bets-list-content');
             if(!grid || (!currentUserId && !isAdmin)) return;
-            let globalBets = new Array(gameData.length).fill(0);
-            Object.keys(users).forEach(uid => {
-                if(users[uid].selections) {
-                    Object.keys(users[uid].selections).forEach(idx => {
-                        globalBets[idx] += users[uid].selections[idx];
-                    });
-                }
-            });
-            if(isAdmin && listContent) {
-                let html = '';
-                Object.keys(users).forEach(uid => {
-                    if(users[uid].selections) {
-                        Object.keys(users[uid].selections).forEach(idx => {
-                            html += `<div>${users[uid].name}: ${gameData[idx]} (${users[uid].selections[idx]})</div>`;
-                        });
-                    }
-                });
-                listContent.innerHTML = html || 'လောင်းထားသူမရှိသေးပါ။';
-            }
             grid.innerHTML = '';
             gameData.forEach((name, i) => {
                 const betCount = (users[currentUserId] && users[currentUserId].selections) ? (users[currentUserId].selections[i] || 0) : 0;
-                const total = globalBets[i];
                 const div = document.createElement('div');
                 div.className = "bg-white p-4 rounded-3xl shadow-sm border border-gray-100 flex flex-col items-center hover:shadow-xl transition-all hover:scale-105 active:scale-95 cursor-pointer";
                 div.innerHTML = `
                     <div class="text-3xl mb-1">${animalEmojis[i]}</div>
                     <div class="font-bold text-gray-700 mb-2">${name}</div>
-                    <div class="text-[10px] font-bold text-gray-400 mb-3 bg-gray-100 px-2 py-0.5 rounded-full">စုစုပေါင်း: ${total}</div>
-                    ${!isAdmin ? `
                     <div class="flex gap-2 items-center">
                         <button class="w-8 h-8 flex items-center justify-center bg-red-50 text-red-600 rounded-full font-bold hover:bg-red-100" onclick="changeBet(${i}, -1)">-</button>
                         <span class="font-black text-blue-600 min-w-[20px] text-center">${betCount}</span>
                         <button class="w-8 h-8 flex items-center justify-center bg-green-50 text-green-600 rounded-full font-bold hover:bg-green-100" onclick="changeBet(${i}, 1)">+</button>
-                    </div>` : ''}
+                    </div>
                 `;
                 grid.appendChild(div);
             });
         }
 
         function updateUI() {
-            if (currentUserId && Object.keys(users).length > 0 && !users[currentUserId] && !isAdmin) { 
-                localStorage.removeItem('game_uid'); 
-                currentUserId = null; 
-            }
-            
             if(currentUserId || isAdmin) {
                 document.getElementById('login-screen').classList.add('hidden-ui');
                 document.getElementById('game-ui').classList.remove('hidden-ui');
-                const user = users[currentUserId];
-                if(user) {
-                    const totalBet = user.selections ? Object.values(user.selections).reduce((a, b) => a + b, 0) : 0;
-                    document.getElementById('current-bet-count').innerText = totalBet;
-                    const statusDiv = document.getElementById('win-loss-status');
-                    
-                    if(adminState.processed && adminState.lastWinner) {
-                        const winIdx = gameData.indexOf(adminState.lastWinner);
-                        if(user.selections && user.selections[winIdx]) {
-                            statusDiv.innerHTML = `<span class="text-green-600">🎉 အနိုင်ရငွေ: ${user.selections[winIdx] * 27}</span>`;
-                        } else {
-                            statusDiv.innerHTML = `<span class="text-gray-500">နောက်ဆုံးရလဒ် - ${adminState.lastWinner}</span>`;
-                        }
-                    } else {
-                        statusDiv.innerHTML = `<span class="text-gray-400">လောင်းကစားချိန် စတင်နေသည်...</span>`;
-                    }
-                }
-                if(isAdmin) {
-                    document.getElementById('admin-panel').classList.remove('hidden-ui');
-                    const select = document.getElementById('user-select-admin');
-                    select.innerHTML = Object.keys(users).map(uid => `<option value="${uid}">${users[uid].name}</option>`).join('');
-                    
-                    const balanceContent = document.getElementById('user-balance-content');
-                    let balanceHtml = '';
-                    Object.keys(users).forEach(uid => {
-                        balanceHtml += `<div class="flex justify-between border-b border-white/10 py-1"><span>${users[uid].name}</span> <span>${users[uid].balance || 0} Coins</span></div>`;
-                    });
-                    balanceContent.innerHTML = balanceHtml || 'User မရှိပါ။';
-                }
                 if(!isAdmin && users[currentUserId]) {
                     document.getElementById('current-user-display').innerText = "User: " + users[currentUserId].name;
                     document.getElementById('coin-balance').innerText = users[currentUserId].balance || 0;
-                }
-                if(adminState.lastWinner) {
-                    document.getElementById('result-display').classList.remove('hidden-ui');
-                    document.getElementById('result-display').innerText = "နောက်ဆုံးရလဒ် - " + adminState.lastWinner;
                 }
             } else {
                 document.getElementById('login-screen').classList.remove('hidden-ui');
@@ -501,40 +141,6 @@
             renderGrid();
         }
 
-        document.getElementById('admin-chat-btn').onclick = () => {
-            const uid = document.getElementById('user-select-admin').value;
-            if(uid) openPrivateChat(uid, users[uid].name);
-        };
-        document.getElementById('add-coin-btn').onclick = () => {
-            const uid = document.getElementById('user-select-admin').value;
-            const amt = parseInt(document.getElementById('coin-amount').value);
-            if(uid && amt) db.ref(`users/${uid}/balance`).set((users[uid].balance || 0) + amt);
-        };
-        document.getElementById('sub-coin-btn').onclick = () => {
-            const uid = document.getElementById('user-select-admin').value;
-            const amt = parseInt(document.getElementById('coin-amount').value);
-            if(uid && amt) db.ref(`users/${uid}/balance`).set(Math.max(0, (users[uid].balance || 0) - amt));
-        };
-        document.getElementById('change-pass-btn').onclick = () => {
-            const uid = document.getElementById('user-select-admin').value;
-            const newPass = document.getElementById('new-password-admin').value.trim();
-            if(uid && newPass) {
-                db.ref(`users/${uid}/password`).set(newPass);
-                showMsg("စကားဝှက် ပြောင်းလဲပြီးပါပြီ");
-            }
-        };
-        document.getElementById('delete-user-btn').onclick = () => {
-            const uid = document.getElementById('user-select-admin').value;
-            if(uid) {
-                db.ref(`users/${uid}`).remove();
-                showMsg("အကောင့် ဖျက်ပြီးပါပြီ");
-            }
-        };
-        document.getElementById('reset-game-btn').onclick = () => {
-            db.ref('adminState').update({ nextReveal: Date.now() + (selectedMinutes * 60000), processed: false });
-            showMsg("ဂိမ်းအား Reset ချပြီးပါပြီ (" + selectedMinutes + " မိနစ်)");
-        };
-        document.getElementById('calc-result-btn').onclick = () => calculateResults();
         document.getElementById('login-existing-btn').onclick = () => {
             const n = document.getElementById('login-name').value.trim();
             const p = document.getElementById('login-pass').value.trim();
