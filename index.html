@@ -102,14 +102,6 @@
                 </div>
             </div>
         </div>
-
-        <!-- Mobile Tab Bar -->
-        <div class="md:hidden fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 flex justify-around p-3 z-40">
-            <button onclick="document.getElementById('open-chat-btn').click()" class="flex flex-col items-center text-xs font-bold text-gray-600">💬 Chat</button>
-            <button onclick="document.getElementById('open-history-btn').click()" class="flex flex-col items-center text-xs font-bold text-gray-600">📜 History</button>
-            <button onclick="document.getElementById('open-private-chat-btn').click()" class="flex flex-col items-center text-xs font-bold text-purple-600">🔒 Admin</button>
-            <button onclick="document.getElementById('logout-btn').click()" class="flex flex-col items-center text-xs font-bold text-red-600">Logout</button>
-        </div>
     </div>
 
     <!-- Modals -->
@@ -213,26 +205,6 @@
             chatMessages.appendChild(div);
             chatMessages.scrollTop = chatMessages.scrollHeight;
         });
-
-        // Chat rendering fix
-        function renderActiveChats() {
-            const container = document.getElementById('active-chats-content');
-            if(!container || !isAdmin) return;
-            db.ref('privateChats').once('value', (snap) => {
-                const chats = snap.val() || {};
-                container.innerHTML = '';
-                Object.keys(chats).forEach(uid => {
-                    const btn = document.createElement('div');
-                    btn.className = "bg-purple-500 p-2 rounded-xl mb-2 cursor-pointer hover:bg-purple-600 text-white font-bold";
-                    btn.innerText = (users[uid] ? users[uid].name : uid) + " - Chat";
-                    btn.onclick = () => {
-                        activePrivateChatUid = uid;
-                        document.getElementById('private-chat-modal').classList.remove('hidden-ui');
-                    };
-                    container.appendChild(btn);
-                });
-            });
-        }
 
         // History Table Renderer
         document.getElementById('open-history-btn').onclick = () => {
@@ -449,43 +421,6 @@
         };
         document.getElementById('admin-login-trigger').onclick = () => { if(prompt("Admin Password:") === 'admin123') { isAdmin = true; localStorage.setItem('is_admin', 'true'); updateUI(); } };
         document.getElementById('logout-btn').onclick = () => { localStorage.clear(); location.reload(); };
-
-        // Chat Sending Logic
-        document.getElementById('send-chat-btn').onclick = () => {
-            const input = document.getElementById('chat-input');
-            const text = input.value.trim();
-            if (text && users[currentUserId]) {
-                db.ref('chat').push({ name: users[currentUserId].name, text: text });
-                input.value = '';
-            }
-        };
-
-        document.getElementById('send-private-chat-btn').onclick = () => {
-            const input = document.getElementById('private-chat-input');
-            const text = input.value.trim();
-            if (text && currentUserId) {
-                const targetId = isAdmin ? (activePrivateChatUid || 'admin') : 'admin';
-                db.ref(`privateChats/${targetId}`).push({ 
-                    name: isAdmin ? 'Admin' : users[currentUserId].name, 
-                    text: text,
-                    timestamp: Date.now()
-                });
-                input.value = '';
-            }
-        };
-
-        // Chat Modal Opening Listeners
-        document.getElementById('open-chat-btn').onclick = () => {
-            document.getElementById('chat-modal').classList.remove('hidden-ui');
-        };
-
-        document.getElementById('open-private-chat-btn').onclick = () => {
-            document.getElementById('private-chat-modal').classList.remove('hidden-ui');
-        };
-
-        document.getElementById('close-private-chat-btn').onclick = () => {
-            document.getElementById('private-chat-modal').classList.add('hidden-ui');
-        };
 
         updateUI();
     </script>
