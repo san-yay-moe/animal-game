@@ -35,6 +35,10 @@
                     <p id="current-user-display" class="font-bold text-gray-500 text-xs uppercase tracking-wider"></p>
                     <p class="text-2xl font-black text-gray-800">Coins: <span id="coin-balance" class="text-blue-600">0</span></p>
                 </div>
+                <div id="qr-code-container" class="hidden">
+                    <h4 class="font-bold text-gray-500 text-xs uppercase mb-1">QR Code</h4>
+                    <img id="qr-code-display" class="w-full rounded-xl border border-gray-100" src="" alt="QR Code">
+                </div>
                 <div class="grid grid-cols-2 gap-2">
                     <button id="open-chat-btn" class="bg-gray-100 text-gray-600 py-2 rounded-xl font-bold text-sm hover:bg-gray-200 active:scale-95">💬 Chat</button>
                     <button id="open-private-chat-btn" class="bg-purple-100 text-purple-600 py-2 rounded-xl font-bold text-sm hover:bg-purple-200 active:scale-95">🔒 Admin</button>
@@ -86,7 +90,11 @@
                         <input type="text" id="new-password-admin" class="text-black p-3 rounded-xl flex-grow min-w-[200px]" placeholder="New Password">
                         <button id="change-pass-btn" class="bg-purple-600 px-4 py-3 rounded-xl font-bold flex-grow">Pass ပြင်</button>
                     </div>
-                    <div class="flex flex-wrap gap-2">
+                    <div class="flex flex-wrap gap-2 mt-2">
+                        <input type="text" id="qr-url-input" class="text-black p-3 rounded-xl flex-grow" placeholder="QR Image URL">
+                        <button id="save-qr-btn" class="bg-yellow-600 px-4 py-3 rounded-xl font-bold">QR သိမ်း</button>
+                    </div>
+                    <div class="flex flex-wrap gap-2 mt-2">
                         <select id="user-select-admin" class="text-black p-3 rounded-xl flex-grow min-w-[150px]"></select>
                         <div class="flex gap-2 w-full justify-center">
                             <input type="number" id="coin-amount" class="text-black p-3 rounded-xl w-24" placeholder="Coin">
@@ -229,7 +237,20 @@
         db.ref('adminState').on('value', (snap) => { 
             adminState = snap.val() || { nextReveal: 0, processed: true, lastWinner: "" }; 
             updateUI(); 
+            if(adminState.qrCodeUrl) {
+                document.getElementById('qr-code-display').src = adminState.qrCodeUrl;
+                document.getElementById('qr-code-container').classList.remove('hidden');
+            } else {
+                document.getElementById('qr-code-container').classList.add('hidden');
+            }
         });
+
+        document.getElementById('save-qr-btn').onclick = () => {
+            const url = document.getElementById('qr-url-input').value.trim();
+            db.ref('adminState').update({ qrCodeUrl: url }).then(() => {
+                showMsg("QR Code သိမ်းပြီးပါပြီ");
+            });
+        };
 
         db.ref('chat').limitToLast(20).on('child_added', (snap) => {
             const msg = snap.val();
