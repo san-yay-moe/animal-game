@@ -15,10 +15,9 @@
 <body class="h-screen overflow-hidden">
     <div id="message-box" class="fixed top-5 right-5 z-50 hidden p-4 rounded-xl shadow-2xl text-white"></div>
 
-    <!-- Login Screen (Centered Overlay) -->
     <div id="login-screen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-100">
         <div class="bg-white p-5 rounded-3xl shadow-xl border border-gray-100 max-w-sm w-full">
-            <h1 class="text-2xl font-black text-gray-800 mb-6 text-center tracking-tight">85</h1>
+            <h1 class="text-2xl font-black text-gray-800 mb-6 text-center tracking-tight">တိရစ္ဆာန် လောင်းကစား</h1>
             <div class="mb-4 space-y-3">
                 <input type="text" id="login-name" class="p-3 bg-gray-50 border-none rounded-xl w-full focus:ring-2 focus:ring-blue-500 transition" placeholder="အမည် (User ID)">
                 <input type="password" id="login-pass" class="p-3 bg-gray-50 border-none rounded-xl w-full focus:ring-2 focus:ring-blue-500 transition" placeholder="စကားဝှက်">
@@ -28,49 +27,36 @@
         </div>
     </div>
 
-    <!-- Game UI -->
     <div id="game-ui" class="hidden-ui flex flex-col md:flex-row h-screen">
-        
-        <!-- Sidebar -->
         <div class="w-full md:w-80 bg-white border-r border-gray-100 flex-shrink-0 p-4 md:p-6 overflow-y-auto flex flex-col gap-6 shadow-sm">
             <div class="flex flex-col gap-4">
                 <h1 class="text-xl font-black text-gray-800 tracking-tight">Game Panel</h1>
-                
-                <!-- User Info -->
                 <div class="bg-gray-50 p-4 rounded-2xl flex flex-col gap-2">
                     <p id="current-user-display" class="font-bold text-gray-500 text-xs uppercase tracking-wider"></p>
                     <p class="text-2xl font-black text-gray-800">Coins: <span id="coin-balance" class="text-blue-600">0</span></p>
                 </div>
-
-                <!-- Navigation -->
                 <div class="grid grid-cols-2 gap-2">
                     <button id="open-chat-btn" class="bg-gray-100 text-gray-600 py-2 rounded-xl font-bold text-sm hover:bg-gray-200 active:scale-95">💬 Chat</button>
                     <button id="open-private-chat-btn" class="bg-purple-100 text-purple-600 py-2 rounded-xl font-bold text-sm hover:bg-purple-200 active:scale-95">🔒 Admin</button>
                     <button id="logout-btn" class="col-span-2 bg-red-50 text-red-600 py-2 rounded-xl font-bold text-sm hover:bg-red-100 active:scale-95">Logout</button>
                 </div>
             </div>
-
-            <!-- Stats -->
             <div class="bg-white border border-gray-100 p-4 rounded-2xl">
                 <h4 class="font-bold text-gray-500 text-xs uppercase mb-1">လက်ရှိလောင်းထားမှု</h4>
                 <p class="text-xl font-black text-gray-800"><span id="current-bet-count" class="text-red-500">0</span> coin</p>
                 <div id="win-loss-status" class="text-xs font-bold mt-2 text-gray-400">စောင့်ဆိုင်းနေသည်...</div>
             </div>
-
-            <!-- Timer -->
             <div class="bg-blue-600 p-4 rounded-2xl shadow-lg flex flex-row justify-between items-center text-white">
                 <h4 class="font-bold text-blue-100 text-xs uppercase">အချိန်</h4>
                 <span id="timer-display" class="text-3xl font-black font-mono tracking-tighter">--:--</span>
             </div>
         </div>
 
-        <!-- Main Area -->
         <div class="flex-1 bg-gray-50 p-4 md:p-8 overflow-y-auto">
             <div id="result-display" class="hidden-ui bg-yellow-400 p-4 rounded-2xl text-center font-black text-lg mb-6 shadow-lg text-yellow-900"></div>
             <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-6 gap-3" id="animal-grid"></div>
         </div>
 
-        <!-- Modals and Admin Panel remain fixed -->
         <div id="chat-modal" class="hidden-ui fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
             <div class="bg-white p-6 rounded-3xl shadow-2xl border border-gray-100 w-full max-w-lg">
                 <div class="flex justify-between items-center mb-4">
@@ -169,6 +155,9 @@
         let isAdmin = localStorage.getItem('is_admin') === 'true';
         let selectedMinutes = 3;
         let activePrivateChatUid = null;
+        let privateChatListener = null;
+        let activeChatsData = {};
+        let lastLeader = "";
         let audioCtx = null; 
 
         document.addEventListener('click', () => {
@@ -218,8 +207,6 @@
                     showMsg("အများဆုံးလောင်းထားသူ: " + leaderName);
                 }
             }
-
-            if(typeof renderActiveChats === 'function') renderActiveChats();
         });
         db.ref('adminState').on('value', (snap) => { adminState = snap.val() || { nextReveal: 0, processed: true }; updateUI(); });
 
@@ -234,32 +221,6 @@
             chatMessages.scrollTop = chatMessages.scrollHeight;
         });
 
-        function renderActiveChats() {
-            const container = document.getElementById('active-chats-content');
-            if(!container) return;
-            container.innerHTML = '';
-            
-            const chatList = Object.keys(activeChatsData || {});
-            if (chatList.length === 0) {
-                container.innerHTML = 'Chat လတ်တလောမရှိပါ။';
-                return;
-            }
-
-            chatList.forEach(uid => {
-                const name = (users[uid] && users[uid].name) ? users[uid].name : ("User: " + uid.substring(0, 5));
-                const div = document.createElement('div');
-                div.className = "cursor-pointer hover:text-white text-blue-300 py-2 border-b border-white/10 last:border-0";
-                div.innerText = "💬 " + name;
-                div.onclick = function() { openPrivateChat(uid, name); };
-                container.appendChild(div);
-            });
-        }
-
-        db.ref('privateChat').on('value', (snap) => {
-            activeChatsData = snap.val() || {};
-            renderActiveChats();
-        });
-
         function openPrivateChat(uid, name) {
             if (activePrivateChatUid && privateChatListener) {
                 db.ref('privateChat/' + activePrivateChatUid).off('child_added', privateChatListener);
@@ -270,10 +231,23 @@
             document.getElementById('private-chat-messages').innerHTML = '';
             document.getElementById('private-chat-modal').classList.remove('hidden-ui');
 
+            // Chat Bot Greeting
+            if (!isAdmin) {
+                db.ref('privateChat/' + uid).once('value', (snap) => {
+                    if (!snap.exists()) {
+                        db.ref('privateChat/' + uid).push({
+                            sender: "Bot",
+                            text: "မင်္ဂလာပါ! Admin ကို မေးမြန်းလိုသည်များကို စာရိုက်ပေးခဲ့ပါ။",
+                            timestamp: Date.now()
+                        });
+                    }
+                });
+            }
+
             privateChatListener = (snap) => {
                 const msg = snap.val();
                 
-                if (isAdmin && msg.sender !== 'Admin') {
+                if (isAdmin && msg.sender !== 'Admin' && msg.sender !== 'Bot') {
                     playNotificationSound();
                     showMsg("Admin, Private Chat အသစ်ဝင်လာပါတယ်!");
                 }
@@ -281,9 +255,11 @@
                 const div = document.createElement('div');
                 div.className = "border-b pb-1 border-gray-100";
                 
-                const isMyMsg = isAdmin ? (msg.sender === 'Admin') : (msg.sender !== 'Admin');
+                const isMyMsg = isAdmin ? (msg.sender === 'Admin') : (msg.sender !== 'Admin' && msg.sender !== 'Bot');
+                const isBot = msg.sender === 'Bot';
                 const timeStr = msg.timestamp ? `<span class="text-[10px] text-gray-400 ml-2">${new Date(msg.timestamp).toLocaleString()}</span>` : '';
-                div.innerHTML = `<span class="font-bold ${isMyMsg ? 'text-purple-600' : 'text-red-600'}">${msg.sender}:</span> ${msg.text} ${timeStr}`;
+                
+                div.innerHTML = `<span class="font-bold ${isMyMsg ? 'text-purple-600' : (isBot ? 'text-yellow-600' : 'text-red-600')}">${msg.sender}:</span> ${msg.text} ${timeStr}`;
                 
                 const container = document.getElementById('private-chat-messages');
                 container.appendChild(div);
