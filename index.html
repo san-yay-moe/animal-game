@@ -514,7 +514,12 @@
                     if(adminState.processed && adminState.lastWinner) {
                         const winIdx = gameData.indexOf(adminState.lastWinner);
                         if(user.selections && user.selections[winIdx]) {
-                            statusDiv.innerHTML = `<span class="text-green-600">🎉 အနိုင်ရငွေ: ${user.selections[winIdx] * 27}</span>`;
+                            const winAmount = user.selections[winIdx] * 27;
+                            statusDiv.innerHTML = `<span class="text-green-600">🎉 အနိုင်ရငွေ: ${winAmount}</span>`;
+                            if(window.lastWonWinner !== adminState.lastWinner) {
+                                showMsg("🎉 ဂုဏ်ယူပါတယ်! သင် " + winAmount + " Coins ရရှိပါသည်!");
+                                window.lastWonWinner = adminState.lastWinner;
+                            }
                         } else {
                             statusDiv.innerHTML = `<span class="text-gray-500">နောက်ဆုံးရလဒ် - ${adminState.lastWinner}</span>`;
                         }
