@@ -50,24 +50,22 @@
         </div>
 
         <!-- Main Content -->
-        <div id="game-content" class="flex-1 bg-gray-50 p-4 md:p-8 overflow-y-auto min-h-0">
-            <div id="result-display" class="hidden-ui bg-yellow-400 p-4 rounded-2xl text-center font-black text-lg mb-6 shadow-lg text-yellow-900"></div>
-            
-            <div class="bg-blue-600 p-4 rounded-2xl shadow-lg flex flex-row justify-between items-center text-white mb-6">
-                <h4 class="font-bold text-blue-100 text-xs uppercase">အချိန်</h4>
-                <span id="timer-display" class="text-3xl font-black font-mono tracking-tighter">--:--</span>
+        <div id="game-content" class="flex-1 bg-gray-50 flex flex-col h-full overflow-hidden">
+            <div class="p-4 md:p-8 flex-shrink-0 flex gap-4">
+                <div id="result-display" class="hidden-ui bg-yellow-400 p-4 rounded-2xl text-center font-black text-lg shadow-lg text-yellow-900 flex-1"></div>
+                
+                <!-- အချိန်ပြသမှု - ရလဒ်ဘေးတွင်ထားရှိသည် -->
+                <div class="hidden-ui bg-blue-600 p-4 rounded-2xl shadow-lg flex flex-row justify-between items-center text-white flex-1">
+                    <h4 class="font-bold text-blue-100 text-xs uppercase">အချိန်</h4>
+                    <span id="timer-display" class="text-3xl font-black font-mono tracking-tighter">--:--</span>
+                </div>
             </div>
 
-            <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-6 gap-3" id="animal-grid"></div>
+            <div class="flex-1 overflow-y-auto p-4 md:p-8 pt-0">
+                <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-6 gap-3" id="animal-grid"></div>
 
-            <div id="admin-panel" class="hidden-ui bg-gray-900 text-white p-4 md:p-8 mt-8 rounded-3xl">
-                <h3 class="font-bold text-yellow-400 mb-6 text-xl tracking-tight">Admin Control</h3>
-                <div class="mb-6 flex flex-wrap gap-2 justify-center">
-                    <button class="timer-btn w-12 h-12 rounded-full border-2 border-yellow-400 text-yellow-400 font-bold hover:bg-yellow-400 hover:text-black transition" onclick="setTimer(1)">1</button>
-                    <button class="timer-btn w-12 h-12 rounded-full border-2 border-yellow-400 text-yellow-400 font-bold hover:bg-yellow-400 hover:text-black transition" onclick="setTimer(3)">3</button>
-                    <button class="timer-btn w-12 h-12 rounded-full border-2 border-yellow-400 text-yellow-400 font-bold hover:bg-yellow-400 hover:text-black transition" onclick="setTimer(5)">5</button>
-                    <button class="timer-btn w-12 h-12 rounded-full border-2 border-yellow-400 text-yellow-400 font-bold hover:bg-yellow-400 hover:text-black transition" onclick="setTimer(10)">10</button>
-                    <button class="timer-btn w-12 h-12 rounded-full border-2 border-yellow-400 text-yellow-400 font-bold hover:bg-yellow-400 hover:text-black transition" onclick="setTimer(30)">30</button>
+                <div id="admin-panel" class="hidden-ui bg-gray-900 text-white p-4 md:p-8 mt-8 rounded-3xl">
+                    <h3 class="font-bold text-yellow-400 mb-6 text-xl tracking-tight">Admin Control</h3>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                     <button id="reset-game-btn" class="bg-green-600 py-4 rounded-2xl font-bold hover:bg-green-700 transition">Reset</button>
@@ -182,7 +180,6 @@
         document.getElementById('tab-panel').onclick = () => {
             document.getElementById('game-content').classList.add('hidden-ui');
             document.getElementById('game-sidebar').classList.remove('hidden-ui');
-            document.getElementById('game-sidebar').classList.remove('hidden');
             document.getElementById('game-sidebar').classList.add('flex');
             document.getElementById('tab-panel').classList.replace('text-gray-400', 'text-blue-600');
             document.getElementById('tab-game').classList.replace('text-blue-600', 'text-gray-400');
