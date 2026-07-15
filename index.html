@@ -171,12 +171,14 @@
         document.getElementById('tab-game').onclick = () => {
             document.getElementById('game-content').classList.remove('hidden-ui');
             document.getElementById('game-sidebar').classList.add('hidden-ui');
+            document.getElementById('game-sidebar').classList.add('hidden');
             document.getElementById('tab-game').classList.replace('text-gray-400', 'text-blue-600');
             document.getElementById('tab-panel').classList.replace('text-blue-600', 'text-gray-400');
         };
         document.getElementById('tab-panel').onclick = () => {
             document.getElementById('game-content').classList.add('hidden-ui');
             document.getElementById('game-sidebar').classList.remove('hidden-ui');
+            document.getElementById('game-sidebar').classList.remove('hidden');
             document.getElementById('game-sidebar').classList.add('flex');
             document.getElementById('tab-panel').classList.replace('text-gray-400', 'text-blue-600');
             document.getElementById('tab-game').classList.replace('text-blue-600', 'text-gray-400');
@@ -689,6 +691,7 @@
                 }
                 if(adminState.lastWinner) {
                     document.getElementById('result-display').classList.remove('hidden-ui');
+                    document.getElementById('result-display').innerText = "နောက်ဆုံးရလဒ် - " + adminState.lastWinner;
                 } else {
                     document.getElementById('result-display').classList.add('hidden-ui');
                 }
@@ -753,7 +756,6 @@
             const p = document.getElementById('login-pass').value.trim();
             if(!n || !p) { showMsg("အမည်နှင့် စကားဝှက် ထည့်ပါ", true); return; }
             const uid = n.replace(/[^a-z0-9]/gi, '');
-            localStorage.removeItem('is_admin');
             
             if(users[uid]) {
                 if(users[uid].password === p) { 
