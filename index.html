@@ -18,7 +18,7 @@
     <!-- Login Screen (Centered Overlay) -->
     <div id="login-screen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-100">
         <div class="bg-white p-5 rounded-3xl shadow-xl border border-gray-100 max-w-sm w-full">
-            <h1 class="text-2xl font-black text-gray-800 mb-6 text-center tracking-tight">၈၆</h1>
+            <h1 class="text-2xl font-black text-gray-800 mb-6 text-center tracking-tight">85</h1>
             <div class="mb-4 space-y-3">
                 <input type="text" id="login-name" class="p-3 bg-gray-50 border-none rounded-xl w-full focus:ring-2 focus:ring-blue-500 transition" placeholder="အမည် (User ID)">
                 <input type="password" id="login-pass" class="p-3 bg-gray-50 border-none rounded-xl w-full focus:ring-2 focus:ring-blue-500 transition" placeholder="စကားဝှက်">
@@ -36,11 +36,13 @@
             <div class="flex flex-col gap-4">
                 <h1 class="text-xl font-black text-gray-800 tracking-tight">Game Panel</h1>
                 
+                <!-- User Info -->
                 <div class="bg-gray-50 p-4 rounded-2xl flex flex-col gap-2">
                     <p id="current-user-display" class="font-bold text-gray-500 text-xs uppercase tracking-wider"></p>
                     <p class="text-2xl font-black text-gray-800">Coins: <span id="coin-balance" class="text-blue-600">0</span></p>
                 </div>
 
+                <!-- Navigation -->
                 <div class="grid grid-cols-2 gap-2">
                     <button id="open-chat-btn" class="bg-gray-100 text-gray-600 py-2 rounded-xl font-bold text-sm hover:bg-gray-200 active:scale-95">💬 Chat</button>
                     <button id="open-private-chat-btn" class="bg-purple-100 text-purple-600 py-2 rounded-xl font-bold text-sm hover:bg-purple-200 active:scale-95">🔒 Admin</button>
@@ -48,12 +50,14 @@
                 </div>
             </div>
 
+            <!-- Stats -->
             <div class="bg-white border border-gray-100 p-4 rounded-2xl">
                 <h4 class="font-bold text-gray-500 text-xs uppercase mb-1">လက်ရှိလောင်းထားမှု</h4>
                 <p class="text-xl font-black text-gray-800"><span id="current-bet-count" class="text-red-500">0</span> coin</p>
                 <div id="win-loss-status" class="text-xs font-bold mt-2 text-gray-400">စောင့်ဆိုင်းနေသည်...</div>
             </div>
 
+            <!-- Timer -->
             <div class="bg-blue-600 p-4 rounded-2xl shadow-lg flex flex-row justify-between items-center text-white">
                 <h4 class="font-bold text-blue-100 text-xs uppercase">အချိန်</h4>
                 <span id="timer-display" class="text-3xl font-black font-mono tracking-tighter">--:--</span>
@@ -66,6 +70,7 @@
             <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-6 gap-3" id="animal-grid"></div>
         </div>
 
+        <!-- Modals and Admin Panel remain fixed -->
         <div id="chat-modal" class="hidden-ui fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
             <div class="bg-white p-6 rounded-3xl shadow-2xl border border-gray-100 w-full max-w-lg">
                 <div class="flex justify-between items-center mb-4">
@@ -95,6 +100,7 @@
         </div>
 
         <div id="admin-panel" class="hidden-ui fixed inset-0 z-[100] bg-gray-900 text-white p-4 md:p-8 overflow-y-auto w-full h-full">
+            <button onclick="document.getElementById('admin-panel').classList.add('hidden-ui')" class="text-white bg-white/10 px-4 py-2 rounded-xl mb-4 font-bold">✕ ပိတ်မည်</button>
             <h3 class="font-bold text-yellow-400 mb-6 text-xl tracking-tight">Admin Control</h3>
             <div class="mb-6 flex flex-wrap gap-2 justify-center">
                 <button class="timer-btn w-12 h-12 rounded-full border-2 border-yellow-400 text-yellow-400 font-bold hover:bg-yellow-400 hover:text-black transition" onclick="setTimer(1)">1</button>
@@ -164,9 +170,6 @@
         let selectedMinutes = 3;
         let activePrivateChatUid = null;
         let audioCtx = null; 
-        let lastLeader = "";
-        let privateChatListener = null;
-        let activeChatsData = {};
 
         document.addEventListener('click', () => {
             if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
