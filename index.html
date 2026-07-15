@@ -17,7 +17,7 @@
 
     <div id="login-screen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-100">
         <div class="bg-white p-5 rounded-3xl shadow-xl border border-gray-100 max-w-sm w-full">
-            <h1 class="text-2xl font-black text-gray-800 mb-6 text-center tracking-tight">တိရစ္ဆာန် လောင်းကစား</h1>
+            <h1 class="text-2xl font-black text-gray-800 mb-6 text-center tracking-tight">WIN</h1>
             <div class="mb-4 space-y-3">
                 <input type="text" id="login-name" class="p-3 bg-gray-50 border-none rounded-xl w-full focus:ring-2 focus:ring-blue-500 transition" placeholder="အမည် (User ID)">
                 <input type="password" id="login-pass" class="p-3 bg-gray-50 border-none rounded-xl w-full focus:ring-2 focus:ring-blue-500 transition" placeholder="စကားဝှက်">
@@ -366,7 +366,7 @@
                         const isWin = h.winnerIdx == idx;
                         betsHtml += `<div class="flex justify-between ${isWin ? 'text-green-600 font-bold' : ''}">
                             <span>${gameData[idx]}</span>
-                            <span>${h.bets[idx]} coins ${isWin ? ' (Win)' : ''}</span>
+                            <span>${h.bets[idx]} coins ${isWin ? ` (Win - ${h.bets[idx] * 27} Coins)` : ''}</span>
                         </div>`;
                     });
                     div.innerHTML = `
