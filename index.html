@@ -394,24 +394,38 @@
             db.ref('adminState').update({
                 nextReveal: Date.now() + 180000,
                 lastWinner: winnerName,
-                processed: true
+                processed: true 
             });
         }
 
         function updateUI() {
-            if(currentUserId && users[currentUserId]) {
-                const user = users[currentUserId];
-                document.getElementById('coin-balance').innerText = user.balance || 0;
-                document.getElementById('current-user-display').innerText = user.name;
-                
-                const resultDisplay = document.getElementById('result-display');
-                // ရလဒ်ထွက်ပြီးမှသာ (adminState.processed ဖြစ်မှ) အနိုင်ရငွေကို ပြသပေးပါမည်
-                if (adminState.processed && user.lastWinAmount && user.lastWinAmount > 0) {
-                    resultDisplay.innerText = "🎉 အနိုင်ရငွေ: " + user.lastWinAmount + " Coins!";
-                    resultDisplay.classList.remove('hidden-ui');
-                } else {
-                    resultDisplay.classList.add('hidden-ui');
-                }
+            if (currentUserId && Object.keys(users).length > 0 && !users[currentUserId] && !isAdmin) { 
+                localStorage.removeItem('game_uid'); 
+                currentUserId = null; 
             }
-        }
-// ... existing code ... -->
+            
+            if(currentUserId || isAdmin) {
+                document.getElementById('login-screen').classList.add('hidden-ui');
+                document.getElementById('game-ui').classList.remove('hidden-ui');
+                const user = users[currentUserId];
+                if(user) {
+                    const totalBet = user.selections ? Object.values(user.selections).reduce((a, b) => a + b, 0) : 0;
+                    document.getElementById('current-bet-count').innerText = totalBet;
+                    const statusDiv = document.getElementById('win-loss-status');
+                    const resultDisplay = document.getElementById('result-display');
+                    
+                    if(adminState.processed && adminState.lastWinner) {
+                        if(user.lastWinAmount && user.lastWinAmount > 0) {
+                            statusDiv.innerHTML = `<span class="text-green-600">🎉 အနိုင်ရငွေ: ${user.lastWinAmount}</span>`;
+                            resultDisplay.innerText = "🎉 အနိုင်ရငွေ: " + user.lastWinAmount + " Coins!";
+                            resultDisplay.classList.remove('hidden-ui');
+                        } else {
+                            statusDiv.innerHTML = `<span class="text-gray-500">နောက်ဆုံးရလဒ် - ${adminState.lastWinner}</span>`;
+                            resultDisplay.classList.add('hidden-ui');
+                        }
+                    } else {
+                        statusDiv.innerHTML = `<span class="text-gray-400">လောင်းကစားချိန် စတင်နေသည်...</span>`;
+                        resultDisplay.classList.add('hidden-ui');
+                    }
+                }
+                if(isAdmin) {
