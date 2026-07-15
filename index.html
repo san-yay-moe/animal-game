@@ -9,126 +9,121 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <style>
         .hidden-ui { display: none !important; }
-        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
-        .glass-panel { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(10px); }
-        .card-shadow { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
+        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; }
+        .cork-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; }
+        .admin-bg { background-color: #0e1726; }
     </style>
 </head>
 <body class="h-screen overflow-hidden text-slate-800">
-    <div id="message-box" class="fixed top-5 right-5 z-[200] hidden p-4 rounded-xl shadow-2xl text-white font-medium"></div>
+    <div id="message-box" class="fixed top-5 right-5 z-[100] hidden p-4 rounded-xl shadow-lg text-white font-semibold text-sm"></div>
 
     <!-- Login Screen -->
-    <div id="login-screen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
-        <div class="bg-white p-8 rounded-3xl shadow-2xl border border-slate-100 max-w-sm w-full">
-            <div class="text-center mb-8">
-                <div class="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-blue-200">
-                    <span class="text-3xl">🎲</span>
-                </div>
-                <h1 class="text-2xl font-black text-slate-900 tracking-tight">Game Portal</h1>
-                <p class="text-slate-500 text-sm mt-1">သင်၏ အကောင့်ဖြင့် ဝင်ရောက်ပါ</p>
+    <div id="login-screen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-100">
+        <div class="bg-white p-8 rounded-2xl shadow-xl border border-slate-200 max-w-sm w-full">
+            <h1 class="text-2xl font-black text-slate-900 mb-6 text-center">36 Animal Game</h1>
+            <div class="mb-4 space-y-3">
+                <input type="text" id="login-name" class="p-3 bg-slate-50 border border-slate-200 rounded-lg w-full focus:ring-2 focus:ring-blue-600 outline-none transition" placeholder="အမည် (User ID)">
+                <input type="password" id="login-pass" class="p-3 bg-slate-50 border border-slate-200 rounded-lg w-full focus:ring-2 focus:ring-blue-600 outline-none transition" placeholder="စကားဝှက်">
+                <button id="login-existing-btn" class="bg-blue-600 text-white w-full py-3 rounded-lg font-bold hover:bg-blue-700 transition shadow-sm">ဝင်မည်</button>
             </div>
-            <div class="space-y-4">
-                <input type="text" id="login-name" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none transition" placeholder="အမည် (User ID)">
-                <input type="password" id="login-pass" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none transition" placeholder="စကားဝှက်">
-                <button id="login-existing-btn" class="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold hover:bg-blue-700 active:scale-[0.98] transition-all shadow-lg shadow-blue-200">ဝင်မည်</button>
-            </div>
-            <button id="admin-login-trigger" class="w-full mt-6 text-slate-400 font-medium text-sm hover:text-slate-600 transition">Admin ဝင်ရောက်ရန်</button>
+            <button id="admin-login-trigger" class="w-full text-slate-400 text-xs hover:text-slate-600 transition">Admin ဝင်ရောက်ရန်</button>
         </div>
     </div>
 
+    <!-- Game UI -->
     <div id="game-ui" class="hidden-ui flex flex-col md:flex-row h-screen">
         
         <!-- Sidebar -->
-        <div class="w-full md:w-80 bg-white border-r border-slate-100 flex-shrink-0 p-6 overflow-y-auto flex flex-col gap-6">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center font-black text-white">36</div>
-                <h1 class="text-lg font-black text-slate-900 tracking-tight">Animal Game</h1>
+        <div class="w-full md:w-80 bg-white border-r border-slate-200 flex-shrink-0 p-6 overflow-y-auto flex flex-col gap-6">
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 bg-blue-600 rounded-md flex items-center justify-center text-white font-bold">36</div>
+                <h1 class="text-lg font-black text-slate-900">Dashboard</h1>
             </div>
             
-            <div class="bg-slate-50 p-5 rounded-2xl border border-slate-100">
+            <div class="cork-card p-4 border-l-4 border-l-blue-600">
                 <p id="current-user-display" class="font-bold text-slate-400 text-[10px] uppercase tracking-wider"></p>
-                <p class="text-3xl font-black text-slate-900 mt-1"><span id="coin-balance" class="text-blue-600">0</span> <span class="text-lg text-slate-400">Coins</span></p>
+                <p class="text-2xl font-black text-slate-900"><span id="coin-balance" class="text-blue-600">0</span> <span class="text-sm font-medium text-slate-400">Coins</span></p>
             </div>
 
-            <div class="grid grid-cols-2 gap-3">
-                <button id="open-chat-btn" class="bg-slate-100 text-slate-600 py-3 rounded-2xl font-bold text-sm hover:bg-slate-200 active:scale-95 transition">💬 Chat</button>
-                <button id="open-private-chat-btn" class="bg-purple-50 text-purple-600 py-3 rounded-2xl font-bold text-sm hover:bg-purple-100 active:scale-95 transition">🔒 Admin</button>
-                <button id="logout-btn" class="col-span-2 bg-red-50 text-red-600 py-3 rounded-2xl font-bold text-sm hover:bg-red-100 active:scale-95 transition">Logout</button>
+            <div class="grid grid-cols-2 gap-2">
+                <button id="open-chat-btn" class="bg-slate-100 text-slate-600 py-2.5 rounded-lg font-semibold text-xs hover:bg-slate-200 transition">💬 Chat</button>
+                <button id="open-private-chat-btn" class="bg-purple-50 text-purple-600 py-2.5 rounded-lg font-semibold text-xs hover:bg-purple-100 transition">🔒 Admin</button>
+                <button id="logout-btn" class="col-span-2 bg-red-50 text-red-600 py-2.5 rounded-lg font-semibold text-xs hover:bg-red-100 transition">Logout</button>
             </div>
 
-            <div class="bg-white border border-slate-100 p-5 rounded-2xl shadow-sm">
-                <h4 class="font-bold text-slate-400 text-[10px] uppercase mb-2">လက်ရှိလောင်းထားမှု</h4>
-                <p class="text-2xl font-black text-slate-900"><span id="current-bet-count" class="text-red-500">0</span> <span class="text-base text-slate-400">coins</span></p>
-                <div id="win-loss-status" class="text-xs font-bold mt-3 text-slate-400">စောင့်ဆိုင်းနေသည်...</div>
+            <div class="cork-card p-4">
+                <h4 class="font-bold text-slate-400 text-[10px] uppercase mb-1">လက်ရှိလောင်းထားမှု</h4>
+                <p class="text-lg font-black text-slate-900"><span id="current-bet-count" class="text-red-500">0</span> <span class="text-xs text-slate-400">coins</span></p>
+                <div id="win-loss-status" class="text-[10px] font-bold mt-2 text-slate-400">စောင့်ဆိုင်းနေသည်...</div>
             </div>
 
-            <div class="bg-slate-900 p-6 rounded-2xl text-white shadow-xl mt-auto">
-                <h4 class="font-bold text-slate-400 text-[10px] uppercase mb-1">Time Remaining</h4>
-                <span id="timer-display" class="text-4xl font-black font-mono tracking-tighter">--:--</span>
+            <div class="bg-slate-900 p-4 rounded-xl text-white mt-auto">
+                <h4 class="font-bold text-slate-500 text-[10px] uppercase mb-1">အချိန်</h4>
+                <span id="timer-display" class="text-3xl font-black font-mono tracking-tighter">--:--</span>
             </div>
         </div>
 
-        <!-- Main Content -->
-        <div class="flex-1 bg-slate-50 p-6 md:p-10 overflow-y-auto">
-            <div id="result-display" class="hidden-ui bg-yellow-100 border-2 border-yellow-200 p-6 rounded-3xl text-center font-black text-xl mb-8 shadow-sm text-yellow-900"></div>
-            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4" id="animal-grid"></div>
+        <!-- Main Area -->
+        <div class="flex-1 p-8 overflow-y-auto">
+            <div id="result-display" class="hidden-ui bg-yellow-400 p-4 rounded-xl text-center font-bold text-sm mb-6 shadow-md text-yellow-900 border-2 border-yellow-500"></div>
+            <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3" id="animal-grid"></div>
         </div>
-    </div>
 
-    <!-- Modals -->
-    <div id="chat-modal" class="hidden-ui fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
-        <div class="bg-white p-6 rounded-3xl shadow-2xl w-full max-w-lg border border-slate-100">
-            <div class="flex justify-between items-center mb-6">
-                <h4 class="font-bold text-slate-400 text-xs uppercase">Public Chat</h4>
-                <button id="close-chat-btn" class="text-slate-400 hover:text-slate-800">✕</button>
-            </div>
-            <div id="chat-messages" class="h-60 overflow-y-auto mb-4 space-y-3 bg-slate-50 p-4 rounded-2xl text-sm"></div>
-            <div class="flex gap-2">
-                <input type="text" id="chat-input" class="flex-grow p-4 bg-slate-100 border-none rounded-2xl focus:ring-2 focus:ring-blue-500" placeholder="စာရိုက်ပါ...">
-                <button id="send-chat-btn" class="bg-blue-600 text-white px-6 rounded-2xl font-bold hover:bg-blue-700">ပို့</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="private-chat-modal" class="hidden-ui fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
-        <div class="bg-white p-6 rounded-3xl shadow-2xl w-full max-w-lg border border-slate-100">
-            <div class="flex justify-between items-center mb-6">
-                <h4 class="font-bold text-purple-600 text-xs uppercase" id="private-chat-title">Admin Chat</h4>
-                <button id="close-private-chat-btn" class="text-slate-400 hover:text-slate-800">✕</button>
-            </div>
-            <div id="private-chat-messages" class="h-60 overflow-y-auto mb-4 space-y-3 bg-slate-50 p-4 rounded-2xl text-sm"></div>
-            <div class="flex gap-2">
-                <input type="text" id="private-chat-input" class="flex-grow p-4 bg-slate-100 border-none rounded-2xl focus:ring-2 focus:ring-purple-500" placeholder="စာရိုက်ပါ...">
-                <button id="send-private-chat-btn" class="bg-purple-600 text-white px-6 rounded-2xl font-bold hover:bg-purple-700">ပို့</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="admin-panel" class="hidden-ui fixed inset-0 z-[100] bg-slate-950 text-white p-6 md:p-12 overflow-y-auto">
-        <button onclick="document.getElementById('admin-panel').classList.add('hidden-ui')" class="bg-white/10 px-6 py-3 rounded-2xl font-bold mb-8 hover:bg-white/20 transition">✕ ပိတ်မည်</button>
-        <h3 class="font-black text-yellow-400 mb-8 text-2xl tracking-tight">Admin Control</h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div class="bg-white/5 p-6 rounded-3xl border border-white/10">
-                <h4 class="font-bold text-yellow-400 mb-4 uppercase text-xs tracking-wider">ဂိမ်းထိန်းချုပ်ရန်</h4>
-                <div class="flex gap-2 mb-6">
-                    <button class="timer-btn w-12 h-12 rounded-full border border-yellow-400 text-yellow-400 font-bold hover:bg-yellow-400 hover:text-black transition" onclick="setTimer(1)">1</button>
-                    <button class="timer-btn w-12 h-12 rounded-full border border-yellow-400 text-yellow-400 font-bold hover:bg-yellow-400 hover:text-black transition" onclick="setTimer(3)">3</button>
-                    <button class="timer-btn w-12 h-12 rounded-full border border-yellow-400 text-yellow-400 font-bold hover:bg-yellow-400 hover:text-black transition" onclick="setTimer(5)">5</button>
-                    <button class="timer-btn w-12 h-12 rounded-full border border-yellow-400 text-yellow-400 font-bold hover:bg-yellow-400 hover:text-black transition" onclick="setTimer(10)">10</button>
+        <!-- Modals -->
+        <div id="chat-modal" class="hidden-ui fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+            <div class="bg-white p-6 rounded-2xl w-full max-w-lg border border-slate-200 shadow-2xl">
+                <div class="flex justify-between items-center mb-4">
+                    <h4 class="font-bold text-slate-400 text-[10px] uppercase">Public Chat</h4>
+                    <button id="close-chat-btn" class="text-slate-400 hover:text-slate-800">✕</button>
                 </div>
-                <div class="grid grid-cols-2 gap-3">
-                    <button id="reset-game-btn" class="bg-emerald-600 py-4 rounded-2xl font-bold hover:bg-emerald-700">Reset</button>
-                    <button id="calc-result-btn" class="bg-amber-600 py-4 rounded-2xl font-bold hover:bg-amber-700">ရလဒ်ထုတ်</button>
-                </div>
-            </div>
-            <div class="bg-white/5 p-6 rounded-3xl border border-white/10">
-                <h4 class="font-bold text-yellow-400 mb-4 uppercase text-xs tracking-wider">User များစီမံရန်</h4>
-                <select id="user-select-admin" class="w-full bg-slate-800 text-white p-4 rounded-2xl mb-4 border border-slate-700"></select>
+                <div id="chat-messages" class="h-60 overflow-y-auto mb-4 space-y-2 text-sm bg-slate-50 p-4 rounded-lg"></div>
                 <div class="flex gap-2">
-                    <input type="number" id="coin-amount" class="w-24 bg-slate-800 p-4 rounded-2xl border border-slate-700" placeholder="Coin">
-                    <button id="add-coin-btn" class="flex-1 bg-blue-600 rounded-2xl font-bold">+</button>
-                    <button id="sub-coin-btn" class="flex-1 bg-orange-600 rounded-2xl font-bold">-</button>
-                    <button id="delete-user-btn" class="bg-red-600 px-6 rounded-2xl font-bold">🗑️</button>
+                    <input type="text" id="chat-input" class="flex-grow p-3 bg-slate-100 rounded-lg outline-none focus:ring-2 focus:ring-blue-600" placeholder="စာရိုက်ပါ...">
+                    <button id="send-chat-btn" class="bg-blue-600 text-white px-6 rounded-lg font-bold">ပို့</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="private-chat-modal" class="hidden-ui fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+            <div class="bg-white p-6 rounded-2xl w-full max-w-lg border border-slate-200 shadow-2xl">
+                <div class="flex justify-between items-center mb-4">
+                    <h4 class="font-bold text-purple-600 text-[10px] uppercase" id="private-chat-title">Admin Chat</h4>
+                    <button id="close-private-chat-btn" class="text-slate-400 hover:text-slate-800">✕</button>
+                </div>
+                <div id="private-chat-messages" class="h-60 overflow-y-auto mb-4 space-y-2 text-sm bg-slate-50 p-4 rounded-lg"></div>
+                <div class="flex gap-2">
+                    <input type="text" id="private-chat-input" class="flex-grow p-3 bg-slate-100 rounded-lg outline-none focus:ring-2 focus:ring-purple-600" placeholder="စာရိုက်ပါ...">
+                    <button id="send-private-chat-btn" class="bg-purple-600 text-white px-6 rounded-lg font-bold">ပို့</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Admin Panel -->
+        <div id="admin-panel" class="hidden-ui fixed inset-0 z-[120] admin-bg text-white p-6 md:p-12 overflow-y-auto">
+            <button onclick="document.getElementById('admin-panel').classList.add('hidden-ui')" class="bg-white/10 px-4 py-2 rounded-lg text-xs font-bold mb-8">✕ ပိတ်မည်</button>
+            <h3 class="font-black text-yellow-400 mb-8 text-2xl tracking-tight">Admin Control Console</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="bg-white/5 p-6 rounded-2xl border border-white/5">
+                    <h4 class="font-bold text-yellow-400 mb-4 text-[10px] uppercase">ဂိမ်းထိန်းချုပ်ရန်</h4>
+                    <div class="flex gap-2 mb-6">
+                        <button class="timer-btn w-10 h-10 rounded-lg border border-yellow-400 text-yellow-400 text-xs font-bold hover:bg-yellow-400 hover:text-black transition" onclick="setTimer(1)">1m</button>
+                        <button class="timer-btn w-10 h-10 rounded-lg border border-yellow-400 text-yellow-400 text-xs font-bold hover:bg-yellow-400 hover:text-black transition" onclick="setTimer(3)">3m</button>
+                        <button class="timer-btn w-10 h-10 rounded-lg border border-yellow-400 text-yellow-400 text-xs font-bold hover:bg-yellow-400 hover:text-black transition" onclick="setTimer(5)">5m</button>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <button id="reset-game-btn" class="bg-emerald-600 py-3 rounded-lg font-bold text-xs hover:bg-emerald-700">Reset Game</button>
+                        <button id="calc-result-btn" class="bg-amber-600 py-3 rounded-lg font-bold text-xs hover:bg-amber-700">Generate Result</button>
+                    </div>
+                </div>
+                <div class="bg-white/5 p-6 rounded-2xl border border-white/5">
+                    <h4 class="font-bold text-yellow-400 mb-4 text-[10px] uppercase">User စီမံရန်</h4>
+                    <select id="user-select-admin" class="w-full bg-slate-800 text-white p-3 rounded-lg mb-4 text-sm border border-slate-700"></select>
+                    <div class="flex gap-2">
+                        <input type="number" id="coin-amount" class="w-20 bg-slate-800 p-3 rounded-lg text-sm border border-slate-700" placeholder="Coin">
+                        <button id="add-coin-btn" class="bg-blue-600 px-4 rounded-lg font-bold text-lg">+</button>
+                        <button id="sub-coin-btn" class="bg-orange-600 px-4 rounded-lg font-bold text-lg">-</button>
+                        <button id="delete-user-btn" class="bg-red-600 px-4 rounded-lg font-bold">🗑️</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -151,7 +146,7 @@
         function showMsg(text, isError = false) {
             const box = document.getElementById('message-box');
             box.innerText = text;
-            box.className = `fixed top-5 right-5 z-[200] p-4 rounded-xl shadow-2xl text-white font-medium ${isError ? 'bg-red-600' : 'bg-green-600'}`;
+            box.className = `fixed top-5 right-5 z-[100] p-4 rounded-xl shadow-lg text-white font-semibold text-sm ${isError ? 'bg-red-600' : 'bg-green-600'}`;
             box.classList.remove('hidden-ui');
             setTimeout(() => box.classList.add('hidden-ui'), 3000);
         }
@@ -168,12 +163,7 @@
         let audioCtx = null; 
         let lastLeader = "";
         let privateChatListener = null;
-        let activeChatsData = {};
 
-        // ... existing code ...
-        // Note: Functionality and logic preserved exactly as requested.
-
-        // Initialize App UI
         document.addEventListener('click', () => {
             if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -203,14 +193,13 @@
                     showMsg("အများဆုံးလောင်းထားသူ: " + leaderName);
                 }
             }
-            if(typeof renderActiveChats === 'function') renderActiveChats();
         });
         db.ref('adminState').on('value', (snap) => { adminState = snap.val() || { nextReveal: 0, processed: true }; updateUI(); });
         db.ref('chat').limitToLast(20).on('child_added', (snap) => {
             const msg = snap.val();
             const div = document.createElement('div');
             div.className = "border-b border-slate-100 pb-2";
-            const timeStr = msg.timestamp ? `<span class="text-[10px] text-slate-400 ml-2">${new Date(msg.timestamp).toLocaleTimeString()}</span>` : '';
+            const timeStr = msg.timestamp ? `<span class="text-[9px] text-slate-400 ml-2">${new Date(msg.timestamp).toLocaleTimeString()}</span>` : '';
             div.innerHTML = `<span class="font-bold text-blue-600">${msg.name}:</span> ${msg.text} ${timeStr}`;
             const chatMessages = document.getElementById('chat-messages');
             chatMessages.appendChild(div);
@@ -222,7 +211,7 @@
                 db.ref('privateChat/' + activePrivateChatUid).off('child_added', privateChatListener);
             }
             activePrivateChatUid = uid;
-            document.getElementById('private-chat-title').innerText = "Chat with " + (isAdmin ? name : "Admin");
+            document.getElementById('private-chat-title').innerText = "Chat: " + (isAdmin ? name : "Admin");
             document.getElementById('private-chat-messages').innerHTML = '';
             document.getElementById('private-chat-modal').classList.remove('hidden-ui');
             privateChatListener = (snap) => {
@@ -306,15 +295,15 @@
             gameData.forEach((name, i) => {
                 const betCount = (users[currentUserId] && users[currentUserId].selections) ? (users[currentUserId].selections[i] || 0) : 0;
                 const div = document.createElement('div');
-                div.className = "bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex flex-col items-center justify-center text-center transition-all hover:shadow-lg hover:border-blue-200 cursor-pointer";
+                div.className = "bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center justify-center text-center hover:border-blue-500 cursor-pointer transition";
                 div.innerHTML = `
-                    <div class="text-4xl mb-2">${animalEmojis[i]}</div>
-                    <div class="font-bold text-slate-700 text-sm mb-3">${name}</div>
+                    <div class="text-3xl mb-2">${animalEmojis[i]}</div>
+                    <div class="font-bold text-slate-700 text-[11px] mb-2">${name}</div>
                     ${!isAdmin ? `
-                    <div class="flex gap-2 items-center bg-slate-50 p-1 rounded-full">
-                        <button class="w-8 h-8 flex items-center justify-center bg-white shadow rounded-full font-bold text-red-600" onclick="changeBet(${i}, -1)">-</button>
-                        <span class="font-black text-blue-600 w-8">${betCount}</span>
-                        <button class="w-8 h-8 flex items-center justify-center bg-white shadow rounded-full font-bold text-green-600" onclick="changeBet(${i}, 1)">+</button>
+                    <div class="flex gap-1 items-center">
+                        <button class="w-7 h-7 flex items-center justify-center bg-slate-100 rounded-lg text-red-600 font-bold hover:bg-slate-200" onclick="changeBet(${i}, -1)">-</button>
+                        <span class="font-black text-blue-600 w-6 text-sm">${betCount}</span>
+                        <button class="w-7 h-7 flex items-center justify-center bg-slate-100 rounded-lg text-green-600 font-bold hover:bg-slate-200" onclick="changeBet(${i}, 1)">+</button>
                     </div>` : ''}
                 `;
                 grid.appendChild(div);
@@ -336,11 +325,6 @@
             renderGrid();
         }
 
-        // Admin Buttons
-        const adminChatBtn = document.getElementById('admin-chat-btn');
-        if (adminChatBtn) {
-            adminChatBtn.onclick = () => { const uid = document.getElementById('user-select-admin').value; if(uid) openPrivateChat(uid, users[uid].name); };
-        }
         document.getElementById('add-coin-btn').onclick = () => { const uid = document.getElementById('user-select-admin').value; const amt = parseInt(document.getElementById('coin-amount').value); if(uid && amt) db.ref(`users/${uid}/balance`).set((users[uid].balance || 0) + amt); };
         document.getElementById('sub-coin-btn').onclick = () => { const uid = document.getElementById('user-select-admin').value; const amt = parseInt(document.getElementById('coin-amount').value); if(uid && amt) db.ref(`users/${uid}/balance`).set(Math.max(0, (users[uid].balance || 0) - amt)); };
         document.getElementById('delete-user-btn').onclick = () => { const uid = document.getElementById('user-select-admin').value; if(uid) db.ref(`users/${uid}`).remove(); };
