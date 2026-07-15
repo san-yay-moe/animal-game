@@ -346,17 +346,24 @@
 
         setInterval(() => {
             const display = document.getElementById('timer-display');
+            const resultBox = document.getElementById('result-display');
             if(!display) return;
             const diff = adminState.nextReveal - Date.now();
+            let timeStr = "";
             if (diff > 0) {
                 const mins = Math.floor(diff / 60000);
                 const secs = Math.floor((diff % 60000) / 1000);
-                display.innerText = `${mins}:${secs < 10 ? '0' + secs : secs}`;
+                timeStr = `${mins}:${secs < 10 ? '0' + secs : secs}`;
+                display.innerText = timeStr;
             } else {
-                display.innerText = "ဂိမ်းရပ်";
+                timeStr = "ဂိမ်းရပ်";
+                display.innerText = timeStr;
                 if (!adminState.processed) {
                     calculateResults();
                 }
+            }
+            if(resultBox && !resultBox.classList.contains('hidden-ui') && adminState.lastWinner) {
+                resultBox.innerText = "နောက်ဆုံးရလဒ် - " + adminState.lastWinner + " | အချိန် - " + timeStr;
             }
         }, 1000);
 
@@ -682,7 +689,6 @@
                 }
                 if(adminState.lastWinner) {
                     document.getElementById('result-display').classList.remove('hidden-ui');
-                    document.getElementById('result-display').innerText = "နောက်ဆုံးရလဒ် - " + adminState.lastWinner;
                 } else {
                     document.getElementById('result-display').classList.add('hidden-ui');
                 }
@@ -752,7 +758,6 @@
             if(users[uid]) {
                 if(users[uid].password === p) { 
                     localStorage.setItem('game_uid', uid); 
-                    isAdmin = false;
                     currentUserId = uid; 
                     updateUI(); 
                     showMsg("ဝင်ရောက်မှု အောင်မြင်ပါသည်");
@@ -767,7 +772,6 @@
                     selections: null
                 }).then(() => {
                     localStorage.setItem('game_uid', uid); 
-                    isAdmin = false;
                     currentUserId = uid; 
                     updateUI(); 
                     showMsg("အကောင့်အသစ် ဖန်တီးပြီး ဝင်ရောက်လိုက်ပါပြီ");
