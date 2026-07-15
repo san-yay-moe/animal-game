@@ -337,7 +337,10 @@
         }
 
         // Admin Buttons
-        document.getElementById('admin-chat-btn').onclick = () => { const uid = document.getElementById('user-select-admin').value; if(uid) openPrivateChat(uid, users[uid].name); };
+        const adminChatBtn = document.getElementById('admin-chat-btn');
+        if (adminChatBtn) {
+            adminChatBtn.onclick = () => { const uid = document.getElementById('user-select-admin').value; if(uid) openPrivateChat(uid, users[uid].name); };
+        }
         document.getElementById('add-coin-btn').onclick = () => { const uid = document.getElementById('user-select-admin').value; const amt = parseInt(document.getElementById('coin-amount').value); if(uid && amt) db.ref(`users/${uid}/balance`).set((users[uid].balance || 0) + amt); };
         document.getElementById('sub-coin-btn').onclick = () => { const uid = document.getElementById('user-select-admin').value; const amt = parseInt(document.getElementById('coin-amount').value); if(uid && amt) db.ref(`users/${uid}/balance`).set(Math.max(0, (users[uid].balance || 0) - amt)); };
         document.getElementById('delete-user-btn').onclick = () => { const uid = document.getElementById('user-select-admin').value; if(uid) db.ref(`users/${uid}`).remove(); };
