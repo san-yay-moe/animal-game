@@ -405,7 +405,8 @@
                 document.getElementById('current-user-display').innerText = user.name;
                 
                 const resultDisplay = document.getElementById('result-display');
-                if (adminState.processed && user.lastWinAmount > 0) {
+                // ရလဒ်ထွက်ပြီးမှသာ (adminState.processed ဖြစ်မှ) အနိုင်ရငွေကို ပြသပေးပါမည်
+                if (adminState.processed && user.lastWinAmount && user.lastWinAmount > 0) {
                     resultDisplay.innerText = "🎉 အနိုင်ရငွေ: " + user.lastWinAmount + " Coins!";
                     resultDisplay.classList.remove('hidden-ui');
                 } else {
