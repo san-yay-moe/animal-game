@@ -17,7 +17,7 @@
 
     <div id="login-screen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-100">
         <div class="bg-white p-5 rounded-3xl shadow-xl border border-gray-100 max-w-sm w-full">
-            <h1 class="text-2xl font-black text-gray-800 mb-6 text-center tracking-tight">အပျော်တမ်း ( ၃၆ ) ကောင်</h1>
+            <h1 class="text-2xl font-black text-gray-800 mb-6 text-center tracking-tight">တိရစ္ဆာန် လောင်းကစား</h1>
             <div class="mb-4 space-y-3">
                 <input type="text" id="login-name" class="p-3 bg-gray-50 border-none rounded-xl w-full focus:ring-2 focus:ring-blue-500 transition" placeholder="အမည် (User ID)">
                 <input type="password" id="login-pass" class="p-3 bg-gray-50 border-none rounded-xl w-full focus:ring-2 focus:ring-blue-500 transition" placeholder="စကားဝှက်">
@@ -101,6 +101,14 @@
                     </div>
                 </div>
             </div>
+        </div>
+
+        <!-- Mobile Tab Bar -->
+        <div class="md:hidden fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 flex justify-around p-3 z-40">
+            <button onclick="document.getElementById('open-chat-btn').click()" class="flex flex-col items-center text-xs font-bold text-gray-600">💬 Chat</button>
+            <button onclick="document.getElementById('open-history-btn').click()" class="flex flex-col items-center text-xs font-bold text-gray-600">📜 History</button>
+            <button onclick="document.getElementById('open-private-chat-btn').click()" class="flex flex-col items-center text-xs font-bold text-purple-600">🔒 Admin</button>
+            <button onclick="document.getElementById('logout-btn').click()" class="flex flex-col items-center text-xs font-bold text-red-600">Logout</button>
         </div>
     </div>
 
