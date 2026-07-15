@@ -545,7 +545,13 @@
                 }
                 if(adminState.lastWinner) {
                     document.getElementById('result-display').classList.remove('hidden-ui');
-                    document.getElementById('result-display').innerText = "နောက်ဆုံးရလဒ် - " + adminState.lastWinner;
+                    const winIdx = gameData.indexOf(adminState.lastWinner);
+                    if(user.selections && user.selections[winIdx]) {
+                        const winAmount = user.selections[winIdx] * 27;
+                        document.getElementById('result-display').innerText = "နောက်ဆုံးရလဒ် - " + adminState.lastWinner + " (သင် " + winAmount + " Coins ရရှိသည်)";
+                    } else {
+                        document.getElementById('result-display').innerText = "နောက်ဆုံးရလဒ် - " + adminState.lastWinner;
+                    }
                 }
             } else {
                 document.getElementById('login-screen').classList.remove('hidden-ui');
