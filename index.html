@@ -387,8 +387,8 @@
                 }
                 db.ref(`users/${uid}`).update({
                     balance: (user.balance || 0) + winnings,
-                    selections: null,
-                    lastWinAmount: winnings
+                    lastWinAmount: winnings,
+                    selections: null
                 });
             });
             db.ref('adminState').update({
@@ -412,20 +412,62 @@
                     const totalBet = user.selections ? Object.values(user.selections).reduce((a, b) => a + b, 0) : 0;
                     document.getElementById('current-bet-count').innerText = totalBet;
                     const statusDiv = document.getElementById('win-loss-status');
-                    const resultDisplay = document.getElementById('result-display');
                     
                     if(adminState.processed && adminState.lastWinner) {
                         if(user.lastWinAmount && user.lastWinAmount > 0) {
                             statusDiv.innerHTML = `<span class="text-green-600">🎉 အနိုင်ရငွေ: ${user.lastWinAmount}</span>`;
-                            resultDisplay.innerText = "🎉 အနိုင်ရငွေ: " + user.lastWinAmount + " Coins!";
-                            resultDisplay.classList.remove('hidden-ui');
                         } else {
                             statusDiv.innerHTML = `<span class="text-gray-500">နောက်ဆုံးရလဒ် - ${adminState.lastWinner}</span>`;
-                            resultDisplay.classList.add('hidden-ui');
                         }
                     } else {
                         statusDiv.innerHTML = `<span class="text-gray-400">လောင်းကစားချိန် စတင်နေသည်...</span>`;
-                        resultDisplay.classList.add('hidden-ui');
                     }
                 }
                 if(isAdmin) {
+                    document.getElementById('admin-panel').classList.remove('hidden-ui');
+                    const userSelect = document.getElementById('user-select-admin');
+                    userSelect.innerHTML = '';
+                    Object.keys(users).forEach(uid => {
+                        const opt = document.createElement('option');
+                        opt.value = uid;
+                        opt.text = users[uid].name;
+                        userSelect.add(opt);
+                    });
+                    
+                    const betsList = document.getElementById('bets-list-content');
+                    betsList.innerHTML = '';
+                    Object.keys(users).forEach(uid => {
+                        if(users[uid].selections) {
+                            const total = Object.values(users[uid].selections).reduce((a, b) => a + b, 0);
+                            betsList.innerHTML += `<div>${users[uid].name}: ${total} coins</div>`;
+                        }
+                    });
+
+                    const balanceList = document.getElementById('user-balance-content');
+                    balanceList.innerHTML = '';
+                    Object.keys(users).forEach(uid => {
+                        balanceList.innerHTML += `<div>${users[uid].name}: ${users[uid].balance || 0}</div>`;
+                    });
+                } else {
+                    document.getElementById('admin-panel').classList.add('hidden-ui');
+                }
+            }
+        }
+
+        // Event Listeners များအား အဆုံးသတ်တွင် ထည့်သွင်းပေးပါ
+        document.getElementById('calc-result-btn').onclick = () => calculateResults();
+        document.getElementById('reset-game-btn').onclick = () => {
+            if(confirm("ဂိမ်းကို Reset လုပ်မှာလား?")) {
+                db.ref('users').once('value', (snap) => {
+                    snap.forEach(child => {
+                        db.ref(`users/${child.key}/selections`).remove();
+                    });
+                });
+                db.ref('adminState').update({processed: true, lastWinner: "Reset"});
+            }
+        };
+
+        // ... (ကျန်ရှိသော Code များ)
+    </script>
+</body>
+</html>
