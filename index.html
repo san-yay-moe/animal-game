@@ -13,9 +13,9 @@
     </style>
 </head>
 <body class="h-screen overflow-hidden">
-    <div id="message-box" class="fixed top-5 right-5 z-50 hidden p-4 rounded-xl shadow-2xl text-white"></div>
+    <div id="message-box" class="fixed top-5 right-5 z-[1000] hidden p-4 rounded-xl shadow-2xl text-white"></div>
 
-    <div id="login-screen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-100">
+    <div id="login-screen" class="fixed inset-0 z-[500] flex items-center justify-center p-4 bg-gray-100">
         <div class="bg-white p-5 rounded-3xl shadow-xl border border-gray-100 max-w-sm w-full">
             <h1 class="text-2xl font-black text-gray-800 mb-6 text-center tracking-tight">တိရစ္ဆာန် လောင်းကစား</h1>
             <div class="mb-4 space-y-3">
@@ -27,8 +27,9 @@
         </div>
     </div>
 
-    <div id="game-ui" class="hidden-ui flex flex-col md:flex-row h-screen">
-        <div class="w-full md:w-80 bg-white border-r border-gray-100 flex-shrink-0 p-4 md:p-6 overflow-y-auto flex flex-col gap-6 shadow-sm">
+    <div id="game-ui" class="hidden-ui flex flex-col md:flex-row h-screen pb-16 md:pb-0">
+        <!-- Sidebar -->
+        <div id="game-sidebar" class="hidden md:flex w-full md:w-80 bg-white border-r border-gray-100 flex-shrink-0 p-4 md:p-6 overflow-y-auto flex-col gap-6 shadow-sm">
             <div class="flex flex-col gap-4">
                 <h1 class="text-xl font-black text-gray-800 tracking-tight">Game Panel</h1>
                 <div class="bg-gray-50 p-4 rounded-2xl flex flex-col gap-2">
@@ -53,7 +54,8 @@
             </div>
         </div>
 
-        <div class="flex-1 bg-gray-50 p-4 md:p-8 overflow-y-auto">
+        <!-- Main Content -->
+        <div id="game-content" class="flex-1 bg-gray-50 p-4 md:p-8 overflow-y-auto">
             <div id="result-display" class="hidden-ui bg-yellow-400 p-4 rounded-2xl text-center font-black text-lg mb-6 shadow-lg text-yellow-900"></div>
             <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-6 gap-3" id="animal-grid"></div>
 
@@ -101,6 +103,12 @@
                     </div>
                 </div>
             </div>
+        </div>
+
+        <!-- Mobile Tabs -->
+        <div id="mobile-tabs" class="md:hidden fixed bottom-0 left-0 right-0 z-[100] flex bg-white border-t border-gray-200 shadow-[0_-4px_20px_-5px_rgba(0,0,0,0.1)]">
+            <button id="tab-game" class="flex-1 py-4 font-bold text-blue-600 border-r border-gray-100 flex items-center justify-center gap-2">🕹️ ဂိမ်း</button>
+            <button id="tab-panel" class="flex-1 py-4 font-bold text-gray-400 flex items-center justify-center gap-2">📊 Panel</button>
         </div>
     </div>
 
@@ -160,10 +168,25 @@
         function showMsg(text, isError = false) {
             const box = document.getElementById('message-box');
             box.innerText = text;
-            box.className = `fixed top-5 right-5 z-50 p-4 rounded-xl shadow-2xl text-white ${isError ? 'bg-red-600' : 'bg-green-600'}`;
+            box.className = `fixed top-5 right-5 z-[1000] p-4 rounded-xl shadow-2xl text-white ${isError ? 'bg-red-600' : 'bg-green-600'}`;
             box.classList.remove('hidden-ui');
             setTimeout(() => box.classList.add('hidden-ui'), 3000);
         }
+
+        // Tab Logic
+        document.getElementById('tab-game').onclick = () => {
+            document.getElementById('game-content').classList.remove('hidden-ui');
+            document.getElementById('game-sidebar').classList.add('hidden-ui');
+            document.getElementById('tab-game').classList.replace('text-gray-400', 'text-blue-600');
+            document.getElementById('tab-panel').classList.replace('text-blue-600', 'text-gray-400');
+        };
+        document.getElementById('tab-panel').onclick = () => {
+            document.getElementById('game-content').classList.add('hidden-ui');
+            document.getElementById('game-sidebar').classList.remove('hidden-ui');
+            document.getElementById('game-sidebar').classList.add('flex');
+            document.getElementById('tab-panel').classList.replace('text-gray-400', 'text-blue-600');
+            document.getElementById('tab-game').classList.replace('text-blue-600', 'text-gray-400');
+        };
 
         const gameData = ["မြင်း", "ရွှေနဂါး", "လိပ်ပြာ", "ဆတ်", "မြွေ", "မျောက်", "ပင့်ကူ", "ဗျိုင်း", "ငန်း", "ခရု", "ဆင်", "ရွှေငါး", "ကြက်", "လိပ်", "ကျီး", "ကျား", "ဝက်", "ဒေါင်း", "ယုန်", "ခွေး", "ပုစွန်", "ဆိတ်", "နွား", "ဖား", "ပျား", "ကြွက်", "ငါးရှဉ့်", "ကျားသစ်", "ခြင်္သေ့", "သမင်", "ဝံပုလွေ", "လင်းယုန်", "ကြောင်", "ပုရွက်ဆိတ်", "ပိုးကောင်", "ငါး"];
         const animalEmojis = ["🐎", "🐉", "🦋", "🦌", "🐍", "🐒", "🕷️", "🦢", "🦆", "🐌", "🐘", "🐠", "🐓", "🐢", "🐦‍⬛", "🐅", "🐖", "🦚", "🐇", "🐕", "🦐", "🐐", "🐂", "🐸", "🐝", "🐀", "🐍", "🐆", "🦁", "🦌", "🐺", "🦅", "🐈", "🐜", "🐛", "🐟"];
@@ -189,7 +212,6 @@
             showMsg(m + " မိနစ် ရွေးချယ်ပြီးပါပြီ");
         }
 
-        // Real-time Users Database sync listener
         db.ref('users').on('value', (snap) => { 
             users = snap.val() || {}; 
             updateUI(); 
@@ -214,13 +236,11 @@
             if(isAdmin && typeof renderAdminData === 'function') renderAdminData();
         });
 
-        // Real-time Admin State watcher
         db.ref('adminState').on('value', (snap) => { 
             adminState = snap.val() || { nextReveal: 0, processed: true, lastWinner: "" }; 
             updateUI(); 
         });
 
-        // Public Chat listener
         db.ref('chat').limitToLast(20).on('child_added', (snap) => {
             const msg = snap.val();
             const div = document.createElement('div');
@@ -231,7 +251,6 @@
             chatMessages.scrollTop = chatMessages.scrollHeight;
         });
 
-        // Active Chats for Admin Panel
         function renderActiveChats() {
             const container = document.getElementById('active-chats-content');
             if(!container) return;
@@ -258,7 +277,6 @@
             renderActiveChats();
         });
 
-        // Private Chat modal controller
         function openPrivateChat(uid, name) {
             if (activePrivateChatUid && privateChatListener) {
                 db.ref('privateChat/' + activePrivateChatUid).off('child_added', privateChatListener);
@@ -338,7 +356,6 @@
             }
         };
 
-        // Automatic Game Process loop
         setInterval(() => {
             const display = document.getElementById('timer-display');
             if(!display) return;
