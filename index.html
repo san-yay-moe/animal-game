@@ -108,6 +108,11 @@
                     <h4 class="font-bold mb-2 text-yellow-400">User များ၏ Coins:</h4>
                     <div id="user-balance-content"></div>
                 </div>
+                <!-- Added Active Chats Section -->
+                <div id="active-chats-container" class="bg-white/10 p-4 rounded-2xl text-sm max-h-60 overflow-y-auto border border-white/10">
+                    <h4 class="font-bold mb-2 text-yellow-400">Chat များ:</h4>
+                    <div id="active-chats-content"></div>
+                </div>
             </div>
             <div class="flex flex-col md:flex-row gap-2 mb-2">
                 <input type="text" id="new-password-admin" class="text-black p-3 rounded-xl flex-grow" placeholder="New Password">
@@ -207,6 +212,7 @@
                     showMsg("အများဆုံးလောင်းထားသူ: " + leaderName);
                 }
             }
+            if(typeof renderActiveChats === 'function') renderActiveChats();
         });
         db.ref('adminState').on('value', (snap) => { adminState = snap.val() || { nextReveal: 0, processed: true }; updateUI(); });
 
@@ -221,6 +227,33 @@
             chatMessages.scrollTop = chatMessages.scrollHeight;
         });
 
+        // Chat Bot Renderer
+        function renderActiveChats() {
+            const container = document.getElementById('active-chats-content');
+            if(!container) return;
+            container.innerHTML = '';
+            
+            const chatList = Object.keys(activeChatsData || {});
+            if (chatList.length === 0) {
+                container.innerHTML = 'Chat လတ်တလောမရှိပါ။';
+                return;
+            }
+
+            chatList.forEach(uid => {
+                const name = (users[uid] && users[uid].name) ? users[uid].name : ("User: " + uid.substring(0, 5));
+                const div = document.createElement('div');
+                div.className = "cursor-pointer hover:text-white text-blue-300 py-2 border-b border-white/10 last:border-0";
+                div.innerText = "💬 " + name;
+                div.onclick = function() { openPrivateChat(uid, name); };
+                container.appendChild(div);
+            });
+        }
+
+        db.ref('privateChat').on('value', (snap) => {
+            activeChatsData = snap.val() || {};
+            renderActiveChats();
+        });
+
         function openPrivateChat(uid, name) {
             if (activePrivateChatUid && privateChatListener) {
                 db.ref('privateChat/' + activePrivateChatUid).off('child_added', privateChatListener);
@@ -231,7 +264,7 @@
             document.getElementById('private-chat-messages').innerHTML = '';
             document.getElementById('private-chat-modal').classList.remove('hidden-ui');
 
-            // Chat Bot Greeting
+            // Bot Greeting Logic
             if (!isAdmin) {
                 db.ref('privateChat/' + uid).once('value', (snap) => {
                     if (!snap.exists()) {
