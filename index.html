@@ -487,6 +487,8 @@
                         } else {
                             statusDiv.innerHTML = `<span class="text-gray-500">နောက်ဆုံးရလဒ် - ${adminState.lastWinner}</span>`;
                         }
+                    } else if(adminState.lastWinner && !adminState.processed) {
+                        statusDiv.innerHTML = `<span class="text-blue-500 font-bold">ရလဒ် စစ်ဆေးနေသည်...</span>`;
                     } else {
                         statusDiv.innerHTML = `<span class="text-gray-400">လောင်းကစားချိန် စတင်နေသည်...</span>`;
                     }
