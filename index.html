@@ -17,7 +17,7 @@
 
     <div id="login-screen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-100">
         <div class="bg-white p-5 rounded-3xl shadow-xl border border-gray-100 max-w-sm w-full">
-            <h1 class="text-2xl font-black text-gray-800 mb-6 text-center tracking-tight">WIN</h1>
+            <h1 class="text-2xl font-black text-gray-800 mb-6 text-center tracking-tight">အပျော်တမ်း ( ၃၆ ကောင် )ကစားမယ် </h1>
             <div class="mb-4 space-y-3">
                 <input type="text" id="login-name" class="p-3 bg-gray-50 border-none rounded-xl w-full focus:ring-2 focus:ring-blue-500 transition" placeholder="အမည် (User ID)">
                 <input type="password" id="login-pass" class="p-3 bg-gray-50 border-none rounded-xl w-full focus:ring-2 focus:ring-blue-500 transition" placeholder="စကားဝှက်">
@@ -134,7 +134,7 @@
     </div>
 
     <div id="history-modal" class="hidden-ui fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-        <div class="bg-white p-6 rounded-3xl shadow-2xl border border-gray-100 w-full max-w-lg max-h-[80vh] flex flex-col">
+        <div class="bg-white p-6 rounded-3xl shadow-2xl border border-gray-100 w-full max-w-2xl max-h-[80vh] flex flex-col">
             <div class="flex justify-between items-center mb-4">
                 <h4 class="font-bold text-yellow-600 text-xs uppercase">ကစားခဲ့သော မှတ်တမ်း (History)</h4>
                 <button onclick="document.getElementById('history-modal').classList.add('hidden-ui')" class="text-gray-400 hover:text-gray-800">✕</button>
@@ -184,23 +184,6 @@
             if (audioCtx.state === 'suspended') audioCtx.resume();
         }, { once: true });
 
-        function playNotificationSound() {
-            try {
-                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                if (audioCtx.state === 'suspended') audioCtx.resume();
-                
-                const oscillator = audioCtx.createOscillator();
-                const gainNode = audioCtx.createGain();
-                oscillator.type = 'sine';
-                oscillator.frequency.setValueAtTime(880, audioCtx.currentTime);
-                gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
-                oscillator.connect(gainNode);
-                gainNode.connect(audioCtx.destination);
-                oscillator.start();
-                oscillator.stop(audioCtx.currentTime + 0.2);
-            } catch(e) { console.error("Sound error", e); }
-        }
-
         function setTimer(m) {
             selectedMinutes = m;
             showMsg(m + " မိနစ် ရွေးချယ်ပြီးပါပြီ");
@@ -209,23 +192,6 @@
         db.ref('users').on('value', (snap) => { 
             users = snap.val() || {}; 
             updateUI(); 
-            
-            let leaderName = "";
-            let maxBets = 0;
-            Object.keys(users).forEach(uid => {
-                const user = users[uid];
-                const total = user.selections ? Object.values(user.selections).reduce((a, b) => a + b, 0) : 0;
-                if (total > maxBets) {
-                    maxBets = total;
-                    leaderName = user.name;
-                }
-            });
-            if (leaderName && leaderName !== lastLeader) {
-                lastLeader = leaderName;
-                if (currentUserId && users[currentUserId] && users[currentUserId].name !== leaderName) {
-                    showMsg("အများဆုံးလောင်းထားသူ: " + leaderName);
-                }
-            }
             if(typeof renderActiveChats === 'function') renderActiveChats();
         });
         db.ref('adminState').on('value', (snap) => { adminState = snap.val() || { nextReveal: 0, processed: true }; updateUI(); });
@@ -234,147 +200,50 @@
             const msg = snap.val();
             const div = document.createElement('div');
             div.className = "border-b pb-1 border-gray-100";
-            const timeStr = msg.timestamp ? `<span class="text-[10px] text-gray-400 ml-2">${new Date(msg.timestamp).toLocaleString()}</span>` : '';
-            div.innerHTML = `<span class="font-bold text-blue-600">${msg.name}:</span> ${msg.text} ${timeStr}`;
+            div.innerHTML = `<span class="font-bold text-blue-600">${msg.name}:</span> ${msg.text}`;
             const chatMessages = document.getElementById('chat-messages');
             chatMessages.appendChild(div);
             chatMessages.scrollTop = chatMessages.scrollHeight;
         });
 
-        function renderActiveChats() {
-            const container = document.getElementById('active-chats-content');
-            if(!container) return;
-            container.innerHTML = '';
-            
-            const chatList = Object.keys(activeChatsData || {});
-            if (chatList.length === 0) {
-                container.innerHTML = 'Chat လတ်တလောမရှိပါ။';
-                return;
-            }
-
-            chatList.forEach(uid => {
-                const name = (users[uid] && users[uid].name) ? users[uid].name : ("User: " + uid.substring(0, 5));
-                const div = document.createElement('div');
-                div.className = "cursor-pointer hover:text-white text-blue-300 py-2 border-b border-white/10 last:border-0";
-                div.innerText = "💬 " + name;
-                div.onclick = function() { openPrivateChat(uid, name); };
-                container.appendChild(div);
-            });
-        }
-
-        db.ref('privateChat').on('value', (snap) => {
-            activeChatsData = snap.val() || {};
-            renderActiveChats();
-        });
-
-        function openPrivateChat(uid, name) {
-            if (activePrivateChatUid && privateChatListener) {
-                db.ref('privateChat/' + activePrivateChatUid).off('child_added', privateChatListener);
-            }
-            
-            activePrivateChatUid = uid;
-            document.getElementById('private-chat-title').innerText = "Chat with " + (isAdmin ? name : "Admin");
-            document.getElementById('private-chat-messages').innerHTML = '';
-            document.getElementById('private-chat-modal').classList.remove('hidden-ui');
-
-            if (!isAdmin) {
-                db.ref('privateChat/' + uid).once('value', (snap) => {
-                    if (!snap.exists()) {
-                        db.ref('privateChat/' + uid).push({
-                            sender: "Bot",
-                            text: "မင်္ဂလာပါ! Admin ကို မေးမြန်းလိုသည်များကို စာရိုက်ပေးခဲ့ပါ။",
-                            timestamp: Date.now()
-                        });
-                    }
-                });
-            }
-
-            privateChatListener = (snap) => {
-                const msg = snap.val();
-                
-                if (isAdmin && msg.sender !== 'Admin' && msg.sender !== 'Bot') {
-                    playNotificationSound();
-                    showMsg("Admin, Private Chat အသစ်ဝင်လာပါတယ်!");
-                }
-
-                const div = document.createElement('div');
-                div.className = "border-b pb-1 border-gray-100";
-                
-                const isMyMsg = isAdmin ? (msg.sender === 'Admin') : (msg.sender !== 'Admin' && msg.sender !== 'Bot');
-                const isBot = msg.sender === 'Bot';
-                const timeStr = msg.timestamp ? `<span class="text-[10px] text-gray-400 ml-2">${new Date(msg.timestamp).toLocaleString()}</span>` : '';
-                
-                div.innerHTML = `<span class="font-bold ${isMyMsg ? 'text-purple-600' : (isBot ? 'text-yellow-600' : 'text-red-600')}">${msg.sender}:</span> ${msg.text} ${timeStr}`;
-                
-                const container = document.getElementById('private-chat-messages');
-                container.appendChild(div);
-                container.scrollTop = container.scrollHeight;
-            };
-            
-            db.ref('privateChat/' + activePrivateChatUid).limitToLast(20).on('child_added', privateChatListener);
-        }
-
-        document.getElementById('send-private-chat-btn').onclick = () => {
-            const input = document.getElementById('private-chat-input');
-            const text = input.value.trim();
-            if(text && activePrivateChatUid) {
-                let senderName = isAdmin ? 'Admin' : (users[currentUserId] && users[currentUserId].name ? users[currentUserId].name : currentUserId);
-                db.ref('privateChat/' + activePrivateChatUid).push({
-                    sender: senderName,
-                    text: text,
-                    timestamp: Date.now()
-                });
-                input.value = '';
-            }
-        };
-
-        document.getElementById('open-private-chat-btn').onclick = () => {
-            if(!isAdmin && currentUserId) openPrivateChat(currentUserId, "Admin");
-        };
-
-        document.getElementById('close-private-chat-btn').onclick = () => {
-            document.getElementById('private-chat-modal').classList.add('hidden-ui');
-            if (activePrivateChatUid && privateChatListener) {
-                db.ref('privateChat/' + activePrivateChatUid).off('child_added', privateChatListener);
-                activePrivateChatUid = null;
-            }
-        };
-
-        document.getElementById('open-chat-btn').onclick = () => document.getElementById('chat-modal').classList.remove('hidden-ui');
-
-        document.getElementById('send-chat-btn').onclick = () => {
-            const input = document.getElementById('chat-input');
-            const text = input.value.trim();
-            if(text && users[currentUserId]) {
-                db.ref('chat').push({ name: users[currentUserId].name, text: text, timestamp: Date.now() });
-                input.value = '';
-            }
-        };
-
-        // History Modal
+        // History Table Renderer
         document.getElementById('open-history-btn').onclick = () => {
             const modal = document.getElementById('history-modal');
             const content = document.getElementById('history-content');
             content.innerHTML = '';
             
             if(users[currentUserId] && users[currentUserId].history) {
+                const table = document.createElement('table');
+                table.className = "w-full text-left border-collapse";
+                table.innerHTML = `
+                    <thead class="text-xs text-gray-500 uppercase bg-gray-100">
+                        <tr>
+                            <th class="p-2 border">အချိန်</th>
+                            <th class="p-2 border">လောင်းခဲ့သည့်အကောင်</th>
+                            <th class="p-2 border">အနိုင်ရအကောင်</th>
+                            <th class="p-2 border">ရရှိငွေ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="history-body"></tbody>
+                `;
+                content.appendChild(table);
+                const tbody = document.getElementById('history-body');
+
                 Object.values(users[currentUserId].history).reverse().forEach(h => {
-                    const div = document.createElement('div');
-                    div.className = "bg-gray-50 p-3 rounded-xl border";
-                    let betsHtml = '';
+                    let betDetails = '';
                     Object.keys(h.bets).forEach(idx => {
-                        const isWin = h.winnerIdx == idx;
-                        betsHtml += `<div class="flex justify-between ${isWin ? 'text-green-600 font-bold' : ''}">
-                            <span>${gameData[idx]}</span>
-                            <span>${h.bets[idx]} coins ${isWin ? ` (Win - ${h.bets[idx] * 27} Coins)` : ''}</span>
-                        </div>`;
+                        betDetails += `${gameData[idx]}(${h.bets[idx]}), `;
                     });
-                    div.innerHTML = `
-                        <div class="text-[10px] text-gray-400 mb-1">${new Date(h.timestamp).toLocaleString()}</div>
-                        ${betsHtml}
-                        <div class="border-t mt-2 pt-1 font-bold">ရလဒ်: ${gameData[h.winnerIdx]} | ရရှိငွေ: ${h.wonAmount}</div>
+                    
+                    const row = document.createElement('tr');
+                    row.className = "border-b text-[11px]";
+                    row.innerHTML = `
+                        <td class="p-2 border">${new Date(h.timestamp).toLocaleTimeString()}</td>
+                        <td class="p-2 border">${betDetails}</td>
+                        <td class="p-2 border font-bold ${h.winnerIdx != undefined ? 'text-green-600' : ''}">${gameData[h.winnerIdx]}</td>
+                        <td class="p-2 border font-bold">${h.wonAmount > 0 ? 'Win ' + h.wonAmount : '0'}</td>
                     `;
-                    content.appendChild(div);
+                    tbody.appendChild(row);
                 });
             } else {
                 content.innerHTML = "မှတ်တမ်းမရှိသေးပါ။";
@@ -392,7 +261,6 @@
                 display.innerText = `${mins}:${secs < 10 ? '0' + secs : secs}`;
             } else {
                 display.innerText = "ဂိမ်းရပ်";
-                if (!adminState.processed) calculateResults(true);
             }
         }, 1000);
 
@@ -425,8 +293,6 @@
                 if(user.selections && user.selections[winnerIdx]) {
                     winnings = user.selections[winnerIdx] * 27;
                 }
-                
-                // Save History
                 if (user.selections) {
                     db.ref(`users/${uid}/history`).push({
                         timestamp: Date.now(),
@@ -435,13 +301,11 @@
                         wonAmount: winnings
                     });
                 }
-
                 db.ref(`users/${uid}`).update({
                     balance: (user.balance || 0) + winnings,
                     selections: null
                 });
             });
-            
             db.ref('adminState').update({
                 nextReveal: Date.now() + 180000,
                 lastWinner: winnerName,
@@ -470,7 +334,6 @@
 
         function renderGrid() {
             const grid = document.getElementById('animal-grid');
-            const listContent = document.getElementById('bets-list-content');
             if(!grid || (!currentUserId && !isAdmin)) return;
             let globalBets = new Array(gameData.length).fill(0);
             Object.keys(users).forEach(uid => {
@@ -480,17 +343,6 @@
                     });
                 }
             });
-            if(isAdmin && listContent) {
-                let html = '';
-                Object.keys(users).forEach(uid => {
-                    if(users[uid].selections) {
-                        Object.keys(users[uid].selections).forEach(idx => {
-                            html += `<div>${users[uid].name}: ${gameData[idx]} (${users[uid].selections[idx]})</div>`;
-                        });
-                    }
-                });
-                listContent.innerHTML = html || 'လောင်းထားသူမရှိသေးပါ။';
-            }
             grid.innerHTML = '';
             gameData.forEach((name, i) => {
                 const betCount = (users[currentUserId] && users[currentUserId].selections) ? (users[currentUserId].selections[i] || 0) : 0;
@@ -517,7 +369,6 @@
                 localStorage.removeItem('game_uid'); 
                 currentUserId = null; 
             }
-            
             if(currentUserId || isAdmin) {
                 document.getElementById('login-screen').classList.add('hidden-ui');
                 document.getElementById('game-ui').classList.remove('hidden-ui');
@@ -526,7 +377,6 @@
                     const totalBet = user.selections ? Object.values(user.selections).reduce((a, b) => a + b, 0) : 0;
                     document.getElementById('current-bet-count').innerText = totalBet;
                     const statusDiv = document.getElementById('win-loss-status');
-                    
                     if(adminState.processed && adminState.lastWinner) {
                         const winIdx = gameData.indexOf(adminState.lastWinner);
                         if(user.selections && user.selections[winIdx]) {
@@ -534,21 +384,10 @@
                         } else {
                             statusDiv.innerHTML = `<span class="text-gray-500">နောက်ဆုံးရလဒ် - ${adminState.lastWinner}</span>`;
                         }
-                    } else {
-                        statusDiv.innerHTML = `<span class="text-gray-400">လောင်းကစားချိန် စတင်နေသည်...</span>`;
                     }
                 }
                 if(isAdmin) {
                     document.getElementById('admin-panel').classList.remove('hidden-ui');
-                    const select = document.getElementById('user-select-admin');
-                    select.innerHTML = Object.keys(users).map(uid => `<option value="${uid}">${users[uid].name}</option>`).join('');
-                    
-                    const balanceContent = document.getElementById('user-balance-content');
-                    let balanceHtml = '';
-                    Object.keys(users).forEach(uid => {
-                        balanceHtml += `<div class="flex justify-between border-b border-white/10 py-1"><span>${users[uid].name}</span> <span>${users[uid].balance || 0} Coins</span></div>`;
-                    });
-                    balanceContent.innerHTML = balanceHtml || 'User မရှိပါ။';
                 }
                 if(!isAdmin && users[currentUserId]) {
                     document.getElementById('current-user-display').innerText = "User: " + users[currentUserId].name;
@@ -565,35 +404,6 @@
             renderGrid();
         }
 
-        document.getElementById('admin-chat-btn').onclick = () => {
-            const uid = document.getElementById('user-select-admin').value;
-            if(uid) openPrivateChat(uid, users[uid].name);
-        };
-        document.getElementById('add-coin-btn').onclick = () => {
-            const uid = document.getElementById('user-select-admin').value;
-            const amt = parseInt(document.getElementById('coin-amount').value);
-            if(uid && amt) db.ref(`users/${uid}/balance`).set((users[uid].balance || 0) + amt);
-        };
-        document.getElementById('sub-coin-btn').onclick = () => {
-            const uid = document.getElementById('user-select-admin').value;
-            const amt = parseInt(document.getElementById('coin-amount').value);
-            if(uid && amt) db.ref(`users/${uid}/balance`).set(Math.max(0, (users[uid].balance || 0) - amt));
-        };
-        document.getElementById('change-pass-btn').onclick = () => {
-            const uid = document.getElementById('user-select-admin').value;
-            const newPass = document.getElementById('new-password-admin').value.trim();
-            if(uid && newPass) {
-                db.ref(`users/${uid}/password`).set(newPass);
-                showMsg("စကားဝှက် ပြောင်းလဲပြီးပါပြီ");
-            }
-        };
-        document.getElementById('delete-user-btn').onclick = () => {
-            const uid = document.getElementById('user-select-admin').value;
-            if(uid) {
-                db.ref(`users/${uid}`).remove();
-                showMsg("အကောင့် ဖျက်ပြီးပါပြီ");
-            }
-        };
         document.getElementById('reset-game-btn').onclick = () => {
             db.ref('adminState').update({ nextReveal: Date.now() + (selectedMinutes * 60000), processed: false });
             showMsg("ဂိမ်းအား Reset ချပြီးပါပြီ (" + selectedMinutes + " မိနစ်)");
