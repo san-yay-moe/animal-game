@@ -61,6 +61,11 @@
 
             <div class="flex-1 overflow-y-auto p-4 md:p-8 pt-0">
                 <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-6 gap-3" id="animal-grid"></div>
+                
+                <div id="twod-grid-container" class="hidden-ui">
+                    <h2 class="text-lg font-black text-gray-800 mb-4">2D နံပါတ်များ (၀၀ မှ ၉၉)</h2>
+                    <div class="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 gap-2" id="twod-grid"></div>
+                </div>
 
                 <div id="admin-panel" class="hidden-ui bg-gray-900 text-white p-4 md:p-8 mt-8 rounded-3xl">
                     <h3 class="font-bold text-yellow-400 mb-6 text-xl tracking-tight">Admin Control</h3>
@@ -112,6 +117,7 @@
 
         <div id="mobile-tabs" class="md:hidden fixed bottom-0 left-0 right-0 z-[100] flex bg-white border-t border-gray-200 shadow-[0_-4px_20px_-5px_rgba(0,0,0,0.1)]">
             <button id="tab-game" class="flex-1 py-4 font-bold text-blue-600 border-r border-gray-100 flex items-center justify-center gap-2">🕹️ ဂိမ်း</button>
+            <button id="tab-twod" class="flex-1 py-4 font-bold text-gray-400 border-r border-gray-100 flex items-center justify-center gap-2">🎲 2D</button>
             <button id="tab-panel" class="flex-1 py-4 font-bold text-gray-400 flex items-center justify-center gap-2">📊 Panel</button>
         </div>
     </div>
@@ -180,8 +186,22 @@
             document.getElementById('game-content').classList.remove('hidden-ui');
             document.getElementById('game-sidebar').classList.add('hidden-ui');
             document.getElementById('game-sidebar').classList.add('hidden');
+            document.getElementById('animal-grid').classList.remove('hidden-ui');
+            document.getElementById('twod-grid-container').classList.add('hidden-ui');
             document.getElementById('tab-game').classList.replace('text-gray-400', 'text-blue-600');
+            document.getElementById('tab-twod').classList.replace('text-blue-600', 'text-gray-400');
             document.getElementById('tab-panel').classList.replace('text-blue-600', 'text-gray-400');
+        };
+        document.getElementById('tab-twod').onclick = () => {
+            document.getElementById('game-content').classList.remove('hidden-ui');
+            document.getElementById('game-sidebar').classList.add('hidden-ui');
+            document.getElementById('game-sidebar').classList.add('hidden');
+            document.getElementById('animal-grid').classList.add('hidden-ui');
+            document.getElementById('twod-grid-container').classList.remove('hidden-ui');
+            document.getElementById('tab-twod').classList.replace('text-gray-400', 'text-blue-600');
+            document.getElementById('tab-game').classList.replace('text-blue-600', 'text-gray-400');
+            document.getElementById('tab-panel').classList.replace('text-blue-600', 'text-gray-400');
+            renderTwodGrid();
         };
         document.getElementById('tab-panel').onclick = () => {
             document.getElementById('game-content').classList.add('hidden-ui');
@@ -190,10 +210,27 @@
             document.getElementById('game-sidebar').classList.add('flex');
             document.getElementById('tab-panel').classList.replace('text-gray-400', 'text-blue-600');
             document.getElementById('tab-game').classList.replace('text-blue-600', 'text-gray-400');
+            document.getElementById('tab-twod').classList.replace('text-blue-600', 'text-gray-400');
         };
 
         const gameData = ["မြင်း", "ရွှေနဂါး", "လိပ်ပြာ", "ဆတ်", "မြွေ", "မျောက်", "ပင့်ကူ", "ဗျိုင်း", "ငန်း", "ခရု", "ဆင်", "ရွှေငါး", "ကြက်", "လိပ်", "ကျီး", "ကျား", "ဝက်", "ဒေါင်း", "ယုန်", "ခွေး", "ပုစွန်", "ဆိတ်", "နွား", "ဖား", "ပျား", "ကြွက်", "ငါးရှဉ့်", "ကျားသစ်", "ခြင်္သေ့", "သမင်", "ဝံပုလွေ", "လင်းယုန်", "ကြောင်", "ပုရွက်ဆိတ်", "ပိုးကောင်", "ငါး"];
         const animalEmojis = ["🐎", "🐉", "🦋", "🦌", "🐍", "🐒", "🕷️", "🦢", "🦆", "🐌", "🐘", "🐠", "🐓", "🐢", "🐦‍⬛", "🐅", "🐖", "🦚", "🐇", "🐕", "🦐", "🐐", "🐂", "🐸", "🐝", "🐀", "🐍", "🐆", "🦁", "🦌", "🐺", "🦅", "🐈", "🐜", "🐛", "🐟"];
+
+        function renderTwodGrid() {
+            const twodGrid = document.getElementById('twod-grid');
+            if(!twodGrid) return;
+            twodGrid.innerHTML = '';
+            for (let i = 0; i < 100; i++) {
+                const numStr = i < 10 ? '0' + i : '' + i;
+                const div = document.createElement('div');
+                div.className = "bg-white p-3 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center hover:shadow-md transition-all font-black text-gray-800 text-lg cursor-pointer";
+                div.innerText = numStr;
+                div.onclick = () => {
+                    showMsg("2D နံပါတ် " + numStr + " ကို နှိပ်ထားပါသည်");
+                };
+                twodGrid.appendChild(div);
+            }
+        }
 
         let users = {};
         let adminState = { nextReveal: 0, processed: true, lastWinner: "" };
