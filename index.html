@@ -35,6 +35,10 @@
                     <p id="current-user-display" class="font-bold text-gray-500 text-xs uppercase tracking-wider"></p>
                     <p class="text-2xl font-black text-gray-800">Coins: <span id="coin-balance" class="text-blue-600">0</span></p>
                 </div>
+                <div id="qr-code-container" class="hidden">
+                    <h4 class="font-bold text-gray-500 text-xs uppercase mb-1">QR Code</h4>
+                    <img id="qr-code-display" class="w-full rounded-xl border border-gray-100" src="" alt="QR Code">
+                </div>
                 <div class="grid grid-cols-2 gap-2">
                     <button id="open-chat-btn" class="bg-gray-100 text-gray-600 py-2 rounded-xl font-bold text-sm hover:bg-gray-200 active:scale-95">💬 Chat</button>
                     <button id="open-private-chat-btn" class="bg-purple-100 text-purple-600 py-2 rounded-xl font-bold text-sm hover:bg-purple-200 active:scale-95">🔒 Admin</button>
@@ -46,6 +50,7 @@
                 <h4 class="font-bold text-gray-500 text-xs uppercase mb-1">လက်ရှိလောင်းထားမှု</h4>
                 <p class="text-xl font-black text-gray-800"><span id="current-bet-count" class="text-red-500">0</span> coin</p>
                 <div id="win-loss-status" class="text-xs font-bold mt-2 text-gray-400">စောင့်ဆိုင်းနေသည်...</div>
+                <div class="mt-2 text-sm font-bold text-gray-500">အချိန်: <span id="timer-display" class="text-blue-600 font-black">--:--</span></div>
             </div>
         </div>
 
@@ -68,11 +73,9 @@
 
                 <div id="admin-panel" class="hidden-ui bg-gray-900 text-white p-4 md:p-8 mt-8 rounded-3xl">
                     <h3 class="font-bold text-yellow-400 mb-6 text-xl tracking-tight">Admin Control</h3>
-                    <div class="flex gap-2 mb-4">
-                        <button class="timer-btn w-12 h-12 rounded-full border-2 border-yellow-400 text-yellow-400 font-bold hover:bg-yellow-400 hover:text-black transition" onclick="setTimer(1)">1</button>
-                        <button class="timer-btn w-12 h-12 rounded-full border-2 border-yellow-400 text-yellow-400 font-bold hover:bg-yellow-400 hover:text-black transition" onclick="setTimer(3)">3</button>
-                        <button class="timer-btn w-12 h-12 rounded-full border-2 border-yellow-400 text-yellow-400 font-bold hover:bg-yellow-400 hover:text-black transition" onclick="setTimer(5)">5</button>
-                    </div>
+                    <button class="timer-btn w-12 h-12 rounded-full border-2 border-yellow-400 text-yellow-400 font-bold hover:bg-yellow-400 hover:text-black transition" onclick="setTimer(5)">5</button>
+                    <button class="timer-btn w-12 h-12 rounded-full border-2 border-yellow-400 text-yellow-400 font-bold hover:bg-yellow-400 hover:text-black transition" onclick="setTimer(10)">10</button>
+                    <button class="timer-btn w-12 h-12 rounded-full border-2 border-yellow-400 text-yellow-400 font-bold hover:bg-yellow-400 hover:text-black transition" onclick="setTimer(30)">30</button>
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 mt-6">
                         <button id="reset-game-btn" class="bg-green-600 py-4 rounded-2xl font-bold hover:bg-green-700 transition">Reset</button>
@@ -96,7 +99,11 @@
                         <input type="text" id="new-password-admin" class="text-black p-3 rounded-xl flex-grow min-w-[200px]" placeholder="New Password">
                         <button id="change-pass-btn" class="bg-purple-600 px-4 py-3 rounded-xl font-bold flex-grow">Pass ပြင်</button>
                     </div>
-                    <div class="flex flex-wrap gap-2">
+                    <div class="flex flex-wrap gap-2 mt-2">
+                        <input type="text" id="qr-url-input" class="text-black p-3 rounded-xl flex-grow" placeholder="QR Image URL">
+                        <button id="save-qr-btn" class="bg-yellow-600 px-4 py-3 rounded-xl font-bold">QR သိမ်း</button>
+                    </div>
+                    <div class="flex flex-wrap gap-2 mt-2">
                         <select id="user-select-admin" class="text-black p-3 rounded-xl flex-grow min-w-[150px]"></select>
                         <div class="flex gap-2 w-full justify-center">
                             <input type="number" id="coin-amount" class="text-black p-3 rounded-xl w-24" placeholder="Coin">
@@ -243,9 +250,9 @@
                     <div class="font-black text-gray-800 text-lg mb-1">${numStr}</div>
                     ${!isAdmin ? `
                     <div class="flex gap-1 items-center mt-1">
-                        <button type="button" class="w-6 h-6 flex items-center justify-center bg-red-50 text-red-600 rounded-full font-bold text-xs hover:bg-red-100" onclick="changeTwodBet('${numStr}', -1); event.stopPropagation();">-</button>
+                        <button class="w-6 h-6 flex items-center justify-center bg-red-50 text-red-600 rounded-full font-bold text-xs hover:bg-red-100" onclick="changeTwodBet('${numStr}', -1); event.stopPropagation();">-</button>
                         <span class="font-black text-blue-600 min-w-[15px] text-center text-xs">${betCount}</span>
-                        <button type="button" class="w-6 h-6 flex items-center justify-center bg-green-50 text-green-600 rounded-full font-bold text-xs hover:bg-green-100" onclick="changeTwodBet('${numStr}', 1); event.stopPropagation();">+</button>
+                        <button class="w-6 h-6 flex items-center justify-center bg-green-50 text-green-600 rounded-full font-bold text-xs hover:bg-green-100" onclick="changeTwodBet('${numStr}', 1); event.stopPropagation();">+</button>
                     </div>` : ''}
                 `;
                 twodGrid.appendChild(div);
@@ -256,17 +263,11 @@
         let adminState = { nextReveal: 0, processed: true, lastWinner: "" };
         let currentUserId = localStorage.getItem('game_uid');
         let isAdmin = localStorage.getItem('is_admin') === 'true';
-        let selectedMinutes = 3;
+        let selectedMinutes = 5;
         let activePrivateChatUid = null;
         let privateChatListener = null;
         let activeChatsData = {};
         let lastLeader = "";
-        let audioCtx = null; 
-
-        document.addEventListener('click', () => {
-            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-        }, { once: true });
 
         function setTimer(m) {
             selectedMinutes = m;
@@ -300,7 +301,20 @@
         db.ref('adminState').on('value', (snap) => { 
             adminState = snap.val() || { nextReveal: 0, processed: true, lastWinner: "" }; 
             updateUI(); 
+            if(adminState.qrCodeUrl) {
+                document.getElementById('qr-code-display').src = adminState.qrCodeUrl;
+                document.getElementById('qr-code-container').classList.remove('hidden');
+            } else {
+                document.getElementById('qr-code-container').classList.add('hidden');
+            }
         });
+
+        document.getElementById('save-qr-btn').onclick = () => {
+            const url = document.getElementById('qr-url-input').value.trim();
+            db.ref('adminState').update({ qrCodeUrl: url }).then(() => {
+                showMsg("QR Code သိမ်းပြီးပါပြီ");
+            });
+        };
 
         db.ref('chat').limitToLast(20).on('child_added', (snap) => {
             const msg = snap.val();
@@ -419,16 +433,24 @@
 
         setInterval(() => {
             const display = document.getElementById('timer-display');
+            const resultBox = document.getElementById('result-display');
+            if(!display) return;
             const diff = adminState.nextReveal - Date.now();
+            let timeStr = "";
             if (diff > 0) {
                 const mins = Math.floor(diff / 60000);
                 const secs = Math.floor((diff % 60000) / 1000);
-                if(display) display.innerText = `${mins}:${secs < 10 ? '0' + secs : secs}`;
+                timeStr = `${mins}:${secs < 10 ? '0' + secs : secs}`;
+                display.innerText = timeStr;
             } else {
-                if(display) display.innerText = "ဂိမ်းရပ်";
+                timeStr = "ဂိမ်းရပ်";
+                display.innerText = timeStr;
                 if (!adminState.processed) {
                     calculateResults();
                 }
+            }
+            if(resultBox && !resultBox.classList.contains('hidden-ui') && adminState.lastWinner) {
+                resultBox.innerText = "နောက်ဆုံးရလဒ် - " + adminState.lastWinner + " | အချိန် - " + timeStr;
             }
         }, 1000);
 
@@ -487,7 +509,8 @@
                 
                 db.ref(`users/${uid}`).update({
                     pendingWinnings: winnings,
-                    selections: null
+                    selections: null,
+                    twodSelections: null
                 });
             });
 
@@ -562,9 +585,9 @@
                     <div class="text-[10px] font-bold text-gray-400 mb-3 bg-gray-100 px-2 py-0.5 rounded-full">စုစုပေါင်း: ${total}</div>
                     ${!isAdmin ? `
                     <div class="flex gap-2 items-center">
-                        <button type="button" class="w-8 h-8 flex items-center justify-center bg-red-50 text-red-600 rounded-full font-bold hover:bg-red-100" onclick="changeBet(${i}, -1); event.stopPropagation();">-</button>
+                        <button class="w-8 h-8 flex items-center justify-center bg-red-50 text-red-600 rounded-full font-bold hover:bg-red-100" onclick="changeBet(${i}, -1); event.stopPropagation();">-</button>
                         <span class="font-black text-blue-600 min-w-[20px] text-center">${betCount}</span>
-                        <button type="button" class="w-8 h-8 flex items-center justify-center bg-green-50 text-green-600 rounded-full font-bold hover:bg-green-100" onclick="changeBet(${i}, 1); event.stopPropagation();">+</button>
+                        <button class="w-8 h-8 flex items-center justify-center bg-green-50 text-green-600 rounded-full font-bold hover:bg-green-100" onclick="changeBet(${i}, 1); event.stopPropagation();">+</button>
                     </div>` : ''}
                 `;
                 grid.appendChild(div);
@@ -660,6 +683,16 @@
                                 <div class="border-b border-white/10 py-1 text-xs flex justify-between">
                                     <span>${u.name}</span>
                                     <span>${gameData[idx]} (${u.selections[idx]} coins)</span>
+                                </div>
+                            `;
+                        });
+                    }
+                    if(u.twodSelections) {
+                        Object.keys(u.twodSelections).forEach(numStr => {
+                            betsHtml += `
+                                <div class="border-b border-white/10 py-1 text-xs flex justify-between">
+                                    <span>${u.name} (2D)</span>
+                                    <span>${numStr} (${u.twodSelections[numStr]} coins)</span>
                                 </div>
                             `;
                         });
@@ -840,7 +873,7 @@
                     balance: 1000,
                     selections: null
                 }).then(() => {
-                    localStorage.setItem('game_uid', uid); 
+                    localStorage.setItem('game_uid', uri); 
                     currentUserId = uid; 
                     updateUI(); 
                     showMsg("အကောင့်အသစ် ဖန်တီးပြီး ဝင်ရောက်လိုက်ပါပြီ");
