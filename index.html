@@ -35,10 +35,6 @@
                     <p id="current-user-display" class="font-bold text-gray-500 text-xs uppercase tracking-wider"></p>
                     <p class="text-2xl font-black text-gray-800">Coins: <span id="coin-balance" class="text-blue-600">0</span></p>
                 </div>
-                <div id="qr-code-container" class="hidden">
-                    <h4 class="font-bold text-gray-500 text-xs uppercase mb-1">QR Code</h4>
-                    <img id="qr-code-display" class="w-full rounded-xl border border-gray-100" src="" alt="QR Code">
-                </div>
                 <div class="grid grid-cols-2 gap-2">
                     <button id="open-chat-btn" class="bg-gray-100 text-gray-600 py-2 rounded-xl font-bold text-sm hover:bg-gray-200 active:scale-95">💬 Chat</button>
                     <button id="open-private-chat-btn" class="bg-purple-100 text-purple-600 py-2 rounded-xl font-bold text-sm hover:bg-purple-200 active:scale-95">🔒 Admin</button>
@@ -50,28 +46,33 @@
                 <h4 class="font-bold text-gray-500 text-xs uppercase mb-1">လက်ရှိလောင်းထားမှု</h4>
                 <p class="text-xl font-black text-gray-800"><span id="current-bet-count" class="text-red-500">0</span> coin</p>
                 <div id="win-loss-status" class="text-xs font-bold mt-2 text-gray-400">စောင့်ဆိုင်းနေသည်...</div>
-                <div class="mt-2 text-sm font-bold text-gray-500">အချိန်: <span id="timer-display" class="text-blue-600 font-black">--:--</span></div>
             </div>
         </div>
 
         <div id="game-content" class="flex-1 bg-gray-50 flex flex-col h-full overflow-hidden">
-            <div class="p-4 md:p-8 flex-shrink-0 flex gap-4">
+            <div class="p-4 md:p-8 flex-shrink-0 flex gap-4 flex-wrap items-center justify-between">
                 <div id="result-display" class="hidden-ui bg-yellow-400 p-4 rounded-2xl text-center font-black text-lg shadow-lg text-yellow-900 flex-1"></div>
+                <div class="flex gap-2">
+                    <button id="tab-animal-game" class="px-4 py-2 bg-blue-600 text-white rounded-xl font-bold text-sm shadow">တိရစ္ဆာန် (၃၆ ကောင်)</button>
+                    <button id="tab-twod-game" class="px-4 py-2 bg-white text-gray-700 border rounded-xl font-bold text-sm hover:bg-gray-100">2D</button>
+                </div>
             </div>
 
             <div class="flex-1 overflow-y-auto p-4 md:p-8 pt-0">
-                <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-6 gap-3" id="animal-grid"></div>
-                
+                <div id="animal-grid-container">
+                    <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-6 gap-3" id="animal-grid"></div>
+                </div>
                 <div id="twod-grid-container" class="hidden-ui">
-                    <h2 class="text-lg font-black text-gray-800 mb-4">2D နံပါတ်များ (၀၀ မှ ၉၉)</h2>
-                    <div class="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 gap-2" id="twod-grid"></div>
+                    <div class="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-10 gap-2" id="twod-grid"></div>
                 </div>
 
                 <div id="admin-panel" class="hidden-ui bg-gray-900 text-white p-4 md:p-8 mt-8 rounded-3xl">
                     <h3 class="font-bold text-yellow-400 mb-6 text-xl tracking-tight">Admin Control</h3>
-                    <button class="timer-btn w-12 h-12 rounded-full border-2 border-yellow-400 text-yellow-400 font-bold hover:bg-yellow-400 hover:text-black transition" onclick="setTimer(5)">5</button>
-                    <button class="timer-btn w-12 h-12 rounded-full border-2 border-yellow-400 text-yellow-400 font-bold hover:bg-yellow-400 hover:text-black transition" onclick="setTimer(10)">10</button>
-                    <button class="timer-btn w-12 h-12 rounded-full border-2 border-yellow-400 text-yellow-400 font-bold hover:bg-yellow-400 hover:text-black transition" onclick="setTimer(30)">30</button>
+                    <div class="flex gap-2 mb-4">
+                        <button class="timer-btn w-12 h-12 rounded-full border-2 border-yellow-400 text-yellow-400 font-bold hover:bg-yellow-400 hover:text-black transition" onclick="setTimer(1)">1</button>
+                        <button class="timer-btn w-12 h-12 rounded-full border-2 border-yellow-400 text-yellow-400 font-bold hover:bg-yellow-400 hover:text-black transition" onclick="setTimer(3)">3</button>
+                        <button class="timer-btn w-12 h-12 rounded-full border-2 border-yellow-400 text-yellow-400 font-bold hover:bg-yellow-400 hover:text-black transition" onclick="setTimer(5)">5</button>
+                    </div>
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 mt-6">
                         <button id="reset-game-btn" class="bg-green-600 py-4 rounded-2xl font-bold hover:bg-green-700 transition">Reset</button>
@@ -95,11 +96,7 @@
                         <input type="text" id="new-password-admin" class="text-black p-3 rounded-xl flex-grow min-w-[200px]" placeholder="New Password">
                         <button id="change-pass-btn" class="bg-purple-600 px-4 py-3 rounded-xl font-bold flex-grow">Pass ပြင်</button>
                     </div>
-                    <div class="flex flex-wrap gap-2 mt-2">
-                        <input type="text" id="qr-url-input" class="text-black p-3 rounded-xl flex-grow" placeholder="QR Image URL">
-                        <button id="save-qr-btn" class="bg-yellow-600 px-4 py-3 rounded-xl font-bold">QR သိမ်း</button>
-                    </div>
-                    <div class="flex flex-wrap gap-2 mt-2">
+                    <div class="flex flex-wrap gap-2">
                         <select id="user-select-admin" class="text-black p-3 rounded-xl flex-grow min-w-[150px]"></select>
                         <div class="flex gap-2 w-full justify-center">
                             <input type="number" id="coin-amount" class="text-black p-3 rounded-xl w-24" placeholder="Coin">
@@ -117,7 +114,6 @@
 
         <div id="mobile-tabs" class="md:hidden fixed bottom-0 left-0 right-0 z-[100] flex bg-white border-t border-gray-200 shadow-[0_-4px_20px_-5px_rgba(0,0,0,0.1)]">
             <button id="tab-game" class="flex-1 py-4 font-bold text-blue-600 border-r border-gray-100 flex items-center justify-center gap-2">🕹️ ဂိမ်း</button>
-            <button id="tab-twod" class="flex-1 py-4 font-bold text-gray-400 border-r border-gray-100 flex items-center justify-center gap-2">🎲 2D</button>
             <button id="tab-panel" class="flex-1 py-4 font-bold text-gray-400 flex items-center justify-center gap-2">📊 Panel</button>
         </div>
     </div>
@@ -182,52 +178,76 @@
             setTimeout(() => box.classList.add('hidden-ui'), 3000);
         }
 
+        // Tab Logic
         document.getElementById('tab-game').onclick = () => {
             document.getElementById('game-content').classList.remove('hidden-ui');
             document.getElementById('game-sidebar').classList.add('hidden-ui');
-            document.getElementById('game-sidebar').classList.add('hidden');
-            document.getElementById('animal-grid').classList.remove('hidden-ui');
-            document.getElementById('twod-grid-container').classList.add('hidden-ui');
             document.getElementById('tab-game').classList.replace('text-gray-400', 'text-blue-600');
-            document.getElementById('tab-twod').classList.replace('text-blue-600', 'text-gray-400');
             document.getElementById('tab-panel').classList.replace('text-blue-600', 'text-gray-400');
-        };
-        document.getElementById('tab-twod').onclick = () => {
-            document.getElementById('game-content').classList.remove('hidden-ui');
-            document.getElementById('game-sidebar').classList.add('hidden-ui');
-            document.getElementById('game-sidebar').classList.add('hidden');
-            document.getElementById('animal-grid').classList.add('hidden-ui');
-            document.getElementById('twod-grid-container').classList.remove('hidden-ui');
-            document.getElementById('tab-twod').classList.replace('text-gray-400', 'text-blue-600');
-            document.getElementById('tab-game').classList.replace('text-blue-600', 'text-gray-400');
-            document.getElementById('tab-panel').classList.replace('text-blue-600', 'text-gray-400');
-            renderTwodGrid();
         };
         document.getElementById('tab-panel').onclick = () => {
             document.getElementById('game-content').classList.add('hidden-ui');
             document.getElementById('game-sidebar').classList.remove('hidden-ui');
-            document.getElementById('game-sidebar').classList.remove('hidden');
             document.getElementById('game-sidebar').classList.add('flex');
             document.getElementById('tab-panel').classList.replace('text-gray-400', 'text-blue-600');
             document.getElementById('tab-game').classList.replace('text-blue-600', 'text-gray-400');
-            document.getElementById('tab-twod').classList.replace('text-blue-600', 'text-gray-400');
         };
 
         const gameData = ["မြင်း", "ရွှေနဂါး", "လိပ်ပြာ", "ဆတ်", "မြွေ", "မျောက်", "ပင့်ကူ", "ဗျိုင်း", "ငန်း", "ခရု", "ဆင်", "ရွှေငါး", "ကြက်", "လိပ်", "ကျီး", "ကျား", "ဝက်", "ဒေါင်း", "ယုန်", "ခွေး", "ပုစွန်", "ဆိတ်", "နွား", "ဖား", "ပျား", "ကြွက်", "ငါးရှဉ့်", "ကျားသစ်", "ခြင်္သေ့", "သမင်", "ဝံပုလွေ", "လင်းယုန်", "ကြောင်", "ပုရွက်ဆိတ်", "ပိုးကောင်", "ငါး"];
         const animalEmojis = ["🐎", "🐉", "🦋", "🦌", "🐍", "🐒", "🕷️", "🦢", "🦆", "🐌", "🐘", "🐠", "🐓", "🐢", "🐦‍⬛", "🐅", "🐖", "🦚", "🐇", "🐕", "🦐", "🐐", "🐂", "🐸", "🐝", "🐀", "🐍", "🐆", "🦁", "🦌", "🐺", "🦅", "🐈", "🐜", "🐛", "🐟"];
 
+        document.getElementById('tab-animal-game').onclick = () => {
+            document.getElementById('animal-grid-container').classList.remove('hidden-ui');
+            document.getElementById('twod-grid-container').classList.add('hidden-ui');
+            document.getElementById('tab-animal-game').className = "px-4 py-2 bg-blue-600 text-white rounded-xl font-bold text-sm shadow";
+            document.getElementById('tab-twod-game').className = "px-4 py-2 bg-white text-gray-700 border rounded-xl font-bold text-sm hover:bg-gray-100";
+        };
+
+        document.getElementById('tab-twod-game').onclick = () => {
+            document.getElementById('twod-grid-container').classList.remove('hidden-ui');
+            document.getElementById('animal-grid-container').classList.add('hidden-ui');
+            document.getElementById('tab-twod-game').className = "px-4 py-2 bg-blue-600 text-white rounded-xl font-bold text-sm shadow";
+            document.getElementById('tab-animal-game').className = "px-4 py-2 bg-white text-gray-700 border rounded-xl font-bold text-sm hover:bg-gray-100";
+            renderTwodGrid();
+        };
+
+        function changeTwodBet(numStr, delta) {
+            const user = users[currentUserId];
+            if(!user || adminState.nextReveal <= Date.now()) return;
+            const currentBet = (user.twodSelections && user.twodSelections[numStr]) ? user.twodSelections[numStr] : 0;
+            const balance = Number(user.balance || 0);
+            if(delta > 0 && balance >= 1) {
+                db.ref(`users/${currentUserId}`).update({
+                    balance: balance - 1,
+                    [`twodSelections/${numStr}`]: currentBet + 1
+                });
+            } else if(delta < 0 && currentBet > 0) {
+                db.ref(`users/${currentUserId}`).update({
+                    balance: balance + 1,
+                    [`twodSelections/${numStr}`]: currentBet - 1
+                });
+            }
+        }
+
         function renderTwodGrid() {
             const twodGrid = document.getElementById('twod-grid');
-            if(!twodGrid) return;
+            if(!twodGrid || (!currentUserId && !isAdmin)) return;
             twodGrid.innerHTML = '';
             for (let i = 0; i < 100; i++) {
                 const numStr = i < 10 ? '0' + i : '' + i;
+                const betCount = (users[currentUserId] && users[currentUserId].twodSelections) ? (users[currentUserId].twodSelections[numStr] || 0) : 0;
+                
                 const div = document.createElement('div');
-                div.className = "bg-white p-3 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center hover:shadow-md transition-all font-black text-gray-800 text-lg cursor-pointer";
-                div.innerText = numStr;
-                div.onclick = () => {
-                    showMsg("2D နံပါတ် " + numStr + " ကို နှိပ်ထားပါသည်");
-                };
+                div.className = "bg-white p-3 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center hover:shadow-md transition-all cursor-pointer";
+                div.innerHTML = `
+                    <div class="font-black text-gray-800 text-lg mb-1">${numStr}</div>
+                    ${!isAdmin ? `
+                    <div class="flex gap-1 items-center mt-1">
+                        <button class="w-6 h-6 flex items-center justify-center bg-red-50 text-red-600 rounded-full font-bold text-xs hover:bg-red-100" onclick="changeTwodBet('${numStr}', -1); event.stopPropagation();">-</button>
+                        <span class="font-black text-blue-600 min-w-[15px] text-center text-xs">${betCount}</span>
+                        <button class="w-6 h-6 flex items-center justify-center bg-green-50 text-green-600 rounded-full font-bold text-xs hover:bg-green-100" onclick="changeTwodBet('${numStr}', 1); event.stopPropagation();">+</button>
+                    </div>` : ''}
+                `;
                 twodGrid.appendChild(div);
             }
         }
@@ -241,6 +261,12 @@
         let privateChatListener = null;
         let activeChatsData = {};
         let lastLeader = "";
+        let audioCtx = null; 
+
+        document.addEventListener('click', () => {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+        }, { once: true });
 
         function setTimer(m) {
             selectedMinutes = m;
@@ -274,20 +300,7 @@
         db.ref('adminState').on('value', (snap) => { 
             adminState = snap.val() || { nextReveal: 0, processed: true, lastWinner: "" }; 
             updateUI(); 
-            if(adminState.qrCodeUrl) {
-                document.getElementById('qr-code-display').src = adminState.qrCodeUrl;
-                document.getElementById('qr-code-container').classList.remove('hidden');
-            } else {
-                document.getElementById('qr-code-container').classList.add('hidden');
-            }
         });
-
-        document.getElementById('save-qr-btn').onclick = () => {
-            const url = document.getElementById('qr-url-input').value.trim();
-            db.ref('adminState').update({ qrCodeUrl: url }).then(() => {
-                showMsg("QR Code သိမ်းပြီးပါပြီ");
-            });
-        };
 
         db.ref('chat').limitToLast(20).on('child_added', (snap) => {
             const msg = snap.val();
@@ -406,24 +419,16 @@
 
         setInterval(() => {
             const display = document.getElementById('timer-display');
-            const resultBox = document.getElementById('result-display');
-            if(!display) return;
             const diff = adminState.nextReveal - Date.now();
-            let timeStr = "";
             if (diff > 0) {
                 const mins = Math.floor(diff / 60000);
                 const secs = Math.floor((diff % 60000) / 1000);
-                timeStr = `${mins}:${secs < 10 ? '0' + secs : secs}`;
-                display.innerText = timeStr;
+                if(display) display.innerText = `${mins}:${secs < 10 ? '0' + secs : secs}`;
             } else {
-                timeStr = "ဂိမ်းရပ်";
-                display.innerText = timeStr;
+                if(display) display.innerText = "ဂိမ်းရပ်";
                 if (!adminState.processed) {
                     calculateResults();
                 }
-            }
-            if(resultBox && !resultBox.classList.contains('hidden-ui') && adminState.lastWinner) {
-                resultBox.innerText = "နောက်ဆုံးရလဒ် - " + adminState.lastWinner + " | အချိန် - " + timeStr;
             }
         }, 1000);
 
@@ -725,8 +730,9 @@
                 document.getElementById('game-ui').classList.remove('hidden-ui');
                 const user = users[currentUserId];
                 if(user) {
-                    const totalBet = user.selections ? Object.values(user.selections).reduce((a, b) => a + b, 0) : 0;
-                    document.getElementById('current-bet-count').innerText = totalBet;
+                    const animalTotal = user.selections ? Object.values(user.selections).reduce((a, b) => a + b, 0) : 0;
+                    const twodTotal = user.twodSelections ? Object.values(user.twodSelections).reduce((a, b) => a + b, 0) : 0;
+                    document.getElementById('current-bet-count').innerText = animalTotal + twodTotal;
                     const statusDiv = document.getElementById('win-loss-status');
                     
                     if (user.pendingWinnings !== undefined && user.pendingWinnings > 0) {
@@ -758,6 +764,9 @@
                 document.getElementById('game-ui').classList.add('hidden-ui');
             }
             renderGrid();
+            if (!document.getElementById('twod-grid-container').classList.contains('hidden-ui')) {
+                renderTwodGrid();
+            }
         }
 
         document.getElementById('admin-chat-btn').onclick = () => {
